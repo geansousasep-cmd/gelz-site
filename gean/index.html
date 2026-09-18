@@ -1,0 +1,735 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-WZRJ8X2MLV"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-WZRJ8X2MLV');
+  </script>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Gean Sousa | E-commerce, Operações Digitais & Growth</title>
+  <meta name="description" content="Portfólio profissional de Gean Sousa — e-commerce, operações digitais, growth, conteúdo, tecnologia e dados.">
+  <meta name="theme-color" content="#080808">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <link rel="icon" type="image/png" href="favicon.png">
+
+  <meta property="og:title" content="Gean Sousa | E-commerce & Operações Digitais">
+  <meta property="og:description" content="Transformando ideias em operações digitais que vendem, medem e escalam.">
+  <meta property="og:image" content="profile.webp">
+  <meta property="og:type" content="website">
+
+  <style>
+    :root{
+      --bg:#080808;
+      --bg2:#0d0d0d;
+      --surface:#111;
+      --surface2:#171717;
+      --surface3:#1f1f1f;
+      --text:#f4f4f4;
+      --muted:#a6a6a6;
+      --muted2:#737373;
+      --line:rgba(255,255,255,.1);
+      --line2:rgba(255,255,255,.18);
+      --white:#fff;
+      --blue:#4c74ff;
+      --cyan:#79e7ff;
+      --green:#25d366;
+      --radius:26px;
+      --shadow:0 24px 80px rgba(0,0,0,.42);
+      --max:1180px;
+    }
+
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth;background:var(--bg)}
+    body{
+      margin:0;
+      color:var(--text);
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      -webkit-font-smoothing:antialiased;
+      background:
+        radial-gradient(circle at 88% -4%,rgba(76,116,255,.15),transparent 23rem),
+        radial-gradient(circle at -8% 32%,rgba(121,231,255,.06),transparent 26rem),
+        var(--bg);
+      overflow-x:hidden;
+    }
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      opacity:.15;
+      background-image:linear-gradient(rgba(255,255,255,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.02) 1px,transparent 1px);
+      background-size:42px 42px;
+      mask-image:linear-gradient(to bottom,black,transparent 80%);
+    }
+    a{color:inherit;text-decoration:none}
+    img{display:block;max-width:100%}
+    button{font:inherit}
+    section[id]{scroll-margin-top:92px}
+    .container{width:min(calc(100% - 28px),var(--max));margin-inline:auto}
+
+    .progress{position:fixed;left:0;top:0;height:2px;background:linear-gradient(90deg,var(--cyan),var(--blue));width:0;z-index:999}
+
+    .header{
+      position:sticky;top:0;z-index:100;
+      height:66px;
+      border-bottom:1px solid var(--line);
+      background:rgba(8,8,8,.82);
+      backdrop-filter:blur(18px);
+      -webkit-backdrop-filter:blur(18px);
+    }
+    .header-inner{height:100%;display:flex;align-items:center;justify-content:space-between;gap:14px}
+    .brand{display:flex;align-items:center;gap:10px;min-width:0}
+    .brand img{width:40px;height:40px;border-radius:13px;object-fit:cover;background:#fff}
+    .brand-copy{min-width:0}
+    .brand-copy strong{display:block;font-size:13px;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+    .brand-copy small{display:block;color:#757575;font-size:9px;letter-spacing:.13em;text-transform:uppercase;margin-top:2px;white-space:nowrap}
+    .header-nav{display:none;align-items:center;gap:22px}
+    .header-nav a{font-size:12px;color:#aaa;font-weight:700;transition:.2s}
+    .header-nav a:hover{color:#fff}
+    .header-actions{display:flex;align-items:center;gap:8px}
+
+    .button{
+      min-height:43px;padding:0 16px;border:1px solid transparent;border-radius:999px;
+      display:inline-flex;align-items:center;justify-content:center;gap:8px;
+      font-size:12px;font-weight:800;transition:.2s;white-space:nowrap
+    }
+    .button:hover{transform:translateY(-1px)}
+    .button-primary{background:#fff;color:#090909}
+    .button-dark{background:#121212;color:#fff;border-color:var(--line)}
+    .button-outline{background:transparent;color:#fff;border-color:var(--line2)}
+    .button-whatsapp{background:var(--green);color:#06170c}
+    .button svg{width:17px;height:17px;flex:0 0 auto}
+    .header .button .desktop-only{display:none}
+
+    .hero{padding:24px 0 34px}
+    .hero-shell{display:grid;gap:16px}
+    .hero-copy{
+      padding:22px 6px 8px;
+      display:grid;align-content:center;gap:15px
+    }
+    .eyebrow{
+      display:inline-flex;align-items:center;gap:9px;width:fit-content;
+      color:#b9b9b9;font-size:10px;font-weight:850;letter-spacing:.16em;text-transform:uppercase
+    }
+    .eyebrow::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--cyan);box-shadow:0 0 0 6px rgba(121,231,255,.08)}
+    .hero h1{margin:0;font-size:clamp(3rem,15vw,6.8rem);line-height:.88;letter-spacing:-.065em;max-width:8.8ch}
+    .hero h1 span{display:block;color:#8f8f8f;font-weight:600}
+    .hero-lead{margin:0;color:#b2b2b2;font-size:14px;line-height:1.7;max-width:58ch}
+    .hero-tagline{margin:0;font-size:18px;line-height:1.35;letter-spacing:-.02em;max-width:29ch;color:#eee}
+    .hero-actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:2px}
+    .micro-links{display:flex;gap:14px;flex-wrap:wrap;color:#818181;font-size:11px;font-weight:700}
+    .micro-links a:hover{color:#fff}
+
+    .portrait-card{
+      position:relative;overflow:hidden;border:1px solid var(--line);border-radius:32px;background:#111;
+      min-height:470px;box-shadow:var(--shadow);isolation:isolate
+    }
+    .portrait-card>img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;filter:saturate(.92) contrast(1.03)}
+    .portrait-card::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.03) 28%,rgba(0,0,0,.84) 100%);z-index:1}
+    .portrait-grid{position:absolute;inset:0;z-index:2;background:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:36px 36px;mask-image:linear-gradient(to top,black,transparent 65%)}
+    .portrait-info{position:absolute;z-index:3;left:18px;right:18px;bottom:18px;display:grid;gap:11px}
+    .portrait-status{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .status-pill{display:inline-flex;align-items:center;gap:8px;padding:8px 11px;border-radius:999px;background:rgba(6,6,6,.62);border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(10px);font-size:10px;font-weight:800}
+    .status-dot{width:7px;height:7px;border-radius:50%;background:#54e794;box-shadow:0 0 0 5px rgba(84,231,148,.11)}
+    .portrait-info strong{font-size:19px;letter-spacing:-.03em}
+    .portrait-info small{color:#c0c0c0;font-size:11px;line-height:1.5}
+
+    .quick-nav{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:5px 0 0}
+    .quick-nav::-webkit-scrollbar{display:none}
+    .quick-nav a{flex:0 0 auto;padding:10px 13px;border:1px solid var(--line);border-radius:999px;color:#aaa;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;background:#0e0e0e}
+
+    .section{padding:50px 0}
+    .section + .section{border-top:1px solid rgba(255,255,255,.045)}
+    .section-head{display:grid;gap:9px;margin-bottom:22px}
+    .section-label{color:#7c7c7c;font-size:10px;font-weight:850;letter-spacing:.18em;text-transform:uppercase}
+    .section-head h2{margin:0;font-size:clamp(2rem,9vw,4.4rem);line-height:.94;letter-spacing:-.055em;max-width:13ch}
+    .section-head p{margin:0;color:#909090;font-size:13px;line-height:1.65;max-width:56ch}
+
+    .identity-grid{display:grid;gap:14px}
+    .identity-card{padding:22px;border:1px solid var(--line);border-radius:26px;background:linear-gradient(145deg,#141414,#0e0e0e)}
+    .identity-card strong{display:block;font-size:22px;letter-spacing:-.03em}
+    .identity-card p{margin:10px 0 0;color:#969696;font-size:13px;line-height:1.65}
+    .identity-mini{display:flex;align-items:center;gap:11px;margin-top:17px;padding-top:16px;border-top:1px solid var(--line);color:#c2c2c2;font-size:11px;font-weight:700}
+    .identity-mini span{width:32px;height:32px;border-radius:10px;background:#1d1d1d;display:grid;place-items:center;color:#fff;font-weight:900}
+
+    .expertise-grid{display:grid;gap:12px;counter-reset:card}
+    .expertise{
+      position:relative;padding:22px;min-height:205px;border:1px solid var(--line);border-radius:26px;
+      background:linear-gradient(145deg,#161616,#0d0d0d);overflow:hidden
+    }
+    .expertise::after{counter-increment:card;content:"0" counter(card);position:absolute;right:15px;top:10px;font-size:62px;font-weight:900;letter-spacing:-.08em;color:rgba(255,255,255,.045)}
+    .expertise .icon{width:42px;height:42px;border:1px solid var(--line);border-radius:14px;display:grid;place-items:center;background:#111;margin-bottom:34px}
+    .expertise .icon svg{width:19px;height:19px}
+    .expertise h3{margin:0;font-size:19px;letter-spacing:-.025em}
+    .expertise p{margin:8px 0 0;color:#8f8f8f;font-size:12px;line-height:1.6;max-width:30ch}
+
+    .metrics-wrap{padding:15px;border-radius:30px;background:linear-gradient(135deg,rgba(76,116,255,.12),rgba(121,231,255,.04),#0d0d0d);border:1px solid rgba(121,231,255,.12)}
+    .metrics-grid{display:grid;gap:10px}
+    .metric{padding:24px 20px;border-radius:22px;background:rgba(10,10,10,.8);border:1px solid var(--line)}
+    .metric strong{display:block;font-size:clamp(2.8rem,14vw,5.6rem);line-height:.86;letter-spacing:-.07em}
+    .metric span{display:block;margin-top:12px;font-size:12px;color:#c3c3c3;font-weight:800}
+    .metric p{margin:7px 0 0;color:#777;font-size:11px;line-height:1.5}
+    .platforms{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+    .platforms span{padding:7px 9px;border-radius:999px;border:1px solid var(--line);font-size:9px;color:#8d8d8d;text-transform:uppercase;letter-spacing:.08em;font-weight:800}
+
+    .case-grid{display:grid;gap:15px}
+    .case-card{border:1px solid var(--line);border-radius:28px;background:#0e0e0e;overflow:hidden;box-shadow:0 18px 55px rgba(0,0,0,.22)}
+    .case-media{position:relative;aspect-ratio:16/11;overflow:hidden;background:#151515}
+    .case-media img{width:100%;height:100%;object-fit:cover;object-position:top center;transition:transform .45s ease}
+    .case-card:hover .case-media img{transform:scale(1.025)}
+    .case-media::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 60%,rgba(0,0,0,.5))}
+    .case-body{padding:20px}
+    .case-kicker{color:#727272;font-size:9px;letter-spacing:.16em;text-transform:uppercase;font-weight:850}
+    .case-body h3{margin:7px 0 0;font-size:20px;letter-spacing:-.03em}
+    .case-body p{margin:9px 0 0;color:#8d8d8d;font-size:12px;line-height:1.6}
+    .case-proof{display:flex;gap:8px;flex-wrap:wrap;margin-top:15px}
+    .case-proof span{border:1px solid var(--line);border-radius:999px;padding:7px 9px;color:#a5a5a5;font-size:9px;font-weight:800}
+
+    .agency-card{display:grid;gap:16px;padding:15px;border:1px solid var(--line);border-radius:30px;background:linear-gradient(145deg,#121212,#0c0c0c)}
+    .agency-copy{padding:13px 8px 7px;display:grid;align-content:center;gap:13px}
+    .agency-copy .logo-row{display:flex;align-items:center;gap:11px}
+    .agency-copy .logo-row img{width:46px;height:46px;border-radius:15px;background:#fff;object-fit:cover}
+    .agency-copy h3{margin:0;font-size:clamp(2rem,9vw,3.8rem);line-height:.95;letter-spacing:-.05em}
+    .agency-copy p{margin:0;color:#959595;font-size:13px;line-height:1.65;max-width:48ch}
+    .agency-media{border-radius:22px;overflow:hidden;background:#111;max-height:560px}
+    .agency-media img{width:100%;height:100%;object-fit:cover;object-position:top center}
+
+    .video-grid{display:grid;gap:13px}
+    .video-card{border:1px solid var(--line);border-radius:26px;background:#0d0d0d;overflow:hidden;min-height:445px;position:relative}
+    .video-placeholder{position:absolute;inset:0;display:grid;place-items:center;padding:24px;text-align:center;background:radial-gradient(circle at 50% 24%,rgba(76,116,255,.16),transparent 18rem),#0c0c0c}
+    .video-placeholder-inner{display:grid;justify-items:center;gap:14px;max-width:220px}
+    .play{width:64px;height:64px;border-radius:50%;border:1px solid var(--line2);display:grid;place-items:center;background:#141414;box-shadow:0 18px 45px rgba(0,0,0,.38)}
+    .play svg{width:23px;height:23px;margin-left:3px}
+    .video-placeholder strong{font-size:17px;letter-spacing:-.02em}
+    .video-placeholder p{margin:0;color:#7c7c7c;font-size:11px;line-height:1.55}
+    .video-placeholder a{margin-top:2px}
+    .tiktok-live{position:relative;z-index:2;min-height:445px;background:#fff;display:none;overflow:hidden}
+    .tiktok-live.loaded{display:block}
+    .tiktok-live .tiktok-embed{margin:0 auto!important;min-width:0!important;width:100%!important;max-width:none!important}
+    .tiktok-live iframe{width:100%!important;min-width:0!important;max-width:none!important}
+
+    .stack-grid{display:grid;gap:10px}
+    .tool{min-height:86px;padding:16px;border:1px solid var(--line);border-radius:20px;background:#101010;display:flex;align-items:center;gap:13px}
+    .tool-icon{width:42px;height:42px;border-radius:13px;background:#181818;border:1px solid var(--line);display:grid;place-items:center;font-size:11px;font-weight:900;color:#d8d8d8;flex:0 0 auto}
+    .tool strong{display:block;font-size:12px}
+    .tool span{display:block;color:#6f6f6f;font-size:10px;margin-top:3px}
+
+    .journey{display:grid;gap:14px}
+    .timeline{display:grid;gap:10px}
+    .timeline-item{padding:18px;border:1px solid var(--line);border-radius:22px;background:#0e0e0e;display:grid;gap:7px}
+    .timeline-item time{color:#6f6f6f;font-size:9px;font-weight:850;letter-spacing:.13em;text-transform:uppercase}
+    .timeline-item strong{font-size:15px;letter-spacing:-.02em}
+    .timeline-item p{margin:0;color:#888;font-size:11px;line-height:1.6}
+    .credential-card{border:1px solid var(--line);border-radius:24px;background:#0f0f0f;overflow:hidden}
+    .credential-card img{width:100%;aspect-ratio:16/10;object-fit:cover;background:#fff}
+    .credential-body{padding:17px}
+    .credential-body strong{display:block;font-size:14px}
+    .credential-body span{display:block;color:#777;font-size:10px;margin-top:4px}
+    .cert-list{display:grid;gap:9px;margin-top:12px}
+    .cert-list div{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:9px;border-top:1px solid var(--line);font-size:10px;color:#aaa}
+    .cert-list small{color:#666}
+
+    .contact-card{
+      position:relative;overflow:hidden;border:1px solid rgba(121,231,255,.16);border-radius:34px;padding:28px 22px;
+      background:radial-gradient(circle at 92% 12%,rgba(76,116,255,.21),transparent 20rem),linear-gradient(145deg,#141414,#0b0b0b);box-shadow:var(--shadow)
+    }
+    .contact-card::before{content:"G";position:absolute;right:-12px;bottom:-56px;font-size:220px;line-height:1;font-weight:950;letter-spacing:-.12em;color:rgba(255,255,255,.025)}
+    .contact-card h2{position:relative;margin:0;font-size:clamp(2.3rem,11vw,5rem);line-height:.9;letter-spacing:-.06em;max-width:10ch}
+    .contact-card p{position:relative;margin:16px 0 0;color:#9b9b9b;font-size:13px;line-height:1.65;max-width:48ch}
+    .contact-actions{position:relative;display:flex;gap:9px;flex-wrap:wrap;margin-top:22px}
+    .contact-email{position:relative;margin-top:18px;color:#777;font-size:11px}
+    .contact-email a{color:#c6c6c6}
+
+    .footer{padding:26px 0 38px;color:#626262;font-size:10px}
+    .footer-inner{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;padding-top:22px;border-top:1px solid var(--line)}
+    .footer-links{display:flex;gap:12px;flex-wrap:wrap}
+    .footer a:hover{color:#fff}
+
+    .reveal{opacity:0;transform:translateY(18px);transition:opacity .55s ease,transform .55s ease}
+    .reveal.visible{opacity:1;transform:none}
+
+    @media (min-width:720px){
+      .container{width:min(calc(100% - 48px),var(--max))}
+      .header .button .desktop-only{display:inline}
+      .hero{padding:48px 0 56px}
+      .hero-shell{grid-template-columns:1.08fr .92fr;align-items:stretch;gap:22px}
+      .hero-copy{padding:34px 4px}
+      .portrait-card{min-height:620px}
+      .identity-grid{grid-template-columns:1.15fr .85fr}
+      .expertise-grid{grid-template-columns:repeat(2,1fr)}
+      .metrics-grid{grid-template-columns:repeat(3,1fr)}
+      .case-grid{grid-template-columns:repeat(3,1fr)}
+      .case-media{aspect-ratio:4/3}
+      .agency-card{grid-template-columns:.9fr 1.1fr;align-items:stretch}
+      .agency-copy{padding:30px}
+      .video-grid{grid-template-columns:repeat(3,1fr)}
+      .stack-grid{grid-template-columns:repeat(3,1fr)}
+      .journey{grid-template-columns:1.2fr .8fr;align-items:start}
+      .contact-card{padding:48px}
+      .section{padding:72px 0}
+      .section-head{grid-template-columns:1fr .8fr;align-items:end}
+      .section-head p{justify-self:end}
+    }
+
+    @media (min-width:980px){
+      .header-nav{display:flex}
+      .expertise-grid{grid-template-columns:repeat(4,1fr)}
+      .stack-grid{grid-template-columns:repeat(5,1fr)}
+      .brand-copy strong{font-size:14px}
+    }
+
+    @media (prefers-reduced-motion:reduce){
+      html{scroll-behavior:auto}
+      .reveal{opacity:1;transform:none;transition:none}
+      .button,.case-media img{transition:none}
+    }
+  </style>
+</head>
+<body>
+  <div class="progress" id="progress"></div>
+
+  <header class="header">
+    <div class="container header-inner">
+      <a class="brand" href="https://gelz.tech" aria-label="Ir para Gelz Store">
+        <img src="gelz-logo.webp" alt="Gelz">
+        <span class="brand-copy">
+          <strong>Gean Sousa</strong>
+          <small>Portfolio · Gelz ecosystem</small>
+        </span>
+      </a>
+
+      <nav class="header-nav" aria-label="Navegação do portfólio">
+        <a href="#especialidades">Especialidades</a>
+        <a href="#resultados">Resultados</a>
+        <a href="#cases">Cases</a>
+        <a href="#stack">Stack</a>
+      </nav>
+
+      <div class="header-actions">
+        <a class="button button-dark" href="https://www.linkedin.com/in/geansoousa/" target="_blank" rel="noopener" aria-label="LinkedIn de Gean">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.94 8.5H3.56V19h3.38V8.5ZM5.25 3A1.96 1.96 0 1 0 5.25 6.92 1.96 1.96 0 0 0 5.25 3ZM20.44 13c0-3.16-1.69-4.63-3.94-4.63-1.82 0-2.63 1-3.08 1.7V8.5h-3.38c.04 1.04 0 10.5 0 10.5h3.38v-5.86c0-.31.02-.62.11-.84.25-.62.82-1.27 1.78-1.27 1.25 0 1.75.96 1.75 2.36V19h3.38v-6Z"/></svg>
+          <span class="desktop-only">LinkedIn</span>
+        </a>
+        <a class="button button-primary" href="#contato">Contato</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container hero-shell">
+        <div class="hero-copy reveal">
+          <span class="eyebrow">Gestor de E-commerce & Operações Digitais</span>
+          <h1>Gean Sousa <span>Pereira.</span></h1>
+          <p class="hero-tagline">Transformando ideias em operações digitais que vendem, medem e escalam.</p>
+          <p class="hero-lead">Atuo na interseção entre <strong>e-commerce, operações, growth, conteúdo e tecnologia</strong>. Estruturo a jornada completa: produto, catálogo, processos, logística, criativos, marketplaces, analytics e automações.</p>
+          <div class="hero-actions">
+            <a class="button button-whatsapp" href="https://wa.me/11922098177" target="_blank" rel="noopener">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a9.82 9.82 0 0 0-8.41 14.89L2 22l5.26-1.54A9.96 9.96 0 1 0 12 2Zm0 17.9a8 8 0 0 1-4.08-1.11l-.29-.17-3.12.91.93-3.04-.19-.31A7.93 7.93 0 1 1 12 19.9Zm4.35-5.93c-.24-.12-1.4-.69-1.62-.77-.22-.08-.38-.12-.54.12-.16.24-.62.77-.76.93-.14.16-.28.18-.52.06-.24-.12-1-.37-1.91-1.18-.71-.63-1.18-1.4-1.32-1.64-.14-.24-.01-.37.1-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.54-1.3-.74-1.78-.2-.47-.4-.41-.54-.42h-.46c-.16 0-.42.06-.64.3-.22.24-.84.82-.84 2s.86 2.32.98 2.48c.12.16 1.7 2.6 4.12 3.64.58.25 1.03.4 1.38.51.58.18 1.11.16 1.53.1.47-.07 1.4-.57 1.6-1.12.2-.55.2-1.02.14-1.12-.06-.1-.22-.16-.46-.28Z"/></svg>
+              Falar no WhatsApp
+            </a>
+            <a class="button button-outline" href="mailto:gean@gelz.tech">gean@gelz.tech</a>
+          </div>
+          <div class="micro-links">
+            <a href="https://www.instagram.com/geansoousa/" target="_blank" rel="noopener">Instagram pessoal ↗</a>
+            <a href="https://www.instagram.com/agenciagelz/" target="_blank" rel="noopener">Agência Gelz ↗</a>
+            <a href="https://gelz.tech" target="_blank" rel="noopener">Gelz Store ↗</a>
+          </div>
+        </div>
+
+        <div class="portrait-card reveal">
+          <img src="profile.webp" alt="Gean Sousa sorrindo">
+          <div class="portrait-grid"></div>
+          <div class="portrait-info">
+            <div class="portrait-status">
+              <span class="status-pill"><span class="status-dot"></span> Projetos & operações digitais</span>
+              <span class="status-pill">BR</span>
+            </div>
+            <strong>Operação + criatividade + tecnologia.</strong>
+            <small>Construindo experiências digitais com visão de negócio e execução ponta a ponta.</small>
+          </div>
+        </div>
+      </div>
+
+      <div class="container quick-nav reveal" aria-label="Atalhos da página">
+        <a href="#sobre">Sobre</a>
+        <a href="#especialidades">O que faço</a>
+        <a href="#resultados">Resultados</a>
+        <a href="#cases">Cases</a>
+        <a href="#videos">Vídeos</a>
+        <a href="#stack">Stack</a>
+        <a href="#trajetoria">Trajetória</a>
+      </div>
+    </section>
+
+    <section class="section" id="sobre">
+      <div class="container">
+        <div class="section-head reveal">
+          <div>
+            <span class="section-label">01 · Posicionamento</span>
+            <h2>Não é só currículo. É uma vitrine de execução.</h2>
+          </div>
+          <p>Uma visão objetiva de quem eu sou profissionalmente, o que sei construir e como conecto tecnologia, operação e crescimento para gerar resultado.</p>
+        </div>
+
+        <div class="identity-grid">
+          <article class="identity-card reveal">
+            <strong>E-commerce & Operações Digitais</strong>
+            <p>Gestão de catálogo, marketplace, pedidos, atendimento, logística, processos, páginas de conversão, análise de performance e melhoria contínua da experiência de compra.</p>
+            <div class="identity-mini"><span>↗</span> Visão do negócio ao detalhe operacional.</div>
+          </article>
+          <article class="identity-card reveal">
+            <strong>ADS · Anhanguera</strong>
+            <p>Graduando em Análise e Desenvolvimento de Sistemas, trazendo lógica, análise de sistemas e infraestrutura tecnológica para a rotina de operações digitais.</p>
+            <div class="identity-mini"><span>26</span> Janeiro de 2026 — cursando.</div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="especialidades">
+      <div class="container">
+        <div class="section-head reveal">
+          <div>
+            <span class="section-label">02 · Especialidades</span>
+            <h2>Da ideia à operação.</h2>
+          </div>
+          <p>Quatro frentes que se conectam para transformar presença digital em uma operação organizada, mensurável e pronta para crescer.</p>
+        </div>
+
+        <div class="expertise-grid">
+          <article class="expertise reveal">
+            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 7h12l1 13H5L6 7Z"/><path d="M9 9V6a3 3 0 0 1 6 0v3"/></svg></div>
+            <h3>E-commerce & Marketplace</h3>
+            <p>Operação de lojas digitais, produtos, pedidos, atendimento e marketplaces.</p>
+          </article>
+          <article class="expertise reveal">
+            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 6h16v12H4z"/><path d="M8 10h8M8 14h5"/></svg></div>
+            <h3>Operações Digitais</h3>
+            <p>Estruturação de processos, logística, ferramentas, suporte e automações.</p>
+          </article>
+          <article class="expertise reveal">
+            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 18V9l8-4 8 4v9"/><path d="M8 13h8M12 9v8"/></svg></div>
+            <h3>Growth & Conteúdo</h3>
+            <p>Estratégia de conteúdo, criativos, testes e aquisição através de canais digitais.</p>
+          </article>
+          <article class="expertise reveal">
+            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8 18 3 12l5-6M16 6l5 6-5 6M14 4l-4 16"/></svg></div>
+            <h3>Tecnologia & Dados</h3>
+            <p>Sites, integrações, analytics, inteligência artificial e acompanhamento de métricas.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="resultados">
+      <div class="container">
+        <div class="section-head reveal">
+          <div>
+            <span class="section-label">03 · Resultados reais</span>
+            <h2>Números que mostram execução.</h2>
+          </div>
+          <p>Resultados consolidados em conteúdo, relacionamento e experiências de compra através de TikTok, Shopee, SHEIN e Instagram.</p>
+        </div>
+
+        <div class="metrics-wrap reveal">
+          <div class="metrics-grid">
+            <article class="metric">
+              <strong>1M+</strong>
+              <span>Pessoas alcançadas</span>
+              <p>Público impactado pelos conteúdos e ativos digitais.</p>
+            </article>
+            <article class="metric">
+              <strong>400K+</strong>
+              <span>Engajamentos e interações</span>
+              <p>Interações geradas nas redes e canais de conteúdo.</p>
+            </article>
+            <article class="metric">
+              <strong>400+</strong>
+              <span>Pedidos e experiências de compra</span>
+              <p>Operações construídas e acompanhadas do catálogo ao pós-venda.</p>
+            </article>
+          </div>
+          <div class="platforms">
+            <span>TikTok Shop</span><span>Shopee</span><span>SHEIN</span><span>Instagram</span><span>Google</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="cases">
+      <div class="container">
+        <div class="section-head reveal">
+          <div>
+            <span class="section-label">04 · Cases</span>
+            <h2>O trabalho acontecendo de verdade.</h2>
+          </div>
+          <p>Recortes de operação, validação de produto e crescimento digital. Menos teoria, mais execução visível.</p>
+        </div>
+
+        <div class="case-grid">
+          <article class="case-card reveal">
+            <div class="case-media"><img src="case-operations.webp" alt="Painel de pedidos e operação de e-commerce"></div>
+            <div class="case-body">
+              <span class="case-kicker">Operação & logística</span>
+              <h3>Da venda ao envio</h3>
+              <p>Rotina operacional com pedidos em diferentes etapas, controle de expedição, coleta e acompanhamento de entrega.</p>
+              <div class="case-proof"><span>Pedidos</span><span>Logística</span><span>Pós-venda</span></div>
+            </div>
+          </article>
+
+          <article class="case-card reveal">
+            <div class="case-media"><img src="case-reviews.webp" alt="Avaliações reais de clientes em marketplace"></div>
+            <div class="case-body">
+              <span class="case-kicker">Produto & experiência</span>
+              <h3>Feedback que valida</h3>
+              <p>Acompanhamento de avaliações, percepção de qualidade, entrega e ajuste de oferta a partir do que o cliente realmente diz.</p>
+              <div class="case-proof"><span>Reviews</span><span>Produto</span><span>Conversão</span></div>
+            </div>
+          </article>
+
+          <article class="case-card reveal">
+            <div class="case-media"><img src="case-growth.webp" alt="Case de presença digital e perfil comercial"></div>
+            <div class="case-body">
+              <span class="case-kicker">Growth & presença digital</span>
+              <h3>Descoberta que gera demanda</h3>
+              <p>Construção de presença digital, identidade visual, otimização de perfil e estratégia para gerar descoberta, interação e intenção de compra.</p>
+              <div class="case-proof"><span>Google</span><span>Social</span><span>Identidade</span></div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="agencia">
+      <div class="container">
+        <div class="agency-card reveal">
+          <div class="agency-copy">
+            <div class="logo-row">
+              <img src="gelz-logo.webp" alt="Logo Gelz">
+              <div>
+                <span class="section-label">Agência Gelz</span>
+                <strong style="display:block;margin-top:4px;font-size:12px;color:#d7d7d7">Fundador · Estratégia & execução digital</strong>
+              </div>
+            </div>
+            <h3>Marca, conteúdo e operação no mesmo ecossistema.</h3>
+            <p>A Agência Gelz conecta identidade, conteúdo, posicionamento e tecnologia para criar presença digital com foco em visibilidade, relacionamento e crescimento.</p>
+            <div>
+              <a class="button button-primary" href="https://www.instagram.com/agenciagelz/" target="_blank" rel="noopener">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7.8 2h8.4A5.8 5.8 0 0 1 22 7.8v8.4a5.8 5.8 0 0 1-5.8 5.8H7.8A5.8 5.8 0 0 1 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2Zm-.2 2A3.6 3.6 0 0 0 4 7.6v8.8A3.6 3.6 0 0 0 7.6 20h8.8a3.6 3.6 0 0 0 3.6-3.6V7.6A3.6 3.6 0 0 0 16.4 4H7.6Zm9.65 1.5a1.35 1.35 0 1 1 0 2.7 1.35 1.35 0 0 1 0-2.7ZM12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10Zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z"/></svg>
+                @agenciagelz
+              </a>
+            </div>
+          </div>
+          <div class="agency-media"><img src="agency-about.webp" alt="Apresentação visual da Agência Gelz"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="videos">
+      <div class="container">
+        <div class="section-head reveal">
+          <div>
+            <span class="section-label">05 · Conteúdo que converte</span>
+            <h2>Vídeos que saem da view e chegam na venda.</h2>
+          </div>
+          <p>Uma seleção de conteúdos de performance. Quando o embed do TikTok estiver disponível, o vídeo abre dentro da própria página; o link original continua como fallback.</p>
+        </div>
+
+        <div class="video-grid">
+          <article class="video-card reveal" data-tiktok="https://vt.tiktok.com/ZSqnYF1Wg/">
+            <div class="video-placeholder">
+              <div class="video-placeholder-inner">
+                <span class="play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="m9 7 8 5-8 5V7Z"/></svg></span>
+                <strong>Conteúdo de performance #01</strong>
+                <p>Hook visual, apresentação do produto e chamada para ação.</p>
+                <a class="button button-outline" href="https://vt.tiktok.com/ZSqnYF1Wg/" target="_blank" rel="noopener">Assistir no TikTok</a>
+              </div>
+            </div>
+            <div class="tiktok-live"></div>
+          </article>
+
+          <article class="video-card reveal" data-tiktok="https://vt.tiktok.com/ZSqnYDRKK/">
+            <div class="video-placeholder">
+              <div class="video-placeholder-inner">
+                <span class="play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="m9 7 8 5-8 5V7Z"/></svg></span>
+                <strong>Conteúdo de performance #02</strong>
+                <p>Criativo orientado a retenção, desejo e conversão.</p>
+                <a class="button button-outline" href="https://vt.tiktok.com/ZSqnYDRKK/" target="_blank" rel="noopener">Assistir no TikTok</a>
+              </div>
+            </div>
+            <div class="tiktok-live"></div>
+          </article>
+
+          <article class="video-card reveal" data-tiktok="https://vt.tiktok.com/ZSqnYUh2Q/">
+            <div class="video-placeholder">
+              <div class="video-placeholder-inner">
+                <span class="play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="m9 7 8 5-8 5V7Z"/></svg></span>
+                <strong>Conteúdo de performance #03</strong>
+                <p>Produto, prova visual e CTA dentro de uma peça curta.</p>
+                <a class="button button-outline" href="https://vt.tiktok.com/ZSqnYUh2Q/" target="_blank" rel="noopener">Assistir no TikTok</a>
+              </div>
+            </div>
+            <div class="tiktok-live"></div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="stack">
+      <div class="container">
+        <div class="section-head reveal">
+          <div>
+            <span class="section-label">06 · Stack / ferramentas</span>
+            <h2>Ferramentas para tirar ideia do papel.</h2>
+          </div>
+          <p>Da análise ao criativo, da página ao vídeo: uma stack pensada para acelerar operação, conteúdo e tomada de decisão.</p>
+        </div>
+
+        <div class="stack-grid">
+          <div class="tool reveal"><span class="tool-icon">GA</span><div><strong>Google Analytics</strong><span>Métricas & comportamento</span></div></div>
+          <div class="tool reveal"><span class="tool-icon">GH</span><div><strong>GitHub</strong><span>Versionamento & deploy</span></div></div>
+          <div class="tool reveal"><span class="tool-icon">&lt;/&gt;</span><div><strong>HTML · CSS · JS</strong><span>Sites & experiências</span></div></div>
+          <div class="tool reveal"><span class="tool-icon">AI</span><div><strong>ChatGPT</strong><span>IA aplicada à operação</span></div></div>
+          <div class="tool reveal"><span class="tool-icon">GF</span><div><strong>Google Flow</strong><span>Vídeo & criação com IA</span></div></div>
+          <div class="tool reveal"><span class="tool-icon">CC</span><div><strong>CapCut</strong><span>Edição & conteúdo curto</span></div></div>
+          <div class="tool reveal"><span class="tool-icon">Ps</span><div><strong>Photoshop</strong><span>Imagem & composição</span></div></div>
+          <div class="tool reveal"><span class="tool-icon">Cv</span><div><strong>Canva</strong><span>Design & comunicação</span></div></div>
+          <div class="tool reveal"><span class="tool-icon">TT</span><div><strong>TikTok Shop</strong><span>Social commerce</span></div></div>
+          <div class="tool reveal"><span class="tool-icon">MK</span><div><strong>Marketplaces</strong><span>Shopee · SHEIN</span></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="trajetoria">
+      <div class="container">
+        <div class="section-head reveal">
+          <div>
+            <span class="section-label">07 · Trajetória & formação</span>
+            <h2>Base técnica. Experiência operacional. Evolução contínua.</h2>
+          </div>
+          <p>Uma trajetória que começou em atendimento e operações, ganhou profundidade em suporte e automação e hoje se conecta diretamente a e-commerce, tecnologia e crescimento.</p>
+        </div>
+
+        <div class="journey">
+          <div class="timeline">
+            <article class="timeline-item reveal">
+              <time>2026 — cursando</time>
+              <strong>Análise e Desenvolvimento de Sistemas · Anhanguera</strong>
+              <p>Formação com foco em análise de sistemas, lógica aplicada à resolução de problemas e infraestrutura tecnológica.</p>
+            </article>
+            <article class="timeline-item reveal">
+              <time>2023 — jun/2026</time>
+              <strong>Suporte, atendimento multicanal & operações</strong>
+              <p>Experiência com triagem, SAC, vendas por WhatsApp, suporte via Blip, resolução de conflitos e rotinas operacionais de alta demanda.</p>
+            </article>
+            <article class="timeline-item reveal">
+              <time>Atual</time>
+              <strong>E-commerce, operações digitais & Agência Gelz</strong>
+              <p>Construção de lojas, processos, conteúdo, criativos, páginas, tracking e rotinas de crescimento em canais digitais.</p>
+            </article>
+          </div>
+
+          <aside class="credential-card reveal">
+            <img src="cert-blip.webp" alt="Certificado Blip Desk para Atendentes">
+            <div class="credential-body">
+              <strong>Formação complementar</strong>
+              <span>Certificações e treinamentos aplicados à rotina profissional.</span>
+              <div class="cert-list">
+                <div><span>Blip Desk para Atendentes</span><small>2026</small></div>
+                <div><span>Ética na Inteligência Artificial · Senai SP</span><small>2026</small></div>
+                <div><span>Comunicação Assertiva · ENAP</span><small>2025</small></div>
+                <div><span>Comunicação Online e Conteúdo Digital · Microsoft</span><small>2024</small></div>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="contato">
+      <div class="container">
+        <div class="contact-card reveal">
+          <span class="section-label">Vamos construir?</span>
+          <h2>Pronto para levar seu negócio para o próximo nível?</h2>
+          <p>Se você precisa organizar uma operação digital, fortalecer sua presença online ou transformar conteúdo e tecnologia em crescimento, me chama.</p>
+          <div class="contact-actions">
+            <a class="button button-whatsapp" href="https://wa.me/11922098177" target="_blank" rel="noopener">Falar no WhatsApp</a>
+            <a class="button button-primary" href="mailto:gean@gelz.tech">Enviar e-mail</a>
+            <a class="button button-outline" href="https://www.linkedin.com/in/geansoousa/" target="_blank" rel="noopener">LinkedIn</a>
+          </div>
+          <div class="contact-email">Contato profissional: <a href="mailto:gean@gelz.tech">gean@gelz.tech</a></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <span>© 2026 Gean Sousa · Portfólio profissional</span>
+      <div class="footer-links">
+        <a href="https://gelz.tech">Gelz Store</a>
+        <a href="https://www.instagram.com/geansoousa/" target="_blank" rel="noopener">Instagram</a>
+        <a href="https://www.instagram.com/agenciagelz/" target="_blank" rel="noopener">Agência Gelz</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Barra de progresso
+    const progress = document.getElementById('progress');
+    const updateProgress = () => {
+      const max = document.documentElement.scrollHeight - innerHeight;
+      const pct = max > 0 ? (scrollY / max) * 100 : 0;
+      progress.style.width = pct + '%';
+    };
+    addEventListener('scroll', updateProgress, {passive:true});
+    updateProgress();
+
+    // Reveal suave
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if(entry.isIntersecting){
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, {threshold:.08, rootMargin:'0px 0px -30px'});
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+    // Embeds TikTok: tenta usar o oEmbed oficial; se falhar, mantém o card clicável.
+    const videoCards = [...document.querySelectorAll('[data-tiktok]')];
+    let tiktokScriptLoaded = false;
+    const ensureTikTokScript = () => {
+      if(tiktokScriptLoaded) return;
+      tiktokScriptLoaded = true;
+      const s = document.createElement('script');
+      s.async = true;
+      s.src = 'https://www.tiktok.com/embed.js';
+      document.body.appendChild(s);
+    };
+
+    videoCards.forEach(async card => {
+      const url = card.dataset.tiktok;
+      const target = card.querySelector('.tiktok-live');
+      try{
+        const response = await fetch('https://www.tiktok.com/oembed?url=' + encodeURIComponent(url));
+        if(!response.ok) return;
+        const data = await response.json();
+        if(!data.html) return;
+        target.innerHTML = data.html.replace(/<script[\s\S]*?<\/script>/gi,'');
+        target.classList.add('loaded');
+        ensureTikTokScript();
+      }catch(e){
+        // fallback já está visível
+      }
+    });
+  </script>
+</body>
+</html>
