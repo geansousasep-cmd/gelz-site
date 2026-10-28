@@ -1,0 +1,5 @@
+# Configuracao para publicar apenas o portfolio /gean no Cloudflare Pages.
+# O GitHub Pages continua publicando gelz.tech normalmente.
+name = "gean-gelz"
+pages_build_output_dir = "./gean"
+compatibility_date = "2026-10-28"
