@@ -16,7 +16,10 @@
   <meta name="description" content="Portfólio profissional de Gean Sousa — e-commerce, operações digitais, growth, conteúdo, tecnologia e dados.">
   <meta name="theme-color" content="#080808">
   <meta name="robots" content="noindex,nofollow,noarchive">
-  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="icon" type="image/png" href="gelz-icon-white.png" sizes="192x192">
+  <link rel="apple-touch-icon" href="gelz-icon-white.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="apple-mobile-web-app-title" content="Gean Sousa">
 
   <meta property="og:title" content="Gean Sousa | E-commerce & Operações Digitais">
   <meta property="og:description" content="Transformando ideias em operações digitais que vendem, medem e escalam.">
@@ -289,6 +292,33 @@
       .reveal{opacity:1;transform:none;transition:none}
       .button,.case-media img{transition:none}
     }
+
+    /* GELZ 2026 — resultados, player e identidade mobile-first */
+    .brand img,.agency-copy .logo-row img{background:#08090c;object-fit:contain;padding:3px}
+    .metric strong{font-size:clamp(2.2rem,6.2vw,4.4rem);line-height:1;overflow-wrap:anywhere}
+    .personal-proof{margin-top:14px;padding:clamp(16px,3vw,26px);border:1px solid rgba(232,236,250,.14);border-radius:24px;background:linear-gradient(140deg,#161920,#0c0e13)}
+    .proof-intro{display:flex;align-items:end;justify-content:space-between;gap:18px;margin-bottom:19px}
+    .proof-intro h3{margin:10px 0 0;font-size:clamp(22px,3.5vw,32px);letter-spacing:-.055em}
+    .proof-intro p{font-size:11px;color:#9fa7b3;line-height:1.6;margin:0;max-width:310px}
+    .personal-charts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .personal-chart{padding:18px;border-radius:17px;background:#0a0d13;border:1px solid rgba(255,255,255,.11)}
+    .personal-chart>b{display:block;font-size:13px;margin-bottom:15px}
+    .pc-label{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:11px;color:#a9b2c0;margin:10px 0 7px}
+    .pc-label strong{font-size:13px;color:#f0f2f7}
+    .pc-track{height:9px;border-radius:10px;background:rgba(255,255,255,.06);overflow:hidden}
+    .pc-track i{display:block;height:100%;background:linear-gradient(90deg,#7e89a1,#e4e8f4);border-radius:inherit}
+    .personal-detail{border-top:1px solid rgba(255,255,255,.1);margin-top:16px;padding-top:14px}
+    .personal-detail summary{font-size:12px;color:#e4e7f0;cursor:pointer;font-weight:750}
+    .personal-extra{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding-top:16px}
+    .personal-extra span{font-size:11px;color:#9ea5b2}
+    .personal-extra strong{display:block;font-size:18px;color:#fafbff;margin-bottom:3px}
+    .personal-source{font-size:10px;color:#8c94a2;line-height:1.65;margin:14px 0 0}
+    .video-card{min-height:0;aspect-ratio:9/17;background:#0b0e13}
+    .personal-tiktok-player{position:absolute;inset:0;width:100%;height:calc(100% - 58px);border:0;display:block}
+    .personal-video-footer{position:absolute;bottom:0;left:0;right:0;z-index:3;display:flex;justify-content:space-between;align-items:center;gap:9px;height:58px;padding:13px;background:#0e1118;font-size:11px}
+    .personal-video-footer a{color:#cbd1dd;text-decoration:underline;font-size:10px}
+    @media(max-width:719px){.proof-intro{align-items:start;flex-direction:column;gap:8px}.personal-charts{grid-template-columns:1fr}.personal-extra{grid-template-columns:repeat(2,minmax(0,1fr))}.metric strong{font-size:clamp(2.5rem,10vw,3.8rem)}.video-grid{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:12px;padding-bottom:10px}.video-card{flex:0 0 min(76vw,305px);scroll-snap-align:start}}
+    @media(prefers-reduced-motion:reduce){.pc-track i{transition:none}}
   </style>
 </head>
 <body>
@@ -297,7 +327,7 @@
   <header class="header">
     <div class="container header-inner">
       <a class="brand" href="https://gelz.tech" aria-label="Ir para Gelz Store">
-        <img src="gelz-logo.webp" alt="Gelz">
+        <img src="gelz-icon-white.png" alt="Gelz">
         <span class="brand-copy">
           <strong>Gean Sousa</strong>
           <small>Portfolio · Gelz ecosystem</small>
@@ -430,35 +460,31 @@
 
     <section class="section" id="resultados">
       <div class="container">
-        <div class="section-head reveal">
-          <div>
-            <span class="section-label">03 · Resultados reais</span>
-            <h2>Números que mostram execução.</h2>
-          </div>
-          <p>Resultados consolidados em conteúdo, relacionamento e experiências de compra através de TikTok, Shopee, SHEIN e Instagram.</p>
-        </div>
-
+        <div class="section-head reveal"><div><span class="section-label">03 · Resultados reais</span><h2>Números que mostram execução.</h2></div><p>Indicadores documentados da operação Gênesis na TikTok Shop e experiência em conteúdo, gestão e tecnologia para e-commerce.</p></div>
         <div class="metrics-wrap reveal">
           <div class="metrics-grid">
-            <article class="metric">
-              <strong>1M+</strong>
-              <span>Pessoas alcançadas</span>
-              <p>Público impactado pelos conteúdos e ativos digitais.</p>
-            </article>
-            <article class="metric">
-              <strong>400K+</strong>
-              <span>Engajamentos e interações</span>
-              <p>Interações geradas nas redes e canais de conteúdo.</p>
-            </article>
-            <article class="metric">
-              <strong>400+</strong>
-              <span>Pedidos e experiências de compra</span>
-              <p>Operações construídas e acompanhadas do catálogo ao pós-venda.</p>
-            </article>
+            <article class="metric"><strong>R$ 86,8 mil</strong><span>GMV registrado</span><p>Valor bruto de mercadorias da operação</p></article>
+            <article class="metric"><strong>1.102</strong><span>Itens vendidos</span><p>1.060 pedidos no período analisado</p></article>
+            <article class="metric"><strong>3,27 mi</strong><span>Impressões de produtos</span><p>1.941.158 impressões únicas registradas</p></article>
           </div>
-          <div class="platforms">
-            <span>TikTok Shop</span><span>Shopee</span><span>SHEIN</span><span>Instagram</span><span>Google</span>
+          <div class="personal-proof">
+            <div class="proof-intro"><div><span class="section-label">GÊNESIS · 03 NOV 2025 — 29 OUT 2026</span><h3>Da apresentação à operação.</h3></div><p>Comparações objetivas de totais verificados, sem simular dados diários.</p></div>
+            <div class="personal-charts">
+              <div class="personal-chart" role="img" aria-label="1.102 itens vendidos e 1.060 pedidos">
+                <b>Volume comercial</b>
+                <div class="pc-label"><span>Itens vendidos</span><strong>1.102</strong></div><div class="pc-track"><i style="width:100%"></i></div>
+                <div class="pc-label"><span>Pedidos</span><strong>1.060</strong></div><div class="pc-track"><i style="width:96.19%"></i></div>
+              </div>
+              <div class="personal-chart" role="img" aria-label="3.267.696 impressões e 1.941.158 impressões únicas">
+                <b>Visibilidade dos produtos</b>
+                <div class="pc-label"><span>Impressões</span><strong>3.267.696</strong></div><div class="pc-track"><i style="width:100%"></i></div>
+                <div class="pc-label"><span>Impressões únicas</span><strong>1.941.158</strong></div><div class="pc-track"><i style="width:59.4%"></i></div>
+              </div>
+            </div>
+            <details class="personal-detail"><summary>Explorar indicadores complementares +</summary><div class="personal-extra"><span><strong>180.617</strong> visitantes</span><span><strong>1.041</strong> clientes</span><span><strong>1.097</strong> pedidos de SKU</span><span><strong>1.060</strong> pedidos</span></div></details>
+            <p class="personal-source">Fonte: painel TikTok Shop Gênesis, atualização em 29/10/2026 às 00h28; período de 03/11/2025 a 29/10/2026. GMV não é lucro. Os gráficos mostram proporções entre totais, não curvas de evolução diária. Os resultados são da operação, não atribuídos apenas à Agência GELZ.</p>
           </div>
+          <div class="platforms"><span>TikTok Shop</span><span>Shopee</span><span>SHEIN</span><span>Instagram</span><span>Google</span></div>
         </div>
       </div>
     </section>
@@ -512,7 +538,7 @@
         <div class="agency-card reveal">
           <div class="agency-copy">
             <div class="logo-row">
-              <img src="gelz-logo.webp" alt="Logo Gelz">
+              <img src="gelz-icon-white.png" alt="Logo Gelz">
               <div>
                 <span class="section-label">Agência Gelz</span>
                 <strong style="display:block;margin-top:4px;font-size:12px;color:#d7d7d7">Fundador · Estratégia & execução digital</strong>
@@ -534,49 +560,19 @@
 
     <section class="section" id="videos">
       <div class="container">
-        <div class="section-head reveal">
-          <div>
-            <span class="section-label">05 · Conteúdo que converte</span>
-            <h2>Vídeos que saem da view e chegam na venda.</h2>
-          </div>
-          <p>Uma seleção de conteúdos de performance. Quando o embed do TikTok estiver disponível, o vídeo abre dentro da própria página; o link original continua como fallback.</p>
-        </div>
-
+        <div class="section-head reveal"><div><span class="section-label">05 · Conteúdo que converte</span><h2>Conteúdo pensado para destacar produtos.</h2></div><p>Três vídeos da Gênesis reproduzidos na própria página pelo player oficial do TikTok. Reprodução automática sem som, quando permitida pelo navegador.</p></div>
         <div class="video-grid">
-          <article class="video-card reveal" data-tiktok="https://vt.tiktok.com/ZSqnYF1Wg/">
-            <div class="video-placeholder">
-              <div class="video-placeholder-inner">
-                <span class="play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="m9 7 8 5-8 5V7Z"/></svg></span>
-                <strong>Conteúdo de performance #01</strong>
-                <p>Hook visual, apresentação do produto e chamada para ação.</p>
-                <a class="button button-outline" href="https://vt.tiktok.com/ZSqnYF1Wg/" target="_blank" rel="noopener">Assistir no TikTok</a>
-              </div>
-            </div>
-            <div class="tiktok-live"></div>
+          <article class="video-card reveal">
+            <iframe class="personal-tiktok-player" data-video-id="7684997596066106631" title="Gênesis · vídeo 1 no player TikTok" loading="lazy" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+            <div class="personal-video-footer"><strong>Gênesis · Vídeo 01</strong><a href="https://www.tiktok.com/@genesiselegancia/video/7684997596066106631" target="_blank" rel="noopener noreferrer">Fonte ↗</a></div>
           </article>
-
-          <article class="video-card reveal" data-tiktok="https://vt.tiktok.com/ZSqnYDRKK/">
-            <div class="video-placeholder">
-              <div class="video-placeholder-inner">
-                <span class="play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="m9 7 8 5-8 5V7Z"/></svg></span>
-                <strong>Conteúdo de performance #02</strong>
-                <p>Criativo orientado a retenção, desejo e conversão.</p>
-                <a class="button button-outline" href="https://vt.tiktok.com/ZSqnYDRKK/" target="_blank" rel="noopener">Assistir no TikTok</a>
-              </div>
-            </div>
-            <div class="tiktok-live"></div>
+          <article class="video-card reveal">
+            <iframe class="personal-tiktok-player" data-video-id="7685818957332303111" title="Gênesis · vídeo 2 no player TikTok" loading="lazy" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+            <div class="personal-video-footer"><strong>Gênesis · Vídeo 02</strong><a href="https://www.tiktok.com/@genesiselegancia/video/7685818957332303111" target="_blank" rel="noopener noreferrer">Fonte ↗</a></div>
           </article>
-
-          <article class="video-card reveal" data-tiktok="https://vt.tiktok.com/ZSqnYUh2Q/">
-            <div class="video-placeholder">
-              <div class="video-placeholder-inner">
-                <span class="play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="m9 7 8 5-8 5V7Z"/></svg></span>
-                <strong>Conteúdo de performance #03</strong>
-                <p>Produto, prova visual e CTA dentro de uma peça curta.</p>
-                <a class="button button-outline" href="https://vt.tiktok.com/ZSqnYUh2Q/" target="_blank" rel="noopener">Assistir no TikTok</a>
-              </div>
-            </div>
-            <div class="tiktok-live"></div>
+          <article class="video-card reveal">
+            <iframe class="personal-tiktok-player" data-video-id="7686476389108780296" title="Gênesis · vídeo 3 no player TikTok" loading="lazy" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+            <div class="personal-video-footer"><strong>Gênesis · Vídeo 03</strong><a href="https://www.tiktok.com/@genesiselegancia/video/7686476389108780296" target="_blank" rel="noopener noreferrer">Fonte ↗</a></div>
           </article>
         </div>
       </div>
@@ -703,33 +699,27 @@
     }, {threshold:.08, rootMargin:'0px 0px -30px'});
     document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 
-    // Embeds TikTok: tenta usar o oEmbed oficial; se falhar, mantém o card clicável.
-    const videoCards = [...document.querySelectorAll('[data-tiktok]')];
-    let tiktokScriptLoaded = false;
-    const ensureTikTokScript = () => {
-      if(tiktokScriptLoaded) return;
-      tiktokScriptLoaded = true;
-      const s = document.createElement('script');
-      s.async = true;
-      s.src = 'https://www.tiktok.com/embed.js';
-      document.body.appendChild(s);
+    // Reprodutor TikTok v1: inicia no viewport e pausa quando sai dele.
+    const players=[...document.querySelectorAll('.personal-tiktok-player[data-video-id]')];
+    const origin='https://www.tiktok.com';
+    const control=(frame,type)=>{if(frame.contentWindow)frame.contentWindow.postMessage({type,'x-tiktok-player':true},origin);};
+    const mount=(frame)=>{
+      if(frame.src)return;
+      const id=frame.dataset.videoId;
+      if(!/^[0-9]{15,22}$/.test(id||''))return;
+      const q=new URLSearchParams({autoplay:'1',muted:'1',loop:'1',controls:'1',rel:'0',description:'0'});
+      frame.src=origin+'/player/v1/'+id+'?'+q.toString();
+      frame.dataset.mounted='true';
     };
-
-    videoCards.forEach(async card => {
-      const url = card.dataset.tiktok;
-      const target = card.querySelector('.tiktok-live');
-      try{
-        const response = await fetch('https://www.tiktok.com/oembed?url=' + encodeURIComponent(url));
-        if(!response.ok) return;
-        const data = await response.json();
-        if(!data.html) return;
-        target.innerHTML = data.html.replace(/<script[\s\S]*?<\/script>/gi,'');
-        target.classList.add('loaded');
-        ensureTikTokScript();
-      }catch(e){
-        // fallback já está visível
-      }
-    });
+    if('IntersectionObserver' in window){
+      const observer=new IntersectionObserver(entries=>{
+        for(const e of entries){
+          if(e.isIntersecting&&e.intersectionRatio>=.4){mount(e.target);control(e.target,'play');}
+          else if(e.target.dataset.mounted==='true')control(e.target,'pause');
+        }
+      },{threshold:[0,.4,.7],rootMargin:'60px 0px'});
+      players.forEach(frame=>observer.observe(frame));
+    }else players.forEach(mount);
   </script>
 </body>
 </html>
