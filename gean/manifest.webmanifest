@@ -1,0 +1,17 @@
+{
+  "name": "Gean Sousa — Portfólio",
+  "short_name": "Gean Sousa",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#080808",
+  "theme_color": "#080808",
+  "icons": [
+    {
+      "src": "/gelz-icon-white.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
