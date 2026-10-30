@@ -65,7 +65,25 @@ document.addEventListener('click',e=>{
  if(a==='category'){state.cat=b.dataset.category;render()}
  if(a==='search')search();
  if(a==='detail')window.location.assign('./product.html?id='+encodeURIComponent(id));
- if(a==='cardColor'){state.colors[id]=b.dataset.color;render()}
+ if(a==='cardColor'){
+  const p=get(id);state.colors[id]=b.dataset.color;
+  const card=b.closest('.product-card');
+  if(card){
+   card.querySelectorAll('.card-colors button').forEach(node=>{
+    const selected=node.dataset.color===b.dataset.color;
+    node.classList.toggle('selected',selected);
+    node.setAttribute('aria-pressed',String(selected));
+   });
+   const img=card.querySelector('.card-image img');
+   const target=picked(p)?.image||p.image;
+   if(img&&img.getAttribute('src')!==target){
+    img.classList.remove('photo-changing');
+    void img.offsetWidth;
+    img.src=target;
+    img.classList.add('photo-changing');
+   }
+  }
+ }
  if(a==='selectColor'){state.colors[id]=b.dataset.color;state.size=null;state.photo=0;renderProduct()}
  if(a==='photo'){state.photo=+b.dataset.index;renderProduct()}
  if(a==='size'){state.size=b.dataset.size;renderProduct()}
