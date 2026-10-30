@@ -17,6 +17,15 @@ const swatchColors = {
  'lilás':'#baa0d3','cinza':'#888b90','laranja / creme':'#d9b086',
  'conjunto | blusa + calça':'#acc2d8'
 };
+const resolveSwatch = (label) => {
+ const n=label.toLowerCase();
+ if (swatchColors[n]) return swatchColors[n];
+ if (n.includes('marrom')) return swatchColors.marrom;
+ if (n.includes('preta')||n.includes('preto')) return swatchColors.preto;
+ if (n.includes('branco')) return swatchColors.branco;
+ if (n.includes('azul')) return swatchColors.azul;
+ return '#b5b9c1';
+};
 const rows = [
  ['1738128185415403253','Feminino','Blusa um ombro só com babados',59.99,'Rosa:P,M,G;Branco:P,M,G','4ba85e0a1e754153aefb7fe53852f44b,c9e5ee18d6e043fda9103f0120ff46d3,38abb0f67b6e4d2885373a1fc7d9b33f,9b50f9fd09fa4b1abba40d3a2f1df2cc'],
  ['1738128235053680373','Feminino','Regata feminina alcinha fina evasê',59.99,'Vinho:P,M,G','b85526140c3e421497bf3f2bd33c3e5b,6bd3f148d0b44f4197cdf455c989d54d,7c8a010fa0104bfe9fcef995dbeeaecd'],
@@ -55,7 +64,7 @@ export const catalog = rows.map(([id,category,name,price,colorRules,images]) => 
     const divider = rule.lastIndexOf(':');
     const name = rule.substring(0,divider);
     const sizes = rule.substring(divider+1).split(',');
-    return {name, hex:swatchColors[name.toLowerCase()]||'#c4c4c4', sizes, image:knownImages[id]?.[name]||null};
+    return {name, hex:resolveSwatch(name), sizes, image:knownImages[id]?.[name]||null};
   });
   const allImages=images.split(',').map(x=>x.trim()).filter(Boolean).map(remote);
   return {id, category, name, price, colors, images:allImages,
