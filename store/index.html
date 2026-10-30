@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#fafaf8">
+  <meta name="description" content="GELZ STORE — moda contemporânea, essencial e autoral. Conheça nossa coleção.">
+  <title>GELZ STORE — Moda & Essenciais</title>
+  <link rel="icon" href="../favicon.png">
+  <link rel="stylesheet" href="./styles.css">
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+  <div class="announcement">GELZ STORE <span>·</span> SUA NOVA EXPERIÊNCIA DE MODA</div>
+  <header class="topbar">
+    <button class="icon-button mobile-only" data-action="menu" aria-label="Abrir menu" aria-expanded="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
+    <a href="#inicio" class="wordmark" aria-label="Gelz Store — Início">GELZ <span>STORE</span></a>
+    <nav class="desktop-nav" aria-label="Navegação principal">
+      <a href="#colecao">Coleção</a><a href="#sobre">Sobre</a><a href="#atendimento">Atendimento</a>
+    </nav>
+    <div class="header-tools">
+      <button class="icon-button search-trigger" data-action="search" aria-label="Buscar produtos"><svg viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.5"/><path d="m16 16 5 5"/></svg></button>
+      <button class="icon-button" data-action="favorites" aria-label="Meus favoritos"><svg viewBox="0 0 24 24"><path d="M20.8 8.5c0 5-8.8 11.2-8.8 11.2S3.2 13.5 3.2 8.5a4.9 4.9 0 0 1 8.8-3 4.9 4.9 0 0 1 8.8 3z"/></svg></button>
+      <button class="icon-button cart-trigger" data-action="cart" aria-label="Abrir sacola"><svg viewBox="0 0 24 24"><path d="M4 8h16l-1 13H5L4 8zM9 8V6a3 3 0 0 1 6 0v2"/></svg><span class="cart-count" id="cartCount">0</span></button>
+    </div>
+  </header>
+  <nav id="mobileMenu" class="mobile-menu" aria-label="Menu móvel" hidden>
+    <a href="#colecao">Coleção completa</a><a href="#sobre">Nossa essência</a><a href="#atendimento">Fale com a Gelz</a>
+  </nav>
+  <main id="inicio">
+    <section class="hero" aria-labelledby="heroTitle">
+      <div class="hero-copy">
+        <div class="eyebrow"><span class="eyebrow-line"></span> COLEÇÃO GELZ</div>
+        <h1 id="heroTitle">O essencial<br><em>faz a diferença.</em></h1>
+        <p>Estilo que acompanha seu ritmo. Escolhas versáteis, design sem excessos e uma experiência feita para você.</p>
+        <a class="button dark" href="#colecao">EXPLORAR COLEÇÃO <span aria-hidden="true">↗</span></a>
+        <div class="hero-bottom"><span>ESTILO & IDENTIDADE</span><span>01 / GELZ STORE</span></div>
+      </div>
+      <div class="hero-visual"><img src="../bestseller-azul.webp" alt="Conjunto de moda da seleção Gelz Store" fetchpriority="high"><div class="hero-image-tag">CURADORIA GELZ <span>✳</span></div></div>
+    </section>
+    <section class="values" aria-label="Diferenciais">
+      <span>ESTILO SEM EXCESSOS</span><span>CURADORIA DE PRODUTOS</span><span>ATENDIMENTO PRÓXIMO</span>
+    </section>
+    <section id="colecao" class="section collection">
+      <div class="section-title"><div><div class="eyebrow">EXPLORE A GELZ</div><h2>A coleção<span class="light">.</span></h2></div><p>Uma seleção de peças para diferentes momentos. Confira as novidades e encontre seu próximo favorito.</p></div>
+      <div class="filters">
+        <div id="categories" class="category-tabs" role="group" aria-label="Filtrar categoria"></div>
+        <button class="filter-action" data-action="sort" id="sortButton" aria-label="Alterar ordenação">Ordenar: Destaques ↕</button>
+      </div>
+      <div class="searchbox" id="searchBox" hidden><label for="searchInput">O que você procura?</label><div class="search-input-wrap"><input id="searchInput" type="search" autocomplete="off" placeholder="Buscar por nome ou categoria"><button data-action="clearSearch" type="button" aria-label="Limpar busca">✕</button></div></div>
+      <div id="catalogStatus" class="catalog-status" role="status"></div>
+      <div class="product-grid" id="productGrid" aria-live="polite"></div>
+      <div class="collection-footnote">Disponibilidade, preços e condições sujeitos à confirmação no catálogo.</div>
+    </section>
+    <section id="sobre" class="editorial">
+      <div class="editorial-photo"><img src="../capuz-branco.webp" loading="lazy" alt="Conjunto da seleção Gelz Store"></div>
+      <div class="editorial-copy"><div class="eyebrow">NOSSA ESSÊNCIA</div><h2>Menos ruído.<br>Mais estilo.</h2><p>A Gelz Store nasce para reunir peças versáteis e uma compra descomplicada. Cada detalhe importa — da escolha do produto à experiência na sua mão.</p><a href="#colecao" class="underline-link">VER PEÇAS SELECIONADAS ↗</a></div>
+    </section>
+    <section class="newsletter" id="atendimento"><div><div class="eyebrow">FICOU COM ALGUMA DÚVIDA?</div><h2>Estamos por perto.</h2><p>Entre em contato com a Gelz Store para saber sobre produtos, tamanhos e disponibilidade.</p></div><a class="button light" href="https://instagram.com/agenciagelz" target="_blank" rel="noopener noreferrer">FALE COM A GELZ ↗</a></section>
+  </main>
+  <footer class="footer"><div class="footer-row"><a href="#inicio" class="wordmark">GELZ <span>STORE</span></a><p>MODA COM IDENTIDADE.</p></div><div class="footer-row footer-bottom"><small>© <span id="year"></span> GELZ STORE. TODOS OS DIREITOS RESERVADOS.</small><small>LOJA EM PREPARAÇÃO · PAGAMENTOS AINDA NÃO ATIVOS</small></div></footer>
+  <nav class="bottom-nav" aria-label="Navegação rápida">
+    <a href="#inicio" aria-label="Início"><svg viewBox="0 0 24 24"><path d="m3 11 9-8 9 8v10h-7v-6h-4v6H3z"/></svg><span>Início</span></a>
+    <button data-action="search" aria-label="Buscar"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><span>Buscar</span></button>
+    <button data-action="favorites" aria-label="Favoritos"><svg viewBox="0 0 24 24"><path d="M20.8 8.5c0 5-8.8 11.2-8.8 11.2S3.2 13.5 3.2 8.5a4.9 4.9 0 0 1 8.8-3 4.9 4.9 0 0 1 8.8 3z"/></svg><span>Favoritos</span></button>
+    <button data-action="cart" aria-label="Sacola"><svg viewBox="0 0 24 24"><path d="M4 8h16l-1 13H5L4 8zM9 8V6a3 3 0 0 1 6 0v2"/></svg><span>Sacola</span></button>
+    <button data-action="account" aria-label="Minha conta"><svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M4 21c0-5 3-7 8-7s8 2 8 7"/></svg><span>Perfil</span></button>
+  </nav>
+  <div class="overlay" id="overlay" hidden></div>
+  <aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle" hidden><div class="drawer-head"><h2 id="drawerTitle">Sua sacola</h2><button class="close-button" data-action="closeDrawer" aria-label="Fechar">✕</button></div><div class="drawer-content" id="drawerContent"></div></aside>
+  <div class="product-dialog" id="productDialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle" hidden><button class="dialog-close" data-action="closeDialog" aria-label="Fechar">✕</button><div id="dialogContent"></div></div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
