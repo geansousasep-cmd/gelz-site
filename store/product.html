@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#08090c">
+<meta name="description" content="GELZ STORE — detalhe da coleção.">
+<title>GELZ STORE — Coleção</title>
+<link rel="icon" href="../favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;550;600;650;700;750;800;850&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./design-v2.css">
+<link rel="stylesheet" href="./design-v3.css">
+<link rel="stylesheet" href="./product-v3.css">
+<script type="module" src="./product-v3.js"></script>
+</head>
+<body class="detail-page">
+<header class="header">
+ <div class="header-inner">
+  <a href="./" class="back-link" aria-label="Voltar à loja"><svg viewBox="0 0 24 24"><path d="M20 12H4m7-7-7 7 7 7"/></svg><span>VOLTAR</span></a>
+  <a href="./" class="logo">GELZ<span>STORE</span><i>.</i></a>
+  <div class="header-actions"><a class="header-collection-link" href="./#colecao">COLEÇÃO</a>
+   <button id="openCart" class="icon-btn" aria-label="Abrir sacola"><svg viewBox="0 0 24 24"><path d="M4 8h16l-1 13H5L4 8zM9 8V6a3 3 0 0 1 6 0v2"/></svg><b id="cartBadge" hidden>0</b></button>
+  </div>
+ </div>
+</header>
+<main class="product-main" id="productMain">
+ <section class="product-story" aria-label="Informações do produto">
+  <div class="product-gallery">
+   <div class="gallery-stage" id="galleryStage" tabindex="0" aria-label="Galeria do produto, deslize para visualizar fotos">
+    <img id="bigPhoto" src="../gelz-logo.webp" alt="Carregando produto">
+    <div class="gallery-topline"><span>GELZ / ORIGINAL SELECTION</span><span id="galleryCounter">01 / 01</span></div>
+    <button class="gallery-arrow prev" id="prevPhoto" aria-label="Foto anterior"><svg viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></svg></button>
+    <button class="gallery-arrow next" id="nextPhoto" aria-label="Próxima foto"><svg viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg></button>
+    <div class="gallery-dots" id="galleryDots"></div>
+   </div>
+   <div class="thumbnail-row" id="thumbnailRow"></div>
+   <div class="gallery-footnote" id="photoNote"></div>
+  </div>
+  <div class="product-summary" id="productSummary">
+   <nav class="crumbs" aria-label="Navegação"><a href="./">GELZ STORE</a><span>/</span><a href="./#colecao">COLEÇÃO</a><span>/</span><span id="crumbCategory"></span></nav>
+   <div class="product-tagline">GELZ CURATED / EDIÇÃO ESSENCIAL</div>
+   <h1 id="productTitle">Carregando coleção…</h1>
+   <div class="product-price-row"><strong id="productPrice"></strong><span>PREÇO DE REFERÊNCIA</span></div>
+   <div class="product-summary-divider"></div>
+   <div class="choose-heading"><strong>Cor</strong><span id="selectedColor"></span></div>
+   <div class="swatch-row" id="productColors" role="group" aria-label="Escolha uma cor"></div>
+   <div class="choose-heading"><strong>Tamanho</strong><span id="selectedSize">Selecione</span></div>
+   <div class="size-row" id="productSizes" role="group" aria-label="Escolha um tamanho"></div>
+   <p id="formError" class="detail-error" role="alert"></p>
+   <button class="add-to-bag" id="addToBag"><span>ADICIONAR À SACOLA</span><span id="addPrice"></span><svg viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
+   <div class="delivery-caption"><svg viewBox="0 0 24 24"><path d="M3 6h12v11H3zM15 10h3l3 4v3h-6M7 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4M18 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4"/></svg><span>Cálculo de frete disponível após a integração logística.</span></div>
+   <div class="product-info">
+    <details open><summary>Descrição do produto <span>＋</span></summary><div id="productDescription"></div></details>
+    <details><summary>Detalhes e medidas <span>＋</span></summary><div id="productSpecs"></div></details>
+    <details><summary>Envio, trocas e devoluções <span>＋</span></summary><p>Informações de envio e políticas da loja serão publicadas antes de ativar pedidos. As vendas nesta prévia estão desabilitadas.</p></details>
+   </div>
+  </div>
+ </section>
+ <section class="related-section"><div class="related-heading"><div><p class="eyebrow">CONTINUE EXPLORANDO</p><h2>Combine com seu estilo<span>.</span></h2></div><a href="./#colecao">VER COLEÇÃO ↗</a></div><div id="relatedProducts" class="related-grid"></div></section>
+</main>
+<footer class="detail-footer"><a href="./" class="logo">GELZ<span>STORE</span><i>.</i></a><span>ESTILO EM CADA DETALHE. / GELZ 2026</span></footer>
+<nav class="mobile-bottom" aria-label="Atalhos">
+ <a href="./"><svg viewBox="0 0 24 24"><path d="m3 11 9-8 9 8v10h-7v-6h-4v6H3z"/></svg><span>Início</span></a>
+ <a href="./#colecao"><svg viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="7"/><path d="m16 16 5 5"/></svg><span>Buscar</span></a>
+ <button id="saveFavorite"><svg viewBox="0 0 24 24"><path d="M20 9c0 5-8 11-8 11S4 14 4 9a4.5 4.5 0 0 1 8-3 4.5 4.5 0 0 1 8 3z"/></svg><span>Favorito</span></button>
+ <button id="mobileCart"><svg viewBox="0 0 24 24"><path d="M4 8h16l-1 13H5L4 8zM9 8V6a3 3 0 0 1 6 0v2"/></svg><span>Sacola</span></button>
+ <a href="./#sobre"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-5 3-8 8-8s8 3 8 8"/></svg><span>Perfil</span></a>
+</nav>
+<div id="bagShade" class="bag-shade" hidden></div>
+<aside class="bag-sheet" id="bagSheet" role="dialog" aria-modal="true" aria-label="Sua sacola" hidden>
+ <header><div><small>GELZ STORE</small><h2>Minha sacola</h2></div><button id="closeBag" aria-label="Fechar">✕</button></header>
+ <div id="bagItems" class="bag-items"></div>
+ <footer><p>Pagamentos ainda não estão disponíveis: falta confirmar estoque e integrar a conta do vendedor.</p><a class="bag-return" href="./#colecao">CONTINUAR EXPLORANDO ↗</a></footer>
+</aside>
+<div id="detailToast" class="toast" role="status"></div>
+</body>
+</html>
