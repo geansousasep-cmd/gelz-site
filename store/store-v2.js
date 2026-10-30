@@ -64,7 +64,7 @@ document.addEventListener('click',e=>{
  if(a==='menu')menu();
  if(a==='category'){state.cat=b.dataset.category;render()}
  if(a==='search')search();
- if(a==='detail')window.location.assign('./product.html?id='+encodeURIComponent(id));
+ if(a==='detail')window.location.assign('./product.html?id='+encodeURIComponent(id)+'&color='+encodeURIComponent(state.colors[id]||get(id).colors[0].name));
  if(a==='cardColor'){
   const p=get(id);state.colors[id]=b.dataset.color;
   const card=b.closest('.product-card');
