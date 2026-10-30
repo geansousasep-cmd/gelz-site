@@ -84,7 +84,8 @@ function setupGallery(){
 }
 function init(){
  if(!p){$('#productMain').innerHTML='<div style="min-height:65vh;padding:80px 22px;text-align:center"><h1>Peça não encontrada.</h1><p>Volte para explorar a coleção GELZ.</p><a class="btn btn-black" href="./">VER COLEÇÃO ↗</a></div>';return}
- chosenColor=p.colors[0].name;
+ const fromLink=new URLSearchParams(location.search).get('color');
+ chosenColor=p.colors.some(c=>c.name===fromLink)?fromLink:p.colors[0].name;
  document.title=p.name+' · GELZ STORE';
  $('#crumbCategory').textContent=p.category;
  $('#productTitle').textContent=p.name;
@@ -97,6 +98,7 @@ function init(){
  $('#productColors').addEventListener('click',e=>{
  const button=e.target.closest('[data-color]');if(!button)return;
  chosenColor=button.dataset.color;chosenSize=null;photoIndex=0;$('#formError').textContent='';
+ history.replaceState(null,'','./product.html?id='+encodeURIComponent(p.id)+'&color='+encodeURIComponent(chosenColor));
  drawOptions();drawGallery();
  });
  $('#productSizes').addEventListener('click',e=>{const button=e.target.closest('[data-size]');if(!button)return;chosenSize=button.dataset.size;$('#formError').textContent='';drawOptions()});
