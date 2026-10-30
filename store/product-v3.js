@@ -31,7 +31,7 @@ function drawGallery(){
  $('#thumbnailRow').innerHTML=album.map((src,i)=>'<button class="'+(i===photoIndex?'selected':'')+'" data-photo="'+i+'" aria-label="Ver imagem '+(i+1)+'" aria-current="'+(i===photoIndex)+'"><img loading="lazy" src="'+clean(src)+'" alt=""></button>').join('');
  $('#galleryDots').innerHTML=album.slice(0,9).map((_,i)=>'<button class="'+(i===photoIndex?'active':'')+'" data-photo="'+i+'" aria-label="Foto '+(i+1)+'"></button>').join('');
  const c=activeColor();
- $('#photoNote').textContent=c.image?'Foto de cor identificada no acervo GELZ. Outras imagens exibem os detalhes do modelo.':'Galeria original do anúncio. A exportação não identifica individualmente qual foto corresponde a cada cor.';
+ $('#photoNote').textContent=c.image?'Veja a cor selecionada e os detalhes do modelo.':'Fotos do modelo e detalhes da coleção. As opções de cor estão disponíveis acima.';
 }
 function drawOptions(){
  $('#selectedColor').textContent=chosenColor;
@@ -92,7 +92,7 @@ function init(){
  $('#addPrice').textContent=money(p.price);
  const desc=descriptions[p.id];
  $('#productDescription').textContent=desc||'Conheça as opções de cores e tamanhos deste modelo da coleção GELZ Store.';
- $('#productSpecs').textContent='Tamanhos disponíveis: '+[...new Set(p.colors.flatMap(x=>x.sizes))].join(', ')+'.\nCores disponíveis: '+p.colors.map(x=>x.name).join(', ')+'.\nEstoque e medidas finais serão confirmados antes de receber pedidos.';
+ $('#productSpecs').textContent='Tamanhos disponíveis: '+[...new Set(p.colors.flatMap(x=>x.sizes))].join(', ')+'.\nCores disponíveis: '+p.colors.map(x=>x.name).join(', ')+'.\nConsulte a disponibilidade da sua seleção quando as vendas forem ativadas.';
  drawOptions();drawGallery();drawRelated();setupGallery();count();
  $('#productColors').addEventListener('click',e=>{
  const button=e.target.closest('[data-color]');if(!button)return;
