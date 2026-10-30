@@ -18,10 +18,24 @@ function closeAll(){$('#cartDrawer').hidden=$('#productOverlay').hidden=$('#chec
 function filtered(){let result=catalog.filter(p=>(state.cat==='Todas'||p.category===state.cat)&&(!state.search||`${p.name} ${p.category}`.toLowerCase().includes(state.search.toLowerCase())));if(state.sort==='low')result.sort((a,b)=>a.price-b.price);if(state.sort==='high')result.sort((a,b)=>b.price-a.price);if(state.sort==='az')result.sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));return result}
 function render(){
  $('#categoryTabs').innerHTML=['Todas','Feminino','Masculino','Infantil'].map(c=>`<button class="${c===state.cat?'active':''}" data-action="category" data-category="${c}" aria-pressed="${c===state.cat}">${c}</button>`).join('');
- const items=filtered();$('#resultCount').textContent=`${items.length} PRODUTOS`;
- $('#productGrid').innerHTML=items.map(p=>`<article class="product-card">
- <div class="card-image"><img src="${esc(picked(p)?.image||p.image)}" alt="${esc(p.name)}" loading="lazy" onerror="this.onerror=null;this.src='../gelz-logo.webp'"><button class="card-click" data-action="detail" data-id="${p.id}" aria-label="Ver ${esc(p.name)}"></button><span class="card-label">GELZ SELECTION</span><button class="card-favorite ${state.favs.has(p.id)?'saved':''}" data-action="favorite" data-id="${p.id}" aria-label="Salvar favorito">${state.favs.has(p.id)?'♥':'♡'}</button></div>
- <div class="card-info"><div class="card-caption"><span>${p.category}</span><span>GELZ STORE</span></div><h3 data-action="detail" data-id="${p.id}">${esc(p.name)}</h3><div class="card-price">${money(p.price)}</div><div class="card-colors">${p.colors.slice(0,7).map(c=>swatch(p,c,false)).join('')}${p.colors.length>7?`<span>+${p.colors.length-7}</span>`:''}</div></div></article>`).join('')||'<p>Nenhum produto encontrado.</p>';
+ const items=filtered();$('#resultCount').textContent=`${items.length} PEÇAS NA COLEÇÃO`;
+ const card=p=>`<article class="product-card">
+ <div class="card-image"><img src="${esc(picked(p)?.image||p.image)}" alt="${esc(p.name)}" loading="lazy" onerror="this.onerror=null;this.src='../gelz-logo.webp'">
+ <button class="card-click" data-action="detail" data-id="${p.id}" aria-label="Ver ${esc(p.name)}"></button>
+ <span class="card-label">GELZ EDITION</span>
+ <button class="card-favorite ${state.favs.has(p.id)?'saved':''}" data-action="favorite" data-id="${p.id}" aria-label="Salvar favorito">${state.favs.has(p.id)?'♥':'♡'}</button></div>
+ <div class="card-info"><div class="card-caption"><span>${p.category}</span><span>GELZ STORE</span></div>
+ <h3 data-action="detail" data-id="${p.id}">${esc(p.name)}</h3><div class="card-price">${money(p.price)}</div>
+ <div class="card-colors" role="group" aria-label="Cores disponíveis">${p.colors.slice(0,8).map(c=>swatch(p,c,false)).join('')}${p.colors.length>8?`<span>+${p.colors.length-8}</span>`:''}</div>
+ </div></article>`;
+ const groups=state.cat==='Todas'?['Feminino','Masculino','Infantil']:[state.cat];
+ const labels={Feminino:['01 / FEMININO','Ela tem presença.','Peças femininas com personalidade.'],Masculino:['02 / MASCULINO','Estilo em movimento.','Essenciais masculinos para todos os dias.'],Infantil:['03 / INFANTIL','Pequenos, com atitude.','Conforto e estilo para a rotina deles.']};
+ $('#productGrid').innerHTML=groups.map(c=>{
+ const products=items.filter(p=>p.category===c);if(!products.length)return '';
+ const title=labels[c]||['GELZ','Toda a coleção',''];
+ return `<section class="collection-cluster" id="${c.toLowerCase()}"><header class="cluster-title">
+ <div><p class="eyebrow">${title[0]}</p><h3>${title[1]}</h3></div><p>${title[2]}</p></header>${products.map(card).join('')}</section>`
+ }).join('')||'<div class="empty-state">Nenhuma peça encontrada. Experimente outro filtro.</div>';
  badge();
 }
 function product(id){state.active=id;state.size=null;state.photo=0;lastFocus=document.activeElement;$('#cartDrawer').hidden=$('#checkoutPage').hidden=true;$('#productOverlay').hidden=false;renderProduct();lock()}
@@ -50,7 +64,7 @@ document.addEventListener('click',e=>{
  if(a==='menu')menu();
  if(a==='category'){state.cat=b.dataset.category;render()}
  if(a==='search')search();
- if(a==='detail')product(id);
+ if(a==='detail')window.location.assign('./product.html?id='+encodeURIComponent(id));
  if(a==='cardColor'){state.colors[id]=b.dataset.color;render()}
  if(a==='selectColor'){state.colors[id]=b.dataset.color;state.size=null;state.photo=0;renderProduct()}
  if(a==='photo'){state.photo=+b.dataset.index;renderProduct()}
