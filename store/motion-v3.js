@@ -33,3 +33,26 @@ function release(){clearTimeout(timer);if(held){held.classList.remove('is-presse
 document.addEventListener('pointerup',release,{passive:true});
 document.addEventListener('pointercancel',release,{passive:true});
 window.addEventListener('blur',release);
+
+
+// Hero editorial: rotativo, com pré-carregamento; evita exibir fotos indisponíveis.
+const heroImage=document.querySelector('.hero-photo img');
+const heroSlides=[
+ {src:'../bestseller-azul.webp',alt:'Conjunto da seleção GELZ Store'},
+ {src:'../capuz-preto.webp',alt:'Conjunto escuro com capuz da coleção GELZ'},
+ {src:'../running-modelo.webp',alt:'Conjunto esportivo da coleção GELZ'}
+];
+let slide=0;
+if(heroImage&&!reduced){
+ setInterval(()=>{
+  if(document.hidden)return;
+  const next=(slide+1)%heroSlides.length,photo=heroSlides[next];
+  const test=new Image();
+  test.onload=()=>{
+   if(document.hidden)return;
+   heroImage.classList.add('is-switching');
+   setTimeout(()=>{heroImage.src=photo.src;heroImage.alt=photo.alt;heroImage.classList.remove('is-switching');slide=next},260);
+  };
+  test.src=photo.src;
+ },6500);
+}
