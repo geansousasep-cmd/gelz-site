@@ -6,7 +6,7 @@ const API=(typeof window.GELZ_API_BASE==='string'?window.GELZ_API_BASE:'').repla
 let options=null,processing=false,checkoutReady=false;
 const zipDigits=value=>String(value||'').replace(/\D/g,'').slice(0,8);
 const toZip=digits=>digits.length>5?digits.slice(0,5)+'-'+digits.slice(5):digits;
-export function openCheckout(cart,catalog,onClose){
+export async function openCheckout(cart,catalog,onClose){
  const byId=new Map(catalog.map(x=>[x.id,x]));
  const subtotal=cart.reduce((s,x)=>s+byId.get(x.id).price*x.qty,0);
  $('#checkoutPage').hidden=false;options=null;checkoutReady=false;processing=false;
@@ -85,7 +85,7 @@ export function openCheckout(cart,catalog,onClose){
    const data=await result.json();if(!result.ok||!Array.isArray(data.options)||!data.options.length)throw Error(data.error||'Frete não disponível');
    options={zip,list:data.options};el.innerHTML=data.options.map((x,i)=>`<label class="freight-option"><input type="radio" name="freight" value="${esc(x.id)}" ${i===0?'checked':''}><span>${esc(x.name)}<small>${x.days?esc(x.days)+' dias úteis':'Prazo a confirmar'}</small></span><b>${money(x.price)}</b></label>`).join('');
    const updateFreight=()=>{const id=f.querySelector('input[name="freight"]:checked')?.value;const selected=options?.list.find(x=>x.id===id);$('#checkoutShipping').textContent=selected?money(selected.price):'A calcular';$('#checkoutTotal').textContent=money(subtotal+(selected?.price||0))};
-   el.addEventListener('change',updateFreight,{once:true});
+   el.addEventListener('change',updateFreight);
    updateFreight();
   }catch(error){el.textContent=error.message}
  });
