@@ -35,7 +35,8 @@ function targetHue(key) {
  if(/verde/.test(key))return [80,180];
  if(/amarelo/.test(key))return [35,75];
  if(/lilas/.test(key))return [255,315];
- if(/marrom|bege/.test(key))return [14,49];
+ // Marrom/bege são confundidos com pele e fundos neutros: exigem foto nomeada por SKU.
+ if(/marrom|bege/.test(key))return null;
  return null; // Evita inferir branco, preto e cinza a partir do fundo da foto.
 }
 async function analyzeImage(url,keys){
@@ -74,6 +75,8 @@ async function detect(product){
 export async function detectColorMedia(product,colorName){
  const initial=variantMedia(product,colorName);
  if(initial.verified||product.colors.length<2||!product.images?.length)return initial;
+ // Uma cor isolada não identifica comprimento de manga, estampa nem conjunto específico.
+ if(/manga curta|manga longa|estampad|blusa \+ calça/i.test(accents(colorName)))return initial;
  const key=colorKey(colorName);if(!targetHue(key))return initial;
  const analyzed=await detect(product);
  const matches=analyzed.filter(x=>{
