@@ -136,9 +136,9 @@
       content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
       background:linear-gradient(180deg,rgba(0,0,0,.02) 5%,rgba(0,0,0,.04) 30%,rgba(4,6,10,.67) 100%);
     }
-    .tile:hover{transform:translateY(-5px);border-color:rgba(255,255,255,.32);box-shadow:0 24px 50px #0007,inset 0 1px 0 #ffffff13}
+    .tile:hover,.has-js .tile.reveal.is-visible:hover{transform:translateY(-5px);border-color:rgba(255,255,255,.32);box-shadow:0 24px 50px #0007,inset 0 1px 0 #ffffff13}
     .tile:hover::before{opacity:1}
-    .tile:active{transform:scale(.992)}
+    .tile:active,.has-js .tile.reveal.is-visible:active{transform:scale(.992)}
     .tile-top,.tile-bottom{position:relative;z-index:3}
     .tile-top{display:flex;justify-content:space-between;align-items:start;gap:10px}
     .tile-tag{
