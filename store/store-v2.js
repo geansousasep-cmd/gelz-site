@@ -116,3 +116,7 @@ $('#sortSelect').addEventListener('change',e=>{state.sort=e.target.value;render(
 $('#scrim').addEventListener('click',closeAll);
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!$('#mobileMenu').hidden)menu();else closeAll()}});
 $('#year').textContent=new Date().getFullYear();render();
+if(new URLSearchParams(location.search).get('checkout')==='1'&&state.cart.length){
+ history.replaceState(null,'',location.pathname);
+ cart();$('#checkoutButton').click();
+}
