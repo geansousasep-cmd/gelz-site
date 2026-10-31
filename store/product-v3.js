@@ -1,16 +1,21 @@
 import {catalog} from './catalog-v2.js';
 import {descriptions} from './description-v3.js';
+import {variantMedia,detectColorMedia} from './variant-media.js';
 const $=selector=>document.querySelector(selector);
 const clean=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const money=n=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n);
 const productId=new URLSearchParams(location.search).get('id');
 const p=catalog.find(item=>item.id===productId);
 const raw=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(key)||'null')??fallback}catch{return fallback}};
-let chosenColor=null,chosenSize=null,photoIndex=0,zoomTimer=0,toastTimer=0;
+let chosenColor=null,chosenSize=null,photoIndex=0,zoomTimer=0,toastTimer=0,detectedMedia=null;
 const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-function images(){
- const color=p.colors.find(c=>c.name===chosenColor);
- return [...new Set([color?.image,...p.images].filter(Boolean))];
+function media(){return detectedMedia?.verified?detectedMedia:variantMedia(p,chosenColor)}
+function images(){return media().images.length?media().images:[p.image]}
+function refreshMedia(){
+ const requestedColor=chosenColor;
+ detectColorMedia(p,requestedColor).then(found=>{
+  if(chosenColor===requestedColor&&found.verified){detectedMedia=found;photoIndex=0;drawGallery()}
+ }).catch(()=>{});
 }
 function activeColor(){return p.colors.find(c=>c.name===chosenColor)||p.colors[0]}
 function toast(message){
@@ -31,7 +36,7 @@ function drawGallery(){
  $('#thumbnailRow').innerHTML=album.map((src,i)=>'<button class="'+(i===photoIndex?'selected':'')+'" data-photo="'+i+'" aria-label="Ver imagem '+(i+1)+'" aria-current="'+(i===photoIndex)+'"><img loading="lazy" src="'+clean(src)+'" alt=""></button>').join('');
  $('#galleryDots').innerHTML=album.slice(0,9).map((_,i)=>'<button class="'+(i===photoIndex?'active':'')+'" data-photo="'+i+'" aria-label="Foto '+(i+1)+'"></button>').join('');
  const c=activeColor();
- $('#photoNote').textContent=c.image?'Veja a cor selecionada e os detalhes do modelo.':'Fotos do modelo e detalhes da coleção. As opções de cor estão disponíveis acima.';
+ $('#photoNote').textContent=media().verified?'Foto correspondente à cor selecionada.':'Foto ilustrativa do modelo: a cor desta imagem ainda não foi confirmada. Confira a cor escolhida no pedido.';
 }
 function drawOptions(){
  $('#selectedColor').textContent=chosenColor;
@@ -57,7 +62,7 @@ function openBag(){
  const cart=raw('gelz:cart',[]).filter(x=>catalog.some(p=>p.id===x.id));
  $('#bagItems').innerHTML=cart.length?cart.map(item=>{
  const product=catalog.find(x=>x.id===item.id),color=product.colors.find(c=>c.name===item.color);
- return '<div class="bag-line"><img src="'+clean(color?.image||product.image)+'" alt="'+clean(product.name)+'"><div><h3>'+clean(product.name)+'</h3><p>'+clean(item.color)+' / '+clean(item.size)+' · '+item.qty+' unidade(s)</p><strong>'+money(product.price*item.qty)+'</strong></div></div>'
+ return '<div class="bag-line"><img src="'+clean(variantMedia(product,item.color).images[0]||product.image)+'" alt="'+clean(product.name)+'"><div><h3>'+clean(product.name)+'</h3><p>'+clean(item.color)+' / '+clean(item.size)+' · '+item.qty+' unidade(s)</p><strong>'+money(product.price*item.qty)+'</strong></div></div>'
  }).join(''):'<p>Sua sacola está vazia.</p>';
  $('#bagSheet').hidden=false;$('#bagShade').hidden=false;document.body.classList.add('is-locked');
 }
@@ -94,12 +99,12 @@ function init(){
  const desc=descriptions[p.id];
  $('#productDescription').textContent=desc||'Conheça as opções de cores e tamanhos deste modelo da coleção GELZ Store.';
  $('#productSpecs').textContent='Tamanhos disponíveis: '+[...new Set(p.colors.flatMap(x=>x.sizes))].join(', ')+'.\nCores disponíveis: '+p.colors.map(x=>x.name).join(', ')+'.\nConsulte a disponibilidade da sua seleção quando as vendas forem ativadas.';
- drawOptions();drawGallery();drawRelated();setupGallery();count();
+ drawOptions();drawGallery();refreshMedia();drawRelated();setupGallery();count();
  $('#productColors').addEventListener('click',e=>{
  const button=e.target.closest('[data-color]');if(!button)return;
- chosenColor=button.dataset.color;chosenSize=null;photoIndex=0;$('#formError').textContent='';
+ chosenColor=button.dataset.color;chosenSize=null;photoIndex=0;detectedMedia=null;$('#formError').textContent='';
  history.replaceState(null,'','./product.html?id='+encodeURIComponent(p.id)+'&color='+encodeURIComponent(chosenColor));
- drawOptions();drawGallery();
+ drawOptions();drawGallery();refreshMedia();
  });
  $('#productSizes').addEventListener('click',e=>{const button=e.target.closest('[data-size]');if(!button)return;chosenSize=button.dataset.size;$('#formError').textContent='';drawOptions()});
  $('#addToBag').addEventListener('click',saveCart);
