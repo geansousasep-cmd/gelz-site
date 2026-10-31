@@ -38,34 +38,35 @@ function targetHue(key) {
  if(/marrom|bege/.test(key))return [14,49];
  return null; // Evita inferir branco, preto e cinza a partir do fundo da foto.
 }
-async function scoreImage(url,key){
- const allowed=targetHue(key);if(!allowed)return 0;
+async function analyzeImage(url,keys){
+ const palettes=keys.map(key=>({key,range:targetHue(key)})).filter(x=>x.range);
+ const empty=palettes.map(x=>({key:x.key,value:0}));
+ if(!palettes.length)return {url,score:empty};
  try{
   const image=new Image();image.crossOrigin='anonymous';image.referrerPolicy='no-referrer';
   await new Promise((resolve,reject)=>{image.onload=resolve;image.onerror=reject;image.src=url});
   const canvas=document.createElement('canvas');canvas.width=54;canvas.height=64;
-  const ctx=canvas.getContext('2d',{willReadFrequently:true});if(!ctx)return 0;
+  const ctx=canvas.getContext('2d',{willReadFrequently:true});if(!ctx)return {url,score:empty};
   ctx.drawImage(image,0,0,54,64);
   const pixels=ctx.getImageData(0,0,54,64).data;
-  let count=0,matching=0;
+  let count=0;const tally=new Map(palettes.map(x=>[x.key,0]));
   for(let y=11;y<56;y+=2)for(let x=12;x<42;x+=2){
    const i=(y*54+x)*4;if(pixels[i+3]<200)continue;
    const c=shade([pixels[i],pixels[i+1],pixels[i+2]]);
-   // Descarta fundo branco, reflexos, sombras e pele clara.
    if(c.sat<.2||c.v<.17||c.v>.96)continue;
    count++;
-   const inside=allowed[0]>allowed[1]?(c.hue>=allowed[0]||c.hue<=allowed[1]):(c.hue>=allowed[0]&&c.hue<=allowed[1]);
-   if(inside)matching++;
+   for(const {key,range} of palettes){
+    const match=range[0]>range[1]?(c.hue>=range[0]||c.hue<=range[1]):(c.hue>=range[0]&&c.hue<=range[1]);
+    if(match)tally.set(key,tally.get(key)+1);
+   }
   }
-  return count>=80?matching/count:0;
- }catch{return 0} // Fotos remotas sem CORS nunca geram atribuição inventada.
+  return {url,score:palettes.map(x=>({key:x.key,value:count>=80?tally.get(x.key)/count:0}))};
+ }catch{return {url,score:empty}} // Mídias sem CORS permanecem ilustrativas.
 }
 async function detect(product){
  if(cache.has(product.id))return cache.get(product.id);
- const work=Promise.all((product.images||[]).slice(0,12).map(async url=>({url,score:await Promise.all(
-  [...new Set(product.colors.map(c=>colorKey(c.name)).filter(Boolean))]
-   .map(async key=>({key,value:await scoreImage(url,key)}))
- )})));
+ const keys=[...new Set(product.colors.map(c=>colorKey(c.name)).filter(Boolean))];
+ const work=Promise.all((product.images||[]).slice(0,12).map(url=>analyzeImage(url,keys)));
  cache.set(product.id,work);return work;
 }
 // Callbacks só substituem a galeria quando a identificação é de alta confiança.
