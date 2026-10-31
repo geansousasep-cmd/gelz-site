@@ -200,3 +200,24 @@ footer{background:#08090d;color:#fff}
  .mobile-bottom.is-compact svg{flex-shrink:0}
  .service-bullet{font-size:16px}
 }
+
+/* Preserve full-body fashion photography in hero and campaign without cropping. */
+.hero-photo { background: radial-gradient(circle at 78% 44%, #353943 0%, #17191f 54%, #0c0d11 100%); }
+.hero-photo img {
+ position:absolute;inset:auto 0 0 auto;width:min(58%,760px);height:100%;
+ object-fit:contain;object-position:center bottom;
+ animation:none!important;transform:none!important;
+ filter:brightness(.86) contrast(1.04) saturate(.87);
+}
+.hero:hover .hero-photo img {transform:none!important}
+.hero-shade {background:linear-gradient(90deg,rgba(5,7,11,.94) 0%,rgba(5,7,11,.73) 39%,rgba(5,7,11,.1) 78%),linear-gradient(0deg,rgba(5,7,11,.45),transparent 45%)}
+.campaign-image {display:flex;align-items:center;justify-content:center}
+.campaign-image img {object-fit:contain;object-position:center center}
+.media-accuracy {display:block;margin-top:8px;font-size:10px;line-height:1.5;color:#a8acb8}
+@media(max-width:780px){
+ .hero-photo {background:radial-gradient(circle at 50% 28%,#3b3f49,#12151a 80%)}
+ .hero-photo img {inset:5px 0 auto;width:100%;height:68%;object-fit:contain;object-position:center top}
+ .hero-shade {background:linear-gradient(0deg,rgba(4,5,8,.97) 0%,rgba(4,5,8,.65) 27%,rgba(4,5,8,.02) 65%)}
+ .campaign-image img {width:100%;height:100%;object-fit:contain}
+ .media-accuracy{font-size:9px}
+}
