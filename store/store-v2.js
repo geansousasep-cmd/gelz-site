@@ -1,5 +1,6 @@
 import {catalog} from './catalog-v2.js';
 import {openCheckout} from './checkout-v2.js';
+import {variantMedia,detectColorMedia} from './variant-media.js';
 const $=s=>document.querySelector(s);
 const esc=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money=n=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n);
@@ -8,7 +9,7 @@ const read=k=>{try{return JSON.parse(localStorage.getItem(k))||[]}catch{return [
 const state={cat:'Todas',search:'',sort:'featured',colors:{},favs:new Set(read('gelz:favs')),cart:read('gelz:cart').filter(x=>get(x.id)),active:null,size:null,photo:0};
 let lastFocus,toastTimer;
 const picked=p=>p.colors.find(c=>c.name===state.colors[p.id])||p.colors[0];
-const pics=p=>[...new Set([picked(p)?.image,...p.images].filter(Boolean))];
+const pics=p=>variantMedia(p,picked(p).name).images;
 const swatch=(p,c,detail)=>`<button data-action="${detail?'selectColor':'cardColor'}" data-id="${p.id}" data-color="${esc(c.name)}" class="${picked(p).name===c.name?'selected':''}" style="--swatch:${c.hex}" aria-label="${esc(c.name)}" title="${esc(c.name)}" aria-pressed="${picked(p).name===c.name}"></button>`;
 function save(){try{localStorage.setItem('gelz:favs',JSON.stringify([...state.favs]));localStorage.setItem('gelz:cart',JSON.stringify(state.cart))}catch{}}
 function toast(t){$('#toast').textContent=t;$('#toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('#toast').classList.remove('show'),2800)}
@@ -20,13 +21,13 @@ function render(){
  $('#categoryTabs').innerHTML=['Todas','Feminino','Masculino','Infantil'].map(c=>`<button class="${c===state.cat?'active':''}" data-action="category" data-category="${c}" aria-pressed="${c===state.cat}">${c}</button>`).join('');
  const items=filtered();$('#resultCount').textContent=`${items.length} PEÇAS NA COLEÇÃO`;
  const card=p=>`<article class="product-card">
- <div class="card-image"><img src="${esc(picked(p)?.image||p.image)}" alt="${esc(p.name)}" loading="lazy" onerror="this.onerror=null;this.src='../gelz-logo.webp'">
+ <div class="card-image"><img src="${esc(variantMedia(p,picked(p).name).images[0]||p.image)}" alt="${esc(p.name)}" loading="lazy" onerror="this.onerror=null;this.src='../gelz-logo.webp'">
  <button class="card-click" data-action="detail" data-id="${p.id}" aria-label="Ver ${esc(p.name)}"></button>
  <span class="card-label">GELZ EDITION</span>
  <button class="card-favorite ${state.favs.has(p.id)?'saved':''}" data-action="favorite" data-id="${p.id}" aria-label="Salvar favorito">${state.favs.has(p.id)?'♥':'♡'}</button></div>
  <div class="card-info"><div class="card-caption"><span>${p.category}</span><span>GELZ STORE</span></div>
  <h3 data-action="detail" data-id="${p.id}">${esc(p.name)}</h3><div class="card-price">${money(p.price)}</div>
- <div class="card-colors" role="group" aria-label="Cores disponíveis">${p.colors.slice(0,8).map(c=>swatch(p,c,false)).join('')}${p.colors.length>8?`<span>+${p.colors.length-8}</span>`:''}</div>
+ <div class="card-colors" role="group" aria-label="Cores disponíveis">${p.colors.slice(0,8).map(c=>swatch(p,c,false)).join('')}${p.colors.length>8?`<span>+${p.colors.length-8}</span>`:''}</div><small class="media-accuracy" data-media-note>${variantMedia(p,picked(p).name).verified?'Foto da cor selecionada':'Foto ilustrativa · cor não confirmada'}</small>
  </div></article>`;
  const groups=state.cat==='Todas'?['Feminino','Masculino','Infantil']:[state.cat];
  const labels={Feminino:['01 / FEMININO','Ela tem presença.','Peças femininas com personalidade.'],Masculino:['02 / MASCULINO','Estilo em movimento.','Essenciais masculinos para todos os dias.'],Infantil:['03 / INFANTIL','Pequenos, com atitude.','Conforto e estilo para a rotina deles.']};
@@ -53,7 +54,7 @@ function add(){const p=get(state.active);if(!state.size){$('#detailError').textC
 function cart(){lastFocus=document.activeElement;$('#productOverlay').hidden=$('#checkoutPage').hidden=true;$('#cartDrawer').hidden=false;renderCart();lock()}
 function renderCart(){
  const total=state.cart.reduce((s,x)=>s+get(x.id).price*x.qty,0);$('#cartSubtotal').textContent=money(total);
- $('#cartContents').innerHTML=state.cart.length?state.cart.map(x=>{const p=get(x.id),color=p.colors.find(c=>c.name===x.color);return `<div class="cart-item"><img src="${esc(color?.image||p.image)}" alt="${esc(p.name)}"><div class="cart-item-info"><h3>${esc(p.name)}</h3><small>${esc(x.color)} / ${esc(x.size)}</small><div class="cart-item-bottom"><div class="quantity"><button data-action="dec" data-key="${esc(x.key)}">−</button><span>${x.qty}</span><button data-action="inc" data-key="${esc(x.key)}">+</button></div><b class="cart-item-price">${money(p.price*x.qty)}</b></div><button data-action="remove" data-key="${esc(x.key)}" style="background:none;border:0;padding:12px 0;text-decoration:underline;font-size:11px">Remover</button></div></div>`}).join(''):'<div class="empty-cart">Sua sacola está vazia.<br>Descubra sua próxima peça na coleção.</div>';
+ $('#cartContents').innerHTML=state.cart.length?state.cart.map(x=>{const p=get(x.id),photo=variantMedia(p,x.color).images[0]||p.image;return `<div class="cart-item"><img src="${esc(photo)}" alt="${esc(p.name)}"><div class="cart-item-info"><h3>${esc(p.name)}</h3><small>${esc(x.color)} / ${esc(x.size)}</small><div class="cart-item-bottom"><div class="quantity"><button data-action="dec" data-key="${esc(x.key)}">−</button><span>${x.qty}</span><button data-action="inc" data-key="${esc(x.key)}">+</button></div><b class="cart-item-price">${money(p.price*x.qty)}</b></div><button data-action="remove" data-key="${esc(x.key)}" style="background:none;border:0;padding:12px 0;text-decoration:underline;font-size:11px">Remover</button></div></div>`}).join(''):'<div class="empty-cart">Sua sacola está vazia.<br>Descubra sua próxima peça na coleção.</div>';
  $('#checkoutButton').disabled=state.cart.length===0;badge();
 }
 function adjust(key,qty){const x=state.cart.find(x=>x.key===key);if(!x)return;x.qty=Math.max(0,Math.min(10,x.qty+qty));state.cart=state.cart.filter(x=>x.qty>0);save();renderCart()}
@@ -75,13 +76,23 @@ document.addEventListener('click',e=>{
     node.setAttribute('aria-pressed',String(selected));
    });
    const img=card.querySelector('.card-image img');
-   const target=picked(p)?.image||p.image;
-   if(img&&img.getAttribute('src')!==target){
-    img.classList.remove('photo-changing');
-    void img.offsetWidth;
-    img.src=target;
-    img.classList.add('photo-changing');
-   }
+   const selectedColor=b.dataset.color;
+   const immediate=variantMedia(p,selectedColor);
+   const target=immediate.images[0]||p.image;
+   const show=(media)=>{
+    if(state.colors[id]!==selectedColor)return;
+    const note=card.querySelector('[data-media-note]');
+    if(note)note.textContent=media.verified?'Foto da cor selecionada':'Foto ilustrativa · cor não confirmada';
+    const candidate=media.images[0]||p.image;
+    if(img&&img.getAttribute('src')!==candidate){
+     img.classList.remove('photo-changing');
+     void img.offsetWidth;
+     img.src=candidate;
+     img.classList.add('photo-changing');
+    }
+   };
+   show(immediate);
+   if(!immediate.verified)detectColorMedia(p,selectedColor).then(show).catch(()=>{});
   }
  }
  if(a==='selectColor'){state.colors[id]=b.dataset.color;state.size=null;state.photo=0;renderProduct()}
