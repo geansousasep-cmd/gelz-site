@@ -39,3 +39,24 @@ Para obter troca de foto fiel nas demais peças, são necessárias fotos nomeada
 
 ## Segurança
 Os dados de compradores só devem ser processados em ambiente configurado, com restrições adequadas de acesso e uma política de privacidade. Não configure credenciais no HTML, em arquivos públicos do GitHub nem em mensagens de chat.
+
+## Atualização — 31/10/2026 (vitrine e checkout)
+
+- O seletor de cores compartilha a mesma rotina entre home e página de produto, priorizando arquivos por cor e exibindo aviso quando a foto não corresponde comprovadamente à variante.
+- A galeria tenta identificar a cor da roupa nas fotos remotas apenas quando o servidor permite leitura e a confiança é alta; fotos sem confirmação não são atribuídas a um SKU.
+- Hero e campanha exibem imagens masculinas com `object-fit: contain` para evitar recortes da peça/modelo.
+- Checkout: etapas visíveis, foto das variantes, resumo de preços, CEP com busca opcional por ViaCEP, escolha de frete e total atualizado.
+- O botão de pagamento exige retorno `paymentsEnabled: true` da API `GET /api/health`. Sem backend conectado, fica bloqueado.
+- A página de detalhes encaminha a sacola ao checkout da home.
+
+### Para conectar Mercado Pago sem expor suas credenciais
+
+1. Criar uma aplicação em Mercado Pago Developers no modo **Teste** e habilitar Checkout Pro, sem inserir dados secretos no código público nem no chat.
+2. Implantar `store/api/worker.js` no Cloudflare Workers, configurar vínculo D1 e executar `schema.sql` e `seed.sql`.
+3. Completar e validar inventário por SKU, peso, dimensões e preços; os 280 SKUs começam com estoque **0** e inativos, por segurança.
+4. Configurar os **secrets** `MP_ACCESS_TOKEN`, `MP_WEBHOOK_SECRET`, `MELHOR_ENVIO_TOKEN`, e as variáveis `ORIGIN_CEP`, `STORE_ORIGIN`, `API_ORIGIN`, `MP_SANDBOX=true`, `ME_SANDBOX=true`.
+5. Configurar `window.GELZ_API_BASE` no HTML **antes** de carregar a aplicação JavaScript (apontar ao Worker publicado); registrar a URL HTTPS do webhook no Mercado Pago.
+6. Testar compra por conta comprador de teste e conferir estoque, frete, falhas, reenvio de webhook, reembolso e liberação de reservas de estoque. O backend atual requer implementação e validação da expiração das reservas antes de pagamentos de produção.
+7. Somente após a validação, ativar credenciais de **produção** e `PAYMENTS_ENABLED=true`, com implantação segura e política de trocas, privacidade e informações fiscais.
+
+**Importante:** esta atualização não conecta conta Mercado Pago, não fornece secrets, não publica o Worker e não autoriza cobranças reais. Ela prepara o frontend e preserva o checkout desabilitado por padrão.
