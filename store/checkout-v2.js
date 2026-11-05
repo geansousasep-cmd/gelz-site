@@ -1,3 +1,5 @@
+import {request,identity} from './commerce-client.js';
+import {mountPayment,unmountPayment} from './payment-brick.js';
 import {variantMedia} from './variant-media.js';
 const $=s=>document.querySelector(s);
 const money=v=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(v||0);
@@ -9,6 +11,7 @@ const toZip=digits=>digits.length>5?digits.slice(0,5)+'-'+digits.slice(5):digits
 export async function openCheckout(cart,catalog,onClose){
  const byId=new Map(catalog.map(x=>[x.id,x]));
  const subtotal=cart.reduce((s,x)=>s+byId.get(x.id).price*x.qty,0);
+ await unmountPayment();try{await identity();}catch{}
  $('#checkoutPage').hidden=false;options=null;checkoutReady=false;processing=false;
  $('#checkoutContents').innerHTML=`<div class="checkout-head"><p class="eyebrow">GELZ STORE / FINALIZAÇÃO</p><h1 id="checkoutTitle">Finalize sua compra<span class="checkout-dot">.</span></h1><div class="checkout-progress"><span>01 · IDENTIFICAÇÃO</span><span>02 · ENTREGA</span><span>03 · PAGAMENTO</span></div></div><div class="checkout-layout">
  <form id="gelzOrderForm">
@@ -25,13 +28,13 @@ export async function openCheckout(cart,catalog,onClose){
  <label>Bairro<input name="district" required maxlength="100" autocomplete="address-level3"></label>
  <label class="full-field">Cidade<input name="city" required maxlength="100" autocomplete="address-level2"></label></div></section>
  <section class="checkout-step"><h2><b>3</b> Frete e pagamento</h2>
- <p class="notice-block" id="checkoutReadiness">Verificando disponibilidade de pagamento e frete. Nenhum dado de cartão é solicitado nesta loja.</p>
+ <p class="notice-block" id="checkoutReadiness">Verificando disponibilidade de pagamento e frete. Os dados do cartão são tratados pelo componente seguro do Mercado Pago.</p>
  <div id="shippingStatus" class="shipping-results">Informe o CEP e consulte as opções de entrega.</div>
  <button class="btn btn-outline" id="quoteButton" type="button" disabled>CONSULTAR FRETE ↗</button>
- </section><p class="checkout-error" id="checkoutError" role="alert"></p>
- <button id="payButton" class="btn btn-black full" type="submit" disabled>PAGAR COM MERCADO PAGO <span>↗</span></button>
- <p class="detail-note">Ao avançar, o pagamento será processado no ambiente oficial do Mercado Pago, conforme os meios disponibilizados pela sua conta. A GELZ não solicita número de cartão.</p>
- </form>
+ </section><label>Cupom de desconto<input name="coupon" maxlength="30" placeholder="Opcional"></label><p class="checkout-error" id="checkoutError" role="alert"></p>
+ <button id="payButton" class="btn btn-black full" type="submit" disabled>CONTINUAR PARA PAGAMENTO <span>↗</span></button>
+ <p class="detail-note">Os dados do cartão são enviados diretamente ao Mercado Pago. Confira juros e parcelamento no componente de pagamento antes de confirmar.</p>
+ </form><section id="paymentArea" class="checkout-step" hidden></section>
  <aside class="checkout-resume"><h2>Resumo do pedido</h2>
  ${cart.map(x=>{const p=byId.get(x.id),photo=variantMedia(p,x.color).images[0]||p.image;return `<div class="checkout-line"><img src="${esc(photo)}" alt="${esc(p.name)}" loading="lazy"><div><strong>${esc(p.name)}</strong><small>${esc(x.color)} · ${esc(x.size)} · ${x.qty} un.</small></div><b>${money(p.price*x.qty)}</b></div>`}).join('')}
  <div class="checkout-row"><span>Subtotal</span><b>${money(subtotal)}</b></div><div class="checkout-row"><span>Frete</span><b id="checkoutShipping">A calcular</b></div>
@@ -97,11 +100,18 @@ export async function openCheckout(cart,catalog,onClose){
   const e=f.elements;
   const customer={name:e.name.value.trim(),email:e.email.value.trim(),phone:e.phone.value.trim()};
   const address={postalCode:e.postalCode.value.replace(/\D/g,''),state:e.state.value.trim(),street:e.street.value.trim(),number:e.number.value.trim(),complement:e.complement.value.trim(),district:e.district.value.trim(),city:e.city.value.trim()};
-  const payload={customer,address,shippingOptionId:shipping.value,items:cart.map(x=>({productId:x.id,color:x.color,size:x.size,quantity:x.qty}))};
+  const payload={customer,address,coupon:e.coupon.value.trim(),shippingOptionId:shipping.value,items:cart.map(x=>({productId:x.id,color:x.color,size:x.size,quantity:x.qty}))};
   processing=true;$('#payButton').disabled=true;
-  try{const result=await fetch(API+'/api/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});const data=await result.json();if(!result.ok)throw Error(data.error||'Erro ao gerar pagamento');
-   if(typeof data.checkoutUrl!=='string'||!/^https:\/\/(www\.)?(mercadopago\.com|mercadopago\.com\.br|mercadopago\.com\.ar|mercadopago\.com\.mx)\//.test(data.checkoutUrl))throw Error('URL de checkout inválida');
-   location.assign(data.checkoutUrl);
+  try{
+   const fingerprint=JSON.stringify(payload);let attempt;
+   try{attempt=JSON.parse(sessionStorage.getItem('gelz:checkout'));}catch{}
+   if(!attempt||attempt.fingerprint!==fingerprint)attempt={fingerprint,key:crypto.randomUUID(),token:crypto.randomUUID()+crypto.randomUUID()};
+   sessionStorage.setItem('gelz:checkout',JSON.stringify(attempt));
+   const data=await request('/api/checkout',{method:'POST',headers:{'Idempotency-Key':attempt.key},data:{...payload,accessToken:attempt.token}});
+   $('#checkoutTotal').textContent=money(data.totalCents/100);$('#checkoutShipping').textContent=money(data.shippingCents/100);
+   $('#paymentArea').hidden=false;await mountPayment(data,attempt.token);
+   f.querySelectorAll('input,select,button').forEach(el=>el.disabled=true);
+   $('#paymentArea').scrollIntoView({behavior:'smooth'});
   }catch(error){err.textContent=error.message;processing=false;$('#payButton').disabled=false}
  });
 }

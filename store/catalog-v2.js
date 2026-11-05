@@ -101,3 +101,9 @@ export const catalog = rows.map(([id,category,name,price,colorRules,images]) => 
   };
 });
 export const catalogStats = {products:24, variants:280, colors:89, source:'TikTok Shop — exportação 28/10/2026'};
+
+// Preserve the existing collection while disconnected; the API becomes authoritative only when configured.
+if(typeof window!=='undefined'&&window.GELZ_API_BASE){
+ try{const response=await fetch(window.GELZ_API_BASE.replace(/\/$/,'')+'/api/catalog',{signal:AbortSignal.timeout(6000)});if(!response.ok)throw Error('Catálogo indisponível');const data=await response.json();const live=data.products.map(p=>{const old=catalog.find(x=>x.id===p.id),colors=[...new Set(p.variants.map(v=>v.color))].map(name=>({name,hex:resolveSwatch(name),sizes:p.variants.filter(v=>v.color===name).map(v=>v.size),image:p.variants.find(v=>v.color===name&&v.image)?.image||old?.colors.find(c=>c.name===name)?.image}));const images=p.images.length?p.images:old?.images||[];return {...old,id:p.id,name:p.name,description:p.description,category:p.category||old?.category||'Masculino',price:p.price_cents/100,colors,variants:p.variants,images,image:images[0]||old?.image||'../gelz-logo.webp',checkoutReady:true};}).filter(p=>p.colors.length);catalog.splice(0,catalog.length,...live);}
+ catch{console.warn('Catálogo remoto indisponível; exibindo coleção de referência. O checkout confirma preço e disponibilidade.');}
+}

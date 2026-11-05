@@ -1,0 +1,17 @@
+import {setup,request,esc,money} from './commerce-client.js';
+let controller=null,poll=null;
+export async function mountPayment(order,token){
+ const c=await setup();if(controller){await controller.unmount();controller=null;}clearTimeout(poll);
+ const host=document.querySelector('#paymentArea');host.innerHTML=`<h2>Pagamento seguro</h2><p>Total confirmado: <b>${money(order.totalCents)}</b> · desconto ${money(order.discountCents)} · frete ${money(order.shippingCents)}</p><p>Ambiente de testes — não use um cartão real.</p><div id="paymentBrick"></div><div id="paymentStatus" role="status"></div>`;
+ if(!window.MercadoPago)await new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='https://sdk.mercadopago.com/js/v2';script.onload=resolve;script.onerror=()=>reject(Error('Não foi possível carregar o pagamento seguro.'));document.head.append(script);});
+ const headers={'X-Order-Token':token};
+ const show=o=>{const target=document.querySelector('#paymentStatus');if(!target)return;const labels={pending:'Aguardando pagamento',paying:'Pagamento pendente / em análise',paid:'Pagamento aprovado',rejected:'Pagamento recusado',cancelled:'Pagamento cancelado',expired:'Reserva expirada',refunded:'Pagamento reembolsado'};target.innerHTML=`<h3>${labels[o.status]||'Pedido em verificação'}</h3><p>Pedido ${esc(o.id)}</p>`;
+ const link=document.createElement('a');link.href='./order.html?id='+encodeURIComponent(o.id)+'#'+encodeURIComponent(token);link.textContent='Guardar link privado para acompanhar este pedido';link.target='_blank';link.rel='noopener';target.append(link);
+ if(o.payment?.qrCode){if(o.payment.qrImage&&/^[A-Za-z0-9+/=]+$/.test(o.payment.qrImage))target.innerHTML+=`<img width="220" height="220" alt="QR Code Pix" src="data:image/png;base64,${o.payment.qrImage}">`;const label=document.createElement('label');label.textContent='Pix copia e cola';const input=document.createElement('textarea');input.readOnly=true;input.value=o.payment.qrCode;label.append(input);target.append(label);const button=document.createElement('button');button.type='button';button.textContent='Copiar código Pix';button.onclick=async()=>{try{await navigator.clipboard.writeText(input.value);button.textContent='Código copiado';}catch{input.select();}};target.append(button);}
+ if(o.status==='paid'){localStorage.removeItem('gelz:cart');sessionStorage.removeItem('gelz:checkout');target.innerHTML+='<p>Pagamento confirmado. Sua compra está registrada.</p>';}
+ if(['pending','paying'].includes(o.status))poll=setTimeout(async()=>{try{show(await request('/api/orders/'+order.id,{headers}));}catch{const node=document.querySelector('#paymentStatus');if(node)node.append(' Não foi possível atualizar agora. Recarregue para consultar.');}},5000);
+ };
+ if(order.status!=='pending'){show(order);return;}
+ controller=await new window.MercadoPago(c.mpPublicKey,{locale:'pt-BR'}).bricks().create('payment','paymentBrick',{initialization:{amount:order.totalCents/100},customization:{paymentMethods:{creditCard:'all',debitCard:'all',bankTransfer:'all',maxInstallments:12}},callbacks:{onReady:()=>{},onError:()=>{document.querySelector('#paymentStatus').textContent='Não foi possível carregar este meio de pagamento.';},onSubmit:async({formData})=>{const result=await request('/api/orders/'+order.id+'/payment',{method:'POST',headers,data:{formData}});show(result);}}});
+}
+export async function unmountPayment(){clearTimeout(poll);if(controller){await controller.unmount();controller=null;}}

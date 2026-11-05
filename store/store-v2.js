@@ -1,3 +1,5 @@
+import {identity,request} from './commerce-client.js';
+import {unmountPayment} from './payment-brick.js';
 import {catalog} from './catalog-v2.js';
 import {openCheckout} from './checkout-v2.js';
 import {variantMedia,detectColorMedia} from './variant-media.js';
@@ -15,7 +17,7 @@ function save(){try{localStorage.setItem('gelz:favs',JSON.stringify([...state.fa
 function toast(t){$('#toast').textContent=t;$('#toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('#toast').classList.remove('show'),2800)}
 function badge(){const n=state.cart.reduce((s,x)=>s+x.qty,0);$('#cartBadge').hidden=n===0;$('#cartBadge').textContent=n;$('#cartQty').textContent=n}
 function lock(){const active=!$('#cartDrawer').hidden||!$('#productOverlay').hidden||!$('#checkoutPage').hidden;document.body.classList.toggle('is-locked',active);$('#scrim').hidden=!active||!$('#checkoutPage').hidden}
-function closeAll(){$('#cartDrawer').hidden=$('#productOverlay').hidden=$('#checkoutPage').hidden=true;lock();lastFocus?.focus?.()}
+function closeAll(){unmountPayment().catch(()=>{});$('#cartDrawer').hidden=$('#productOverlay').hidden=$('#checkoutPage').hidden=true;lock();lastFocus?.focus?.()}
 function filtered(){let result=catalog.filter(p=>(state.cat==='Todas'||p.category===state.cat)&&(!state.search||`${p.name} ${p.category}`.toLowerCase().includes(state.search.toLowerCase())));if(state.sort==='low')result.sort((a,b)=>a.price-b.price);if(state.sort==='high')result.sort((a,b)=>b.price-a.price);if(state.sort==='az')result.sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));return result}
 function render(){
  $('#categoryTabs').innerHTML=['Todas','Feminino','Masculino','Infantil'].map(c=>`<button class="${c===state.cat?'active':''}" data-action="category" data-category="${c}" aria-pressed="${c===state.cat}">${c}</button>`).join('');
@@ -98,7 +100,7 @@ document.addEventListener('click',e=>{
  if(a==='selectColor'){state.colors[id]=b.dataset.color;state.size=null;state.photo=0;renderProduct()}
  if(a==='photo'){state.photo=+b.dataset.index;renderProduct()}
  if(a==='size'){state.size=b.dataset.size;renderProduct()}
- if(a==='favorite'){state.favs.has(id)?state.favs.delete(id):state.favs.add(id);save();render();toast('Favoritos atualizados')}
+ if(a==='favorite'){state.favs.has(id)?state.favs.delete(id):state.favs.add(id);save();render();syncFavorites().catch(()=>toast('Entre na conta para sincronizar os favoritos'));toast('Favoritos atualizados')}
  if(a==='favorites'){state.cat='Todas';render();$('#colecao').scrollIntoView({behavior:'smooth'});toast('Seus favoritos estão salvos neste aparelho')}
  if(a==='add')add();
  if(a==='cart')cart();
@@ -106,8 +108,8 @@ document.addEventListener('click',e=>{
  if(a==='inc')adjust(b.dataset.key,1);
  if(a==='dec')adjust(b.dataset.key,-1);
  if(a==='remove'){state.cart=state.cart.filter(x=>x.key!==b.dataset.key);save();renderCart()}
- if(a==='checkout'){if(state.cart.length){lastFocus=document.activeElement;$('#cartDrawer').hidden=true;openCheckout(state.cart,catalog,()=>{closeAll()});lock()}}
- if(a==='account')toast('Login estará disponível quando a autenticação for conectada');
+ if(a==='checkout'){if(state.cart.length){lastFocus=document.activeElement;$('#cartDrawer').hidden=true;openCheckout(state.cart,catalog,()=>{closeAll()}).then(lock).catch(error=>toast(error.message))}}
+ if(a==='account')location.assign('./account/');
  if(a==='clearSearch'){$('#searchTerm').value='';state.search='';render()}
 });
 document.addEventListener('click',e=>{const a=e.target.closest('a[data-cat]');if(a){state.cat=a.dataset.cat;if(!$('#mobileMenu').hidden)menu();render()}});
@@ -120,3 +122,5 @@ if(new URLSearchParams(location.search).get('checkout')==='1'&&state.cart.length
  history.replaceState(null,'',location.pathname);
  cart();$('#checkoutButton').click();
 }
+async function syncFavorites(){const client=await identity();const {data:{session}}=await client.auth.getSession();if(session)await request('/api/account/favorites',{method:'POST',data:{ids:[...state.favs]}});}
+if(window.GELZ_API_BASE)identity().then(async client=>{const {data:{session}}=await client.auth.getSession();if(session){const data=await request('/api/account');state.favs=new Set(data.favorites);save();render();}}).catch(()=>{});

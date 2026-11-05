@@ -1,3 +1,4 @@
+import {identity,request} from './commerce-client.js';
 import {catalog} from './catalog-v2.js';
 import {descriptions} from './description-v3.js';
 import {variantMedia,detectColorMedia} from './variant-media.js';
@@ -72,6 +73,7 @@ function favorites(){
  if(fav.has(p.id)){fav.delete(p.id);toast('Removido dos favoritos')}else{fav.add(p.id);toast('Salvo nos favoritos')}
  try{localStorage.setItem('gelz:favs',JSON.stringify([...fav]))}catch{}
  $('#saveFavorite').classList.toggle('favorite-active',fav.has(p.id));
+ if(window.GELZ_API_BASE)identity().then(async client=>{const {data:{session}}=await client.auth.getSession();if(session)await request('/api/account/favorites',{method:'POST',data:{ids:[...fav]}});}).catch(()=>toast('Não foi possível sincronizar os favoritos.'));
 }
 function photoChange(shift){
  const len=images().length;if(len<2)return;
@@ -96,7 +98,7 @@ function init(){
  $('#productTitle').textContent=p.name;
  $('#productPrice').textContent=money(p.price);
  $('#addPrice').textContent=money(p.price);
- const desc=descriptions[p.id];
+ const desc=p.description||descriptions[p.id];
  $('#productDescription').textContent=desc||'Conheça as opções de cores e tamanhos deste modelo da coleção GELZ Store.';
  $('#productSpecs').textContent='Tamanhos disponíveis: '+[...new Set(p.colors.flatMap(x=>x.sizes))].join(', ')+'.\nCores disponíveis: '+p.colors.map(x=>x.name).join(', ')+'.\nConsulte a disponibilidade da sua seleção quando as vendas forem ativadas.';
  drawOptions();drawGallery();refreshMedia();drawRelated();setupGallery();count();
