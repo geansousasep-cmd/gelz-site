@@ -1,0 +1,11 @@
+{
+  "release": "gelz-store-whatsapp-filtros-2026-11-07",
+  "branch": "main",
+  "published_from": "github-actions",
+  "features": [
+    "filtros de cor e tamanho",
+    "categorias independentes",
+    "checkout por whatsapp sem login"
+  ],
+  "whatsapp": "5511971443233"
+}
