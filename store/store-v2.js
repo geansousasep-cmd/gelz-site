@@ -13,8 +13,16 @@ const brandTagsById={
 };
 const isProductMatch=(p,query)=>normal([p.name,p.category,p.description||'',p.brand||'',...(p.tags||[]),...(brandTagsById[p.id]||[])].join(' ')).includes(normal(query));
 const read=k=>{try{return JSON.parse(localStorage.getItem(k))||[]}catch{return []}};
-const state={cat:'Masculino',search:'',sort:'featured',sizeFilter:'',colorFilter:'',priceFilter:'',colors:{},favs:new Set(read('gelz:favs')),cart:read('gelz:cart').filter(x=>get(x.id)),active:null,size:null,photo:0};
+const categoryFromLink=()=>({masculino:'Masculino',feminino:'Feminino',infantil:'Infantil',todos:'Todas',todas:'Todas'})[normal(new URLSearchParams(window.location.search).get('categoria'))]||'Masculino';
+const state={cat:categoryFromLink(),search:'',sort:'featured',sizeFilter:'',colorFilter:'',priceFilter:'',colors:{},favs:new Set(read('gelz:favs')),cart:read('gelz:cart').filter(x=>get(x.id)),active:null,size:null,photo:0};
 let lastFocus,toastTimer;
+function syncCategoryUrl(category){
+ const url=new URL(window.location.href);
+ if(category==='Todas')url.searchParams.delete('categoria');
+ else url.searchParams.set('categoria',normal(category));
+ url.hash='colecao';
+ window.history.replaceState(null,'',url.pathname+url.search+url.hash);
+}
 const picked=p=>p.colors.find(c=>c.name===state.colors[p.id])||p.colors.find(c=>c.name===state.colorFilter)||p.colors[0];
 const pics=p=>variantMedia(p,picked(p).name).images;
 const swatch=(p,c,detail)=>`<button data-action="${detail?'selectColor':'cardColor'}" data-id="${p.id}" data-color="${esc(c.name)}" class="${picked(p).name===c.name?'selected':''}" style="--swatch:${c.hex}" aria-label="${esc(c.name)}" title="${esc(c.name)}" aria-pressed="${picked(p).name===c.name}"></button>`;
@@ -115,7 +123,7 @@ function menu(){
 document.addEventListener('click',e=>{
  const b=e.target.closest('[data-action]');if(!b)return;const a=b.dataset.action,id=b.dataset.id;
  if(a==='menu')menu();
- if(a==='category'){state.cat=b.dataset.category;state.search='';$('#searchTerm').value='';render()}
+ if(a==='category'){state.cat=b.dataset.category;state.search='';$('#searchTerm').value='';render();syncCategoryUrl(state.cat)}
  if(a==='search')search();
   if(a==='toggleFilters'){const panel=$('#filterControls');panel.hidden=!panel.hidden;b.setAttribute('aria-expanded',String(!panel.hidden))}
  if(a==='detail')window.location.assign('./product.html?id='+encodeURIComponent(id)+'&color='+encodeURIComponent(state.colors[id]||get(id).colors[0].name));
@@ -152,7 +160,7 @@ document.addEventListener('click',e=>{
  if(a==='photo'){state.photo=+b.dataset.index;renderProduct()}
  if(a==='size'){state.size=b.dataset.size;renderProduct()}
  if(a==='favorite'){state.favs.has(id)?state.favs.delete(id):state.favs.add(id);save();render();toast('Favoritos salvos neste aparelho')}
- if(a==='favorites'){state.cat='Todas';render();$('#colecao').scrollIntoView({behavior:'smooth'});toast('Seus favoritos estão salvos neste aparelho')}
+ if(a==='favorites'){state.cat='Todas';render();syncCategoryUrl(state.cat);$('#colecao').scrollIntoView({behavior:'smooth'});toast('Seus favoritos estão salvos neste aparelho')}
  if(a==='add')add();
  if(a==='cart')cart();
  if(a==='closeCart'||a==='closeProduct'||a==='closeCheckout')closeAll();
@@ -163,8 +171,8 @@ document.addEventListener('click',e=>{
  if(a==='clearSearch'){$('#searchTerm').value='';state.search='';render()}
  if(a==='resetFilters'){state.sizeFilter=state.colorFilter=state.priceFilter=state.search='';state.sort='featured';$('#searchTerm').value='';render()}
 });
-document.addEventListener('click',e=>{const a=e.target.closest('a[data-cat]');if(a){state.cat=a.dataset.cat;state.search='';$('#searchTerm').value='';if($('#mobileMenu').classList.contains('is-open'))menu();render()}});
-$('#searchTerm').addEventListener('input',e=>{state.search=e.target.value;if(state.search.trim())state.cat='Todas';render()});
+document.addEventListener('click',e=>{const a=e.target.closest('a[data-cat]');if(a){state.cat=a.dataset.cat;state.search='';$('#searchTerm').value='';if($('#mobileMenu').classList.contains('is-open'))menu();render();syncCategoryUrl(state.cat)}});
+$('#searchTerm').addEventListener('input',e=>{state.search=e.target.value;if(state.search.trim()){state.cat='Todas';syncCategoryUrl(state.cat)}render()});
 $('#sortSelect').addEventListener('change',e=>{state.sort=e.target.value;render()});
 $('#sizeFilter').addEventListener('change',e=>{state.sizeFilter=e.target.value;render()});
 $('#colorFilter').addEventListener('change',e=>{state.colorFilter=e.target.value;render()});
