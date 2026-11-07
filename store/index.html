@@ -7,8 +7,8 @@
 <link rel="icon" href="../favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;550;600;650;700;750;800;850&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./design-v2.css"><link rel="stylesheet" href="./design-v3.css">
-<script src="./commerce-config.js"></script><script type="module" src="./store-v2.js"></script><script type="module" src="./motion-v3.js"></script>
+<link rel="stylesheet" href="./design-v2.css"><link rel="stylesheet" href="./design-v3.css"><link rel="stylesheet" href="./vitrine-filtros.css?v=20261107-2">
+<script src="./commerce-config.js"></script><script type="module" src="./store-v2.js?v=20261107-2"></script><script type="module" src="./motion-v3.js"></script>
 </head>
 <body>
 <div class="announcement">NOVA ERA GELZ STORE <span>•</span> ESTILO, CURADORIA E MOVIMENTO</div>
@@ -16,7 +16,7 @@
   <div class="header-inner">
     <button class="icon-btn mobile-menu-toggle" type="button" data-action="menu" aria-label="Abrir menu"><svg viewBox="0 0 24 24"><path d="M3 7h18M3 12h18M3 17h18"/></svg></button>
     <a href="#inicio" class="logo">GELZ<span>STORE</span><i>.</i></a>
-    <nav class="header-nav"><a href="#colecao" data-cat="Todas">Novidades</a><a href="#feminino" data-cat="Todas">Feminino</a><a href="#masculino" data-cat="Todas">Masculino</a><a href="#infantil" data-cat="Todas">Infantil</a></nav>
+    <nav class="header-nav"><a href="#colecao" data-cat="Todas">Novidades</a><a href="#colecao" data-cat="Feminino">Feminino</a><a href="#colecao" data-cat="Masculino">Masculino</a><a href="#colecao" data-cat="Infantil">Infantil</a></nav>
     <div class="header-actions">
       <button class="icon-btn search-desktop" data-action="search" aria-label="Buscar"><svg viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="7"/><path d="m16 16 5 5"/></svg></button>
       
@@ -24,7 +24,7 @@
     </div>
   </div>
 </header>
-<div class="mobile-menu" id="mobileMenu" hidden><div class="menu-head">EXPLORAR GELZ <button aria-label="Fechar menu" data-action="menu">✕</button></div><a href="#colecao" data-cat="Todas">Toda coleção <span>↗</span></a><a href="#colecao" data-cat="Feminino">Feminino <span>↗</span></a><a href="#colecao" data-cat="Masculino">Masculino <span>↗</span></a><a href="#colecao" data-cat="Infantil">Infantil <span>↗</span></a><a href="#sobre">Nossa história <span>↗</span></a></div>
+<div class="mobile-menu" id="mobileMenu" hidden><div class="menu-head">EXPLORAR GELZ <button aria-label="Fechar menu" data-action="menu">✕</button></div><a href="#colecao" data-cat="Todas">Toda coleção <span>↗</span></a><a href="#colecao" data-cat="Feminino">Feminino <span>↗</span></a><a href="#colecao" data-cat="Masculino">Masculino <span>↗</span></a><a href="#colecao" data-cat="Infantil">Infantil <span>↗</span></a><a href="#colecao" data-cat="Todas">Ver coleção <span>↗</span></a></div>
 <main>
 <section class="hero" id="inicio">
   <div class="hero-photo"><img src="../bestseller-azul.webp" alt="Destaque da coleção GELZ Store" fetchpriority="high"></div>
@@ -38,12 +38,19 @@
   <div class="hero-meta"><span>CONTEMPORARY ESSENTIALS</span><span>DESDE 2026</span></div>
 </section>
 <div class="service-line"><span>MODA QUE ACOMPANHA VOCÊ</span><span aria-hidden="true">·</span><span>SELEÇÃO GELZ</span><span class="service-bullet" aria-hidden="true">·</span><span>IDENTIDADE EM CADA DETALHE</span></div>
-<section class="feature-section" id="sobre"><div class="section-intro"><p class="eyebrow">A NOVA GELZ</p><h2>O essencial nunca<br><em>sai de cena.</em></h2><p>Curadoria de peças para vestir a sua melhor versão, sem exageros e sem complicações.</p></div><div class="feature-aside"><div class="feature-word">G/</div><span>ESTILO QUE SE MOVE COM VOCÊ.</span></div></section>
 <section class="shop-section" id="colecao">
- <div class="section-head"><div><p class="eyebrow">ESCOLHAS QUE FAZEM A DIFERENÇA</p><h2>Explore a coleção<span>.</span></h2></div><p>Coleções com identidade. Explore por estilo, descubra cores e encontre a peça que combina com você.</p></div>
- <div class="toolbar"><div class="tabs" id="categoryTabs" role="group" aria-label="Categorias"></div><div class="toolbar-actions"><button id="openSearch" data-action="search" aria-label="Buscar produtos"><svg viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="7"/><path d="m16 16 5 5"/></svg> BUSCAR</button><select id="sortSelect" aria-label="Ordenar produtos"><option value="featured">Destaques</option><option value="low">Menor preço</option><option value="high">Maior preço</option><option value="az">Nome A–Z</option></select></div></div>
+ <div class="section-head compact-section-head"><div><p class="eyebrow">GELZ STORE / SELECIONE SUA LINHA</p><h2>Sua próxima peça<span>.</span></h2></div></div>
+ <div class="toolbar"><div class="tabs" id="categoryTabs" role="group" aria-label="Filtrar por categoria"></div></div>
+ <div class="filters-bar" aria-label="Filtros dos produtos">
+  <label class="filter-item"><span>TAMANHO</span><select id="sizeFilter" aria-label="Filtrar tamanho"><option value="">Todos os tamanhos</option></select></label>
+  <label class="filter-item"><span>COR</span><select id="colorFilter" aria-label="Filtrar cor"><option value="">Todas as cores</option></select></label>
+  <label class="filter-item"><span>PREÇO</span><select id="priceFilter" aria-label="Filtrar preço"><option value="">Todos os preços</option><option value="0-60">Até R$ 60</option><option value="60-90">R$ 60 a R$ 90</option><option value="90+">Acima de R$ 90</option></select></label>
+  <label class="filter-item filter-sort"><span>ORDENAR</span><select id="sortSelect" aria-label="Ordenar produtos"><option value="featured">Destaques</option><option value="low">Menor preço</option><option value="high">Maior preço</option><option value="az">Nome A–Z</option></select></label>
+  <button class="filter-search" data-action="search" aria-label="Buscar produtos"><svg viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="7"/><path d="m16 16 5 5"/></svg><span>Buscar</span></button>
+  <button class="filter-reset" id="resetFilters" data-action="resetFilters" hidden>Limpar filtros ×</button>
+ </div>
  <div class="search-panel" id="searchPanel" hidden><label for="searchTerm">O QUE VOCÊ ESTÁ PROCURANDO?</label><div class="search-wrap"><input id="searchTerm" type="search" placeholder="Buscar peças, conjuntos, saias..." autocomplete="off"><button data-action="clearSearch" aria-label="Limpar">✕</button></div></div>
- <div class="result-line"><span id="resultCount">Carregando produtos</span><span>FEMININO · MASCULINO · INFANTIL</span></div>
+ <div class="result-line"><span id="resultCount">Carregando produtos</span><span id="activeCollection">Toda a coleção GELZ</span></div>
  <div class="product-grid" id="productGrid" aria-live="polite"></div>
  <div class="shop-foot"><p>Escolha suas peças e fale com a GELZ pelo WhatsApp. Disponibilidade, valores finais e entrega são confirmados no atendimento.</p></div>
 </section>
@@ -52,7 +59,7 @@
 </main>
 <footer><div class="footer-top"><a class="logo" href="#inicio">GELZ<span>STORE</span><i>.</i></a><span>FEITO PARA TER ESTILO.</span></div><div class="footer-low"><span>© <span id="year"></span> GELZ STORE</span><span>PEDIDOS PELO WHATSAPP • ATENDIMENTO PERSONALIZADO</span></div><p style="padding:16px 24px;font-size:12px;line-height:1.8">GELZ Store · CNPJ 69.919.402/0001-90 · <a href="./policies.html">Privacidade, termos e devoluções</a> · <a href="mailto:contato@gelz.tech">Atendimento</a></p></footer>
 <nav class="mobile-bottom" aria-label="Atalhos">
-<a href="#inicio"><svg viewBox="0 0 24 24"><path d="m3 11 9-8 9 8v10h-7v-6h-4v6H3z"/></svg>Início</a>
+<a href="#colecao"><svg viewBox="0 0 24 24"><path d="m3 11 9-8 9 8v10h-7v-6h-4v6H3z"/></svg>Produtos</a>
 <button data-action="search"><svg viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="7"/><path d="m16 16 5 5"/></svg>Buscar</button>
 <button data-action="favorites"><svg viewBox="0 0 24 24"><path d="M20 9c0 5-8 11-8 11S4 14 4 9a4.5 4.5 0 0 1 8-3 4.5 4.5 0 0 1 8 3z"/></svg>Favoritos</button>
 <button data-action="cart"><svg viewBox="0 0 24 24"><path d="M4 8h16l-1 13H5L4 8zM9 8V6a3 3 0 0 1 6 0v2"/></svg>Sacola</button>
