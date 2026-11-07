@@ -120,3 +120,8 @@ body.detail-page{background:#0b0c11;color:#f7f7fa}
 .whatsapp-buy span:last-child{margin-left:auto;font-size:22px}
 .bag-return.whatsapp-checkout{width:100%;background:#c7d5ee;color:#151923;cursor:pointer;margin-bottom:12px}
 .bag-return.whatsapp-checkout:disabled{opacity:.45;cursor:not-allowed}
+
+.bag-quantity{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:12px}
+.bag-quantity button{border:1px solid #ffffff33;background:#ffffff0f;color:#fff;border-radius:9px;padding:6px 11px;cursor:pointer;font-size:14px}
+.bag-quantity span{font-size:12px;min-width:18px;text-align:center}
+.bag-quantity .bag-remove{border:0;background:none;padding:7px 0 7px 10px;text-decoration:underline;font-size:10px;color:#bec9dc}
