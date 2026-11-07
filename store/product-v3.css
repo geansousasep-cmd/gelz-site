@@ -114,3 +114,9 @@ body.detail-page{background:#0b0c11;color:#f7f7fa}
  .bag-sheet footer{padding-bottom:calc(30px + env(safe-area-inset-bottom))}
 }
 @media(prefers-reduced-motion:reduce){.gallery-stage>img,.gallery-stage{transition:none!important}}
+
+/* Atendimento via WhatsApp sem checkout ou cadastro de cliente */
+.whatsapp-buy{background:linear-gradient(120deg,#1d9e67,#116b49);color:#fff}
+.whatsapp-buy span:last-child{margin-left:auto;font-size:22px}
+.bag-return.whatsapp-checkout{width:100%;background:#c7d5ee;color:#151923;cursor:pointer;margin-bottom:12px}
+.bag-return.whatsapp-checkout:disabled{opacity:.45;cursor:not-allowed}
