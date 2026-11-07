@@ -1,5 +1,5 @@
 import {catalog} from './catalog-v2.js';
-import {orderWhatsAppUrl} from './whatsapp.js';
+import {orderWhatsAppUrl} from './whatsapp.js?v=20261107-2';
 import {descriptions} from './description-v3.js';
 import {variantMedia,detectColorMedia} from './variant-media.js';
 const $=selector=>document.querySelector(selector);
@@ -72,12 +72,24 @@ function openBag(){
  const cart=raw('gelz:cart',[]).filter(x=>catalog.some(p=>p.id===x.id));
  $('#bagItems').innerHTML=cart.length?cart.map(item=>{
  const product=catalog.find(x=>x.id===item.id),color=product.colors.find(c=>c.name===item.color);
- return '<div class="bag-line"><img src="'+clean(variantMedia(product,item.color).images[0]||product.image)+'" alt="'+clean(product.name)+'"><div><h3>'+clean(product.name)+'</h3><p>'+clean(item.color)+' / '+clean(item.size)+' · '+item.qty+' unidade(s)</p><strong>'+money(product.price*item.qty)+'</strong></div></div>'
+ return '<div class="bag-line"><img src="'+clean(variantMedia(product,item.color).images[0]||product.image)+'" alt="'+clean(product.name)+'"><div><h3>'+clean(product.name)+'</h3><p>'+clean(item.color)+' / '+clean(item.size)+'</p><strong>'+money(product.price*item.qty)+'</strong><div class="bag-quantity"><button type="button" data-bag-action="dec" data-bag-key="'+clean(item.key)+'" aria-label="Reduzir quantidade">−</button><span>'+item.qty+'</span><button type="button" data-bag-action="inc" data-bag-key="'+clean(item.key)+'" aria-label="Aumentar quantidade">+</button><button type="button" data-bag-action="remove" data-bag-key="'+clean(item.key)+'" class="bag-remove" aria-label="Remover peça">Remover</button></div></div></div>'
  }).join(''):'<p>Sua sacola está vazia.</p>';
  $('#whatsAppBag').disabled=!cart.length;
  $('#bagSheet').hidden=false;$('#bagShade').hidden=false;document.body.classList.add('is-locked');
 }
 function closeBag(){$('#bagSheet').hidden=true;$('#bagShade').hidden=true;document.body.classList.remove('is-locked')}
+function changeBag(event){
+ const button=event.target.closest('[data-bag-action]');
+ if(!button)return;
+ const cart=raw('gelz:cart',[]).filter(item=>catalog.some(product=>product.id===item.id));
+ const item=cart.find(entry=>entry.key===button.dataset.bagKey);
+ if(!item)return;
+ if(button.dataset.bagAction==='remove')item.qty=0;
+ if(button.dataset.bagAction==='inc')item.qty=Math.min(10,item.qty+1);
+ if(button.dataset.bagAction==='dec')item.qty=Math.max(0,item.qty-1);
+ try{localStorage.setItem('gelz:cart',JSON.stringify(cart.filter(entry=>entry.qty>0)))}catch{}
+ count();openBag();
+}
 function favorites(){
  const fav=new Set(raw('gelz:favs',[]));
  if(fav.has(p.id)){fav.delete(p.id);toast('Removido dos favoritos')}else{fav.add(p.id);toast('Salvo nos favoritos')}
@@ -121,6 +133,7 @@ function init(){
  $('#addToBag').addEventListener('click',saveCart);
  $('#buyWhatsApp').addEventListener('click',buyWhatsApp);
  $('#whatsAppBag').addEventListener('click',finishBagWhatsApp);
+ $('#bagItems').addEventListener('click',changeBag);
  $('#openCart').addEventListener('click',openBag);$('#mobileCart').addEventListener('click',openBag);
  $('#closeBag').addEventListener('click',closeBag);$('#bagShade').addEventListener('click',closeBag);
  $('#saveFavorite').addEventListener('click',favorites);
