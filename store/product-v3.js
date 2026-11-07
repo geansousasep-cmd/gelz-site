@@ -1,5 +1,5 @@
-import {identity,request} from './commerce-client.js';
 import {catalog} from './catalog-v2.js';
+import {orderWhatsAppUrl} from './whatsapp.js';
 import {descriptions} from './description-v3.js';
 import {variantMedia,detectColorMedia} from './variant-media.js';
 const $=selector=>document.querySelector(selector);
@@ -49,6 +49,15 @@ function drawRelated(){
  const others=catalog.filter(x=>x.category===p.category&&x.id!==p.id).slice(0,4);
  $('#relatedProducts').innerHTML=others.map(x=>'<a href="./product.html?id='+encodeURIComponent(x.id)+'" class="related-card"><img loading="lazy" src="'+clean(x.image)+'" alt="'+clean(x.name)+'"><strong>'+clean(x.name)+'</strong><small>'+money(x.price)+'</small></a>').join('');
 }
+function buyWhatsApp(){
+ if(!chosenSize){$('#formError').textContent='Selecione um tamanho para falar com a GELZ no WhatsApp.';return}
+ window.location.assign(orderWhatsAppUrl([{id:p.id,color:chosenColor,size:chosenSize,qty:1}],catalog));
+}
+function finishBagWhatsApp(){
+ const cart=raw('gelz:cart',[]).filter(item=>catalog.some(product=>product.id===item.id));
+ if(!cart.length){toast('Adicione uma peça à sacola para continuar.');return}
+ window.location.assign(orderWhatsAppUrl(cart,catalog));
+}
 function saveCart(){
  if(!chosenSize){$('#formError').textContent='Selecione um tamanho antes de adicionar à sacola.';return}
  const cart=raw('gelz:cart',[]).filter(x=>catalog.some(p=>p.id===x.id));
@@ -65,6 +74,7 @@ function openBag(){
  const product=catalog.find(x=>x.id===item.id),color=product.colors.find(c=>c.name===item.color);
  return '<div class="bag-line"><img src="'+clean(variantMedia(product,item.color).images[0]||product.image)+'" alt="'+clean(product.name)+'"><div><h3>'+clean(product.name)+'</h3><p>'+clean(item.color)+' / '+clean(item.size)+' · '+item.qty+' unidade(s)</p><strong>'+money(product.price*item.qty)+'</strong></div></div>'
  }).join(''):'<p>Sua sacola está vazia.</p>';
+ $('#whatsAppBag').disabled=!cart.length;
  $('#bagSheet').hidden=false;$('#bagShade').hidden=false;document.body.classList.add('is-locked');
 }
 function closeBag(){$('#bagSheet').hidden=true;$('#bagShade').hidden=true;document.body.classList.remove('is-locked')}
@@ -73,7 +83,6 @@ function favorites(){
  if(fav.has(p.id)){fav.delete(p.id);toast('Removido dos favoritos')}else{fav.add(p.id);toast('Salvo nos favoritos')}
  try{localStorage.setItem('gelz:favs',JSON.stringify([...fav]))}catch{}
  $('#saveFavorite').classList.toggle('favorite-active',fav.has(p.id));
- if(window.GELZ_API_BASE)identity().then(async client=>{const {data:{session}}=await client.auth.getSession();if(session)await request('/api/account/favorites',{method:'POST',data:{ids:[...fav]}});}).catch(()=>toast('Não foi possível sincronizar os favoritos.'));
 }
 function photoChange(shift){
  const len=images().length;if(len<2)return;
@@ -100,7 +109,7 @@ function init(){
  $('#addPrice').textContent=money(p.price);
  const desc=p.description||descriptions[p.id];
  $('#productDescription').textContent=desc||'Conheça as opções de cores e tamanhos deste modelo da coleção GELZ Store.';
- $('#productSpecs').textContent='Tamanhos disponíveis: '+[...new Set(p.colors.flatMap(x=>x.sizes))].join(', ')+'.\nCores disponíveis: '+p.colors.map(x=>x.name).join(', ')+'.\nConsulte a disponibilidade da sua seleção quando as vendas forem ativadas.';
+ $('#productSpecs').textContent='Tamanhos disponíveis: '+[...new Set(p.colors.flatMap(x=>x.sizes))].join(', ')+'.\nCores disponíveis: '+p.colors.map(x=>x.name).join(', ')+'.\nConsulte a disponibilidade e frete pelo WhatsApp.';
  drawOptions();drawGallery();refreshMedia();drawRelated();setupGallery();count();
  $('#productColors').addEventListener('click',e=>{
  const button=e.target.closest('[data-color]');if(!button)return;
@@ -110,6 +119,8 @@ function init(){
  });
  $('#productSizes').addEventListener('click',e=>{const button=e.target.closest('[data-size]');if(!button)return;chosenSize=button.dataset.size;$('#formError').textContent='';drawOptions()});
  $('#addToBag').addEventListener('click',saveCart);
+ $('#buyWhatsApp').addEventListener('click',buyWhatsApp);
+ $('#whatsAppBag').addEventListener('click',finishBagWhatsApp);
  $('#openCart').addEventListener('click',openBag);$('#mobileCart').addEventListener('click',openBag);
  $('#closeBag').addEventListener('click',closeBag);$('#bagShade').addEventListener('click',closeBag);
  $('#saveFavorite').addEventListener('click',favorites);
