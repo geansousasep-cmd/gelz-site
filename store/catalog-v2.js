@@ -94,7 +94,8 @@ export const catalog = rows.map(([id,category,name,price,colorRules,images]) => 
     return {name, hex:resolveSwatch(name), sizes, image:knownImages[id]?.[name]||null};
   });
   const allImages=[...new Set([...images.split(',').map(x=>x.trim()).filter(Boolean),...(extraPhotoHashes[id]||'').split(',').filter(Boolean)])].map(remote);
-  return {id, category, name, price, colors, images:allImages,
+  const brands={'1737402795005347743':'Nike TN','1737492614665439135':'Nike','1737402743979542431':'Louis Vuitton'};
+  return {id, category, name, brand:brands[id]||'', price, colors, images:allImages,
     image:colors.find(x=>x.image)?.image||allImages[0], // Foto de referência apenas
     variants:colors.flatMap(c=>c.sizes.map(size=>({color:c.name,size,price,stock:null}))),
     shippingReady:false, checkoutReady:false, status:'catalogado'
@@ -104,6 +105,6 @@ export const catalogStats = {products:24, variants:280, colors:89, source:'TikTo
 
 // Preserve the existing collection while disconnected; the API becomes authoritative only when configured.
 if(typeof window!=='undefined'&&window.GELZ_API_BASE){
- try{const response=await fetch(window.GELZ_API_BASE.replace(/\/$/,'')+'/api/catalog',{signal:AbortSignal.timeout(6000)});if(!response.ok)throw Error('Catálogo indisponível');const data=await response.json();const live=data.products.map(p=>{const old=catalog.find(x=>x.id===p.id),colors=[...new Set(p.variants.map(v=>v.color))].map(name=>({name,hex:resolveSwatch(name),sizes:p.variants.filter(v=>v.color===name).map(v=>v.size),image:p.variants.find(v=>v.color===name&&v.image)?.image||old?.colors.find(c=>c.name===name)?.image}));const images=p.images.length?p.images:old?.images||[];return {...old,id:p.id,name:p.name,description:p.description,category:p.category||old?.category||'Masculino',price:p.price_cents/100,colors,variants:p.variants,images,image:images[0]||old?.image||'../gelz-logo.webp',checkoutReady:true};}).filter(p=>p.colors.length);catalog.splice(0,catalog.length,...live);}
+ try{const response=await fetch(window.GELZ_API_BASE.replace(/\/$/,'')+'/api/catalog',{signal:AbortSignal.timeout(6000)});if(!response.ok)throw Error('Catálogo indisponível');const data=await response.json();const live=data.products.map(p=>{const old=catalog.find(x=>x.id===p.id),colors=[...new Set(p.variants.map(v=>v.color))].map(name=>({name,hex:resolveSwatch(name),sizes:p.variants.filter(v=>v.color===name).map(v=>v.size),image:p.variants.find(v=>v.color===name&&v.image)?.image||old?.colors.find(c=>c.name===name)?.image}));const images=p.images.length?p.images:old?.images||[];return {...old,id:p.id,name:p.name,brand:p.brand||old?.brand||'',tags:p.tags||old?.tags||[],description:p.description,category:p.category||old?.category||'Masculino',price:p.price_cents/100,colors,variants:p.variants,images,image:images[0]||old?.image||'../gelz-logo.webp',checkoutReady:true};}).filter(p=>p.colors.length);catalog.splice(0,catalog.length,...live);}
  catch{console.warn('Catálogo remoto indisponível; exibindo coleção de referência. O checkout confirma preço e disponibilidade.');}
 }
