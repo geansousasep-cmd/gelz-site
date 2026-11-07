@@ -5,8 +5,15 @@ const $=s=>document.querySelector(s);
 const esc=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money=n=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n);
 const get=id=>catalog.find(p=>p.id===id);
+const normal=t=>String(t??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR');
+const brandTagsById={
+ '1737402795005347743':['nike','tn','nike tn'],
+ '1737492614665439135':['nike'],
+ '1737402743979542431':['louis vuitton','lv']
+};
+const isProductMatch=(p,query)=>normal([p.name,p.category,p.description||'',p.brand||'',...(p.tags||[]),...(brandTagsById[p.id]||[])].join(' ')).includes(normal(query));
 const read=k=>{try{return JSON.parse(localStorage.getItem(k))||[]}catch{return []}};
-const state={cat:'Todas',search:'',sort:'featured',sizeFilter:'',colorFilter:'',priceFilter:'',colors:{},favs:new Set(read('gelz:favs')),cart:read('gelz:cart').filter(x=>get(x.id)),active:null,size:null,photo:0};
+const state={cat:'Masculino',search:'',sort:'featured',sizeFilter:'',colorFilter:'',priceFilter:'',colors:{},favs:new Set(read('gelz:favs')),cart:read('gelz:cart').filter(x=>get(x.id)),active:null,size:null,photo:0};
 let lastFocus,toastTimer;
 const picked=p=>p.colors.find(c=>c.name===state.colors[p.id])||p.colors.find(c=>c.name===state.colorFilter)||p.colors[0];
 const pics=p=>variantMedia(p,picked(p).name).images;
@@ -35,7 +42,7 @@ function filterOptions(){
 function filtered(){
  let result=catalog.filter(p=>{
   if(state.cat!=='Todas'&&p.category!==state.cat)return false;
-  if(state.search&&!(''+p.name+' '+p.category).toLocaleLowerCase('pt-BR').includes(state.search.toLocaleLowerCase('pt-BR')))return false;
+  if(state.search&&!isProductMatch(p,state.search))return false;
   if(!p.colors.some(c=>(!state.colorFilter||c.name===state.colorFilter)&&(!state.sizeFilter||c.sizes.includes(state.sizeFilter))))return false;
   if(state.priceFilter==='0-60'&&p.price>60)return false;
   if(state.priceFilter==='60-90'&&(p.price<60||p.price>90))return false;
@@ -48,7 +55,7 @@ function filtered(){
  return result;
 }
 function render(){
- $('#categoryTabs').innerHTML=['Todas','Feminino','Masculino','Infantil'].map(c=>`<button class="${c===state.cat?'active':''}" data-action="category" data-category="${c}" aria-pressed="${c===state.cat}">${c==='Todas'?'Todos':c}</button>`).join('');
+ $('#categoryTabs').innerHTML=['Masculino','Feminino','Infantil','Todas'].map(c=>`<button class="${c===state.cat?'active':''}" data-action="category" data-category="${c}" aria-pressed="${c===state.cat}">${c==='Todas'?'Todos':c}</button>`).join('');
  filterOptions();
  const items=filtered();$('#resultCount').textContent=`${items.length} ${items.length===1?'PRODUTO ENCONTRADO':'PRODUTOS ENCONTRADOS'}`;
  $('#activeCollection').textContent=state.cat==='Todas'?'Toda a coleção':state.cat;
@@ -61,7 +68,7 @@ function render(){
  <h3 data-action="detail" data-id="${p.id}">${esc(p.name)}</h3><div class="card-price">${money(p.price)}</div>
  <div class="card-colors" role="group" aria-label="Cores disponíveis">${p.colors.slice(0,8).map(c=>swatch(p,c,false)).join('')}${p.colors.length>8?`<span>+${p.colors.length-8}</span>`:''}</div><small class="media-accuracy" data-media-note>${variantMedia(p,picked(p).name).verified?'Foto da cor selecionada':'Foto ilustrativa · cor não confirmada'}</small>
  </div></article>`;
- const groups=state.cat==='Todas'?['Feminino','Masculino','Infantil']:[state.cat];
+ const groups=state.cat==='Todas'?['Masculino','Feminino','Infantil']:[state.cat];
  const labels={Feminino:['01 / FEMININO','Moda feminina'],Masculino:['02 / MASCULINO','Moda masculina'],Infantil:['03 / INFANTIL','Moda infantil']};
  $('#productGrid').innerHTML=groups.map(c=>{
  const products=items.filter(p=>p.category===c);if(!products.length)return '';
@@ -91,12 +98,26 @@ function renderCart(){
 }
 function adjust(key,qty){const x=state.cart.find(x=>x.key===key);if(!x)return;x.qty=Math.max(0,Math.min(10,x.qty+qty));state.cart=state.cart.filter(x=>x.qty>0);save();renderCart()}
 function search() {closeAll();$('#searchPanel').hidden=false;$('#colecao').scrollIntoView({behavior:'smooth'});setTimeout(()=>$('#searchTerm').focus(),200)}
-function menu(){$('#mobileMenu').hidden=!$('#mobileMenu').hidden;document.body.classList.toggle('is-locked',!$('#mobileMenu').hidden)}
+let menuCloseTimer;
+function menu(){
+ const panel=$('#mobileMenu');
+ clearTimeout(menuCloseTimer);
+ if(panel.classList.contains('is-open')){
+  panel.classList.remove('is-open');
+  document.body.classList.remove('is-locked');
+  menuCloseTimer=setTimeout(()=>{if(!panel.classList.contains('is-open'))panel.hidden=true},350);
+ }else{
+  panel.hidden=false;
+  requestAnimationFrame(()=>panel.classList.add('is-open'));
+  document.body.classList.add('is-locked');
+ }
+}
 document.addEventListener('click',e=>{
  const b=e.target.closest('[data-action]');if(!b)return;const a=b.dataset.action,id=b.dataset.id;
  if(a==='menu')menu();
- if(a==='category'){state.cat=b.dataset.category;render()}
+ if(a==='category'){state.cat=b.dataset.category;state.search='';$('#searchTerm').value='';render()}
  if(a==='search')search();
+  if(a==='toggleFilters'){const panel=$('#filterControls');panel.hidden=!panel.hidden;b.setAttribute('aria-expanded',String(!panel.hidden))}
  if(a==='detail')window.location.assign('./product.html?id='+encodeURIComponent(id)+'&color='+encodeURIComponent(state.colors[id]||get(id).colors[0].name));
  if(a==='cardColor'){
   const p=get(id);state.colors[id]=b.dataset.color;
@@ -142,8 +163,8 @@ document.addEventListener('click',e=>{
  if(a==='clearSearch'){$('#searchTerm').value='';state.search='';render()}
  if(a==='resetFilters'){state.sizeFilter=state.colorFilter=state.priceFilter=state.search='';state.sort='featured';$('#searchTerm').value='';render()}
 });
-document.addEventListener('click',e=>{const a=e.target.closest('a[data-cat]');if(a){state.cat=a.dataset.cat;if(!$('#mobileMenu').hidden)menu();render()}});
-$('#searchTerm').addEventListener('input',e=>{state.search=e.target.value;render()});
+document.addEventListener('click',e=>{const a=e.target.closest('a[data-cat]');if(a){state.cat=a.dataset.cat;state.search='';$('#searchTerm').value='';if($('#mobileMenu').classList.contains('is-open'))menu();render()}});
+$('#searchTerm').addEventListener('input',e=>{state.search=e.target.value;if(state.search.trim())state.cat='Todas';render()});
 $('#sortSelect').addEventListener('change',e=>{state.sort=e.target.value;render()});
 $('#sizeFilter').addEventListener('change',e=>{state.sizeFilter=e.target.value;render()});
 $('#colorFilter').addEventListener('change',e=>{state.colorFilter=e.target.value;render()});
