@@ -38,9 +38,13 @@ window.addEventListener('blur',release);
 // Hero editorial: rotativo, com pré-carregamento; evita exibir fotos indisponíveis.
 const heroImage=document.querySelector('.hero-photo img');
 const heroSlides=[
- {src:'../bestseller-azul.webp',alt:'Conjunto da seleção GELZ Store'},
- {src:'../capuz-preto.webp',alt:'Conjunto escuro com capuz da coleção GELZ'},
- {src:'../running-modelo.webp',alt:'Conjunto esportivo da coleção GELZ'}
+ {src:'../bestseller-azul.webp',alt:'Conjunto masculino azul bebê Nike TN'},
+ {src:'../bestseller-preto.webp',alt:'Conjunto masculino preto Nike TN'},
+ {src:'../bestseller-vermelho.webp',alt:'Conjunto masculino vermelho Nike TN'},
+ {src:'../bestseller-branco.webp',alt:'Conjunto masculino branco Nike TN'},
+ {src:'../capuz-marinho.webp',alt:'Conjunto masculino azul marinho com capuz'},
+ {src:'../lv-bege.webp',alt:'Conjunto masculino bege'},
+ {src:'../running-modelo.webp',alt:'Conjunto esportivo GELZ'}
 ];
 let slide=0;
 if(heroImage&&!reduced){
@@ -54,5 +58,5 @@ if(heroImage&&!reduced){
    setTimeout(()=>{heroImage.src=photo.src;heroImage.alt=photo.alt;heroImage.classList.remove('is-switching');slide=next},260);
   };
   test.src=photo.src;
- },6500);
+ },5300);
 }
