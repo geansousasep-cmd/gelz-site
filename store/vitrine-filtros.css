@@ -1,0 +1,46 @@
+/* GELZ Store — vitrine compacta, categorias isoladas e filtros */
+html{scroll-padding-top:88px}
+.shop-section{padding-top:34px}
+.compact-section-head{display:flex;justify-content:space-between;align-items:end;margin-bottom:20px}
+.compact-section-head .eyebrow{font-size:9px;letter-spacing:.18em;margin:0 0 7px;color:#aab1c3}
+.compact-section-head h2{font-size:clamp(25px,3vw,38px);letter-spacing:-.052em;margin:0;line-height:1.15}
+.toolbar{border:0;margin-bottom:0;padding:0}
+.tabs{display:flex;align-items:center;gap:7px;overflow:visible;width:100%;border-bottom:1px solid #ffffff1e;padding:0 0 13px}
+.tabs button{flex:1 1 0;min-width:0;min-height:42px;padding:11px 14px;border:1px solid #ffffff21;border-radius:999px;background:#ffffff05;color:#b7bdcb;font-size:12px;font-weight:650;letter-spacing:.01em;transition:background .2s,border-color .2s,color .2s}
+.tabs button.active{background:#e2e9f7;border-color:#e2e9f7;color:#171b27;box-shadow:0 7px 22px #0002}
+.tabs button:focus-visible,.filter-item select:focus-visible,.filter-search:focus-visible,.filter-reset:focus-visible{outline:2px solid #c6dcff;outline-offset:2px}
+.filters-bar{display:flex;flex-wrap:wrap;align-items:end;gap:10px;padding:14px 0 17px}
+.filter-item{min-width:0;flex:1 1 135px;display:flex;flex-direction:column;gap:6px;color:#9ba5b8;font-size:9px;font-weight:730;letter-spacing:.085em}
+.filter-item select{appearance:auto;width:100%;min-width:0;min-height:41px;border:1px solid #ffffff23;background:#171a22;color:#eef2fa;border-radius:11px;padding:9px 10px;font:600 12px/1.3 Inter,system-ui,sans-serif}
+.filter-search,.filter-reset{height:41px;border:1px solid #ffffff28;border-radius:11px;background:#20242e;color:#e9edf5;font:650 11px Inter,system-ui,sans-serif;padding:0 15px;display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer}
+.filter-search svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8}
+.filter-reset{background:transparent;color:#b4bed1}
+.filter-reset[hidden]{display:none}
+.result-line{padding-top:2px;margin-bottom:10px;font-size:10px}
+.collection-cluster{margin:0 0 38px;gap:21px 18px}
+.cluster-title{padding:18px 1px 9px;margin-top:10px;border-top:1px solid #ffffff26;align-items:center}
+.cluster-title h3{font-size:clamp(21px,2.5vw,30px);letter-spacing:-.046em;margin:4px 0 0}
+.cluster-title .eyebrow{font-size:9px;margin:0;color:#9fa9b9}
+.cluster-title>p{font-size:11px;color:#aab3c3;white-space:nowrap}
+.product-card{min-width:0}
+.shop-foot{margin-top:20px}
+@media(min-width:781px){.hero{min-height:510px;height:clamp(500px,55vw,615px)}.shop-section{padding-bottom:82px}}
+@media(max-width:780px){
+ .hero{height:clamp(425px,61svh,520px);min-height:425px}
+ .hero-content{padding-bottom:54px}
+ .shop-section{padding:30px 12px 64px}
+ .compact-section-head{margin-bottom:17px}
+ .compact-section-head h2{font-size:clamp(24px,6.5vw,33px)}
+ .tabs{gap:5px;padding-bottom:11px}
+ .tabs button{font-size:11px;padding:11px 5px;min-height:39px}
+ .filters-bar{gap:8px;padding:11px 0 17px}
+ .filter-item{flex:1 1 calc(50% - 8px)}
+ .filter-item select{min-height:40px;font-size:11px;padding:8px}
+ .filter-search{flex:1 1 auto}
+ .filter-reset{flex:1 1 auto}
+ .result-line{font-size:9px;margin-bottom:2px}
+ .collection-cluster{gap:20px 10px;margin-bottom:23px}
+ .cluster-title{padding:15px 1px 5px;margin-top:0}
+ .cluster-title h3{font-size:22px}
+ .cluster-title>p{font-size:10px}
+}
