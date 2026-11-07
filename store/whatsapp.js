@@ -1,7 +1,7 @@
 // Atendimento comercial da GELZ Store: este fluxo inicia apenas uma conversa,
 // sem criar pedido ou cobrar o cliente no site.
 const PHONE = '5511971443233';
-const brl = value => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(value);
+const brl = value => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(value).replace(/[\u00a0\u202f]/g,' ');
 
 export function orderWhatsAppUrl(items,catalog){
  const byId=new Map(catalog.map(product=>[product.id,product]));
