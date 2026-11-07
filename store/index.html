@@ -19,7 +19,7 @@
     <nav class="header-nav"><a href="#colecao" data-cat="Todas">Novidades</a><a href="#feminino" data-cat="Todas">Feminino</a><a href="#masculino" data-cat="Todas">Masculino</a><a href="#infantil" data-cat="Todas">Infantil</a></nav>
     <div class="header-actions">
       <button class="icon-btn search-desktop" data-action="search" aria-label="Buscar"><svg viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="7"/><path d="m16 16 5 5"/></svg></button>
-      <button class="icon-btn user-desktop" data-action="account" aria-label="Minha conta"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-5 3-8 8-8s8 3 8 8"/></svg></button>
+      
       <button class="icon-btn cart-toggle" data-action="cart" aria-label="Abrir sacola"><svg viewBox="0 0 24 24"><path d="M4 8h16l-1 13H5L4 8zM9 8V6a3 3 0 0 1 6 0v2"/></svg><b id="cartBadge" hidden>0</b></button>
     </div>
   </div>
@@ -45,23 +45,23 @@
  <div class="search-panel" id="searchPanel" hidden><label for="searchTerm">O QUE VOCÊ ESTÁ PROCURANDO?</label><div class="search-wrap"><input id="searchTerm" type="search" placeholder="Buscar peças, conjuntos, saias..." autocomplete="off"><button data-action="clearSearch" aria-label="Limpar">✕</button></div></div>
  <div class="result-line"><span id="resultCount">Carregando produtos</span><span>FEMININO · MASCULINO · INFANTIL</span></div>
  <div class="product-grid" id="productGrid" aria-live="polite"></div>
- <div class="shop-foot"><p>Catálogo com preços de referência. Pedidos ainda dependem da configuração de estoque e pagamentos.</p></div>
+ <div class="shop-foot"><p>Escolha suas peças e fale com a GELZ pelo WhatsApp. Disponibilidade, valores finais e entrega são confirmados no atendimento.</p></div>
 </section>
 <section class="campaign"><div class="campaign-image"><img src="../capuz-preto.webp" alt="Estilo urbano da Gelz Store" loading="lazy"></div><div class="campaign-content"><p class="eyebrow">SUA IDENTIDADE PRIMEIRO</p><h2>Vista sua<br>atitude.</h2><p>Do casual ao essencial. Encontre a peça que combina com seu próximo momento.</p><a href="#colecao" class="btn btn-black">VER COLEÇÃO <span>↗</span></a></div></section>
 <section class="editorial-footer"><p class="eyebrow">GELZ STORE / CONTATO</p><h2>Vista o que faz<br><em>sentido pra você.</em></h2><a href="https://instagram.com/agenciagelz" target="_blank" rel="noopener noreferrer">ACOMPANHE A GELZ ↗</a></section>
 </main>
-<footer><div class="footer-top"><a class="logo" href="#inicio">GELZ<span>STORE</span><i>.</i></a><span>FEITO PARA TER ESTILO.</span></div><div class="footer-low"><span>© <span id="year"></span> GELZ STORE</span><span>PRÉVIA DO E-COMMERCE • PAGAMENTOS NÃO ATIVOS</span></div><p style="padding:16px 24px;font-size:12px;line-height:1.8">GELZ Store · CNPJ 69.919.402/0001-90 · <a href="./policies.html">Privacidade, termos e devoluções</a> · <a href="mailto:contato@gelz.tech">Atendimento</a></p></footer>
+<footer><div class="footer-top"><a class="logo" href="#inicio">GELZ<span>STORE</span><i>.</i></a><span>FEITO PARA TER ESTILO.</span></div><div class="footer-low"><span>© <span id="year"></span> GELZ STORE</span><span>PEDIDOS PELO WHATSAPP • ATENDIMENTO PERSONALIZADO</span></div><p style="padding:16px 24px;font-size:12px;line-height:1.8">GELZ Store · CNPJ 69.919.402/0001-90 · <a href="./policies.html">Privacidade, termos e devoluções</a> · <a href="mailto:contato@gelz.tech">Atendimento</a></p></footer>
 <nav class="mobile-bottom" aria-label="Atalhos">
 <a href="#inicio"><svg viewBox="0 0 24 24"><path d="m3 11 9-8 9 8v10h-7v-6h-4v6H3z"/></svg>Início</a>
 <button data-action="search"><svg viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="7"/><path d="m16 16 5 5"/></svg>Buscar</button>
 <button data-action="favorites"><svg viewBox="0 0 24 24"><path d="M20 9c0 5-8 11-8 11S4 14 4 9a4.5 4.5 0 0 1 8-3 4.5 4.5 0 0 1 8 3z"/></svg>Favoritos</button>
 <button data-action="cart"><svg viewBox="0 0 24 24"><path d="M4 8h16l-1 13H5L4 8zM9 8V6a3 3 0 0 1 6 0v2"/></svg>Sacola</button>
-<button data-action="account"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-5 3-8 8-8s8 3 8 8"/></svg>Perfil</button>
+
 </nav>
 <div class="scrim" id="scrim" hidden></div>
-<section class="drawer" id="cartDrawer" role="dialog" aria-modal="true" aria-labelledby="cartTitle" hidden><div class="drawer-head"><div><p class="eyebrow">GELZ STORE</p><h2 id="cartTitle">Sua sacola <span id="cartQty">0</span></h2></div><button data-action="closeCart" aria-label="Fechar sacola">✕</button></div><div id="cartContents" class="drawer-content"></div><div class="drawer-footer"><div class="subtotal-row"><span>Subtotal</span><b id="cartSubtotal">R$ 0,00</b></div><p>Frete calculado na finalização do pedido.</p><button id="checkoutButton" class="btn btn-black full" data-action="checkout">IR PARA O CHECKOUT <span>→</span></button></div></section>
+<section class="drawer" id="cartDrawer" role="dialog" aria-modal="true" aria-labelledby="cartTitle" hidden><div class="drawer-head"><div><p class="eyebrow">GELZ STORE</p><h2 id="cartTitle">Sua sacola <span id="cartQty">0</span></h2></div><button data-action="closeCart" aria-label="Fechar sacola">✕</button></div><div id="cartContents" class="drawer-content"></div><div class="drawer-footer"><div class="subtotal-row"><span>Subtotal</span><b id="cartSubtotal">R$ 0,00</b></div><p>Frete e disponibilidade confirmados pelo WhatsApp.</p><button id="checkoutButton" class="btn btn-black full" data-action="checkout">FINALIZAR NO WHATSAPP <span>↗</span></button></div></section>
 <section class="product-overlay" id="productOverlay" role="dialog" aria-modal="true" aria-labelledby="detailTitle" hidden><button class="floating-close" data-action="closeProduct" aria-label="Fechar produto">✕</button><div id="productContents"></div></section>
-<section class="checkout-page" id="checkoutPage" role="dialog" aria-modal="true" aria-labelledby="checkoutTitle" hidden><div class="checkout-top"><button data-action="closeCheckout">← VOLTAR PARA A LOJA</button><a class="logo" href="#inicio">GELZ<span>STORE</span><i>.</i></a><span>AMBIENTE SEGURO</span></div><div id="checkoutContents" class="checkout-body"></div></section>
+
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </body>
 </html>
