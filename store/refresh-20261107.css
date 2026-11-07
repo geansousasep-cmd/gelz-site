@@ -1,0 +1,134 @@
+/* GELZ Store — edição 07/11: vitrine limpa, foco no masculino e interação de vidro */
+:root{--gelz-ice:#c4e7ff;--gelz-glass:rgba(235,247,255,.09)}
+.hero{
+  height:clamp(560px,60vw,735px);
+  min-height:520px;
+  background:radial-gradient(circle at 77% 41%,#263951 0%,#111923 41%,#080a10 76%);
+  isolation:isolate;
+}
+.hero-photo{overflow:hidden;background:radial-gradient(circle at 74% 50%,#253140,#080b12 69%)}
+.hero-photo img{
+  width:min(73%,920px);height:100%;left:auto;right:0;
+  object-fit:contain;object-position:center center;
+  filter:brightness(.9) contrast(1.03) saturate(1.08);
+  transform:scale(1.025);
+  animation:gelzHeroIntro 1.35s cubic-bezier(.19,.72,.18,1) both;
+}
+.hero:hover .hero-photo img{transform:scale(1.045)}
+.hero-shade{
+ background:linear-gradient(90deg,rgba(6,9,15,.91) 0%,rgba(8,11,18,.6) 34%,rgba(8,12,19,.1) 77%),
+ linear-gradient(0deg,rgba(4,7,13,.85),transparent 42%);
+ pointer-events:none;
+}
+.hero-content{max-width:720px;position:relative;z-index:2}
+.hero-content h1{font-size:clamp(59px,7.1vw,102px);letter-spacing:-.083em}
+.hero-content>p:not(.eyebrow){max-width:365px;font-size:clamp(13px,1.1vw,15px);line-height:1.7}
+.hero-cta.btn{
+ min-height:42px;padding:11px 18px;gap:0;
+ background:rgba(250,253,255,.96);color:#0e1520;
+ border-radius:15px;font-size:12px;letter-spacing:-.015em;font-weight:720;
+ border:1px solid rgba(255,255,255,.8);
+ box-shadow:0 9px 28px #0004, inset 0 1px #fff;
+}
+.hero-cta:hover{background:#fff;box-shadow:0 13px 35px #0006}
+.hero-cta:active{transform:scale(.97)}
+.shop-section{padding-top:32px}
+.compact-filter-actions{
+ display:flex;gap:10px;align-items:center;justify-content:flex-start;
+ margin:0 0 7px;
+}
+.filter-toggle,.compact-filter-actions .filter-search{
+ display:inline-flex;align-items:center;justify-content:center;gap:9px;
+ min-height:39px;padding:8px 15px;border-radius:13px;
+ border:1px solid rgba(222,236,255,.22);
+ background:linear-gradient(125deg,rgba(255,255,255,.09),rgba(255,255,255,.04));
+ color:#ecf3fa;font:650 12px Inter,system-ui,sans-serif;
+ box-shadow:inset 0 1px rgba(255,255,255,.08);
+ transition:background .24s ease,border-color .24s ease,transform .24s ease;
+}
+.filter-toggle:hover,.compact-filter-actions .filter-search:hover{background:rgba(207,231,255,.15);border-color:#b8e1ff82}
+.filter-toggle[aria-expanded=true]{background:rgba(175,220,255,.15);border-color:#c4e7ff}
+.compact-filter-actions svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.compact-filter-panel{
+ margin:8px 0 12px;padding:18px;border:1px solid rgba(204,226,255,.17);
+ border-radius:20px;background:rgba(26,32,44,.72);
+ -webkit-backdrop-filter:blur(26px) saturate(155%);backdrop-filter:blur(26px) saturate(155%);
+ box-shadow:0 16px 38px rgba(0,0,0,.19);animation:gelzFiltersOpen .32s cubic-bezier(.2,.8,.2,1) both;
+}
+.compact-filter-panel .filter-item select{border-radius:12px}
+.tabs{gap:8px}
+.tabs button{border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);font-weight:650}
+.tabs button.active{background:linear-gradient(145deg,#eff7ff,#cde3f7);color:#111824;border-color:#e0f3ff}
+.search-panel{margin:8px 0 16px;animation:gelzFiltersOpen .28s ease-out both}
+.mobile-menu{
+ background:linear-gradient(145deg,rgba(237,246,255,.2),rgba(42,52,68,.8) 28%,rgba(16,22,34,.94));
+ border:1px solid rgba(231,244,255,.29);
+ border-radius:27px;padding:14px;
+ box-shadow:0 26px 62px rgba(0,0,0,.48),inset 0 1px rgba(255,255,255,.2);
+ -webkit-backdrop-filter:blur(38px) saturate(185%);backdrop-filter:blur(38px) saturate(185%);
+ opacity:0;transform:translateY(-14px) scale(.963);
+ transform-origin:top center;pointer-events:none;
+ transition:opacity .34s cubic-bezier(.2,.83,.17,1),transform .34s cubic-bezier(.2,.83,.17,1);
+}
+.mobile-menu.is-open{opacity:1;transform:translateY(0) scale(1);pointer-events:auto}
+.mobile-menu .menu-head{font-size:13px;font-weight:750;color:#eaf2fd;letter-spacing:-.01em;border-bottom:1px solid #ffffff24;margin:0 4px 9px;padding:11px 11px 15px}
+.mobile-menu .menu-head button{border:1px solid #ffffff25;border-radius:50%;width:31px;height:31px;background:rgba(255,255,255,.09);color:white;font-size:20px;line-height:1}
+.mobile-menu a{
+ display:block;padding:14px 15px;margin:4px 0;border-radius:15px;
+ border:1px solid transparent;
+ background:rgba(255,255,255,.045);
+ font-size:14px;font-weight:620;letter-spacing:-.01em;color:#eff5fc;
+ transition:background .25s,border-color .25s,transform .25s;
+}
+.mobile-menu a:hover,.mobile-menu a:focus-visible{background:rgba(224,241,255,.18);border-color:#e5f4ff46;transform:translateX(2px)}
+@keyframes gelzHeroIntro{from{opacity:.42;transform:scale(1.075)}to{opacity:1;transform:scale(1.025)}}
+@keyframes gelzFiltersOpen{from{opacity:0;transform:translateY(-7px) scale(.991)}to{opacity:1;transform:translateY(0) scale(1)}}
+/* Avaliações reais relacionadas ao anúncio Nike TN */
+.gelz-reviews{margin-top:31px;padding:20px 0 0;border-top:1px solid rgba(255,255,255,.15)}
+.gelz-reviews-title{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap}
+.gelz-reviews-title h2{font-size:18px!important;line-height:1.25;font-weight:730;letter-spacing:-.035em;margin:0}
+.gelz-reviews-summary{font-size:12px;color:#bec9d7;white-space:nowrap}
+.gelz-reviews-summary .stars{color:#ffcb58;letter-spacing:1px;font-size:13px}
+.gelz-review-list{display:grid;grid-template-columns:1fr;gap:10px}
+.gelz-review{
+ display:grid;grid-template-columns:67px 1fr;gap:12px;min-width:0;padding:12px;
+ border:1px solid rgba(214,230,245,.14);border-radius:17px;
+ background:linear-gradient(125deg,rgba(255,255,255,.052),rgba(255,255,255,.018));
+}
+.gelz-review-photo{
+ width:67px;height:67px;border-radius:11px;background-color:#242c35;
+ background-image:url('./reviews-tn-atlas.jpg');
+ background-size:300% 200%;background-repeat:no-repeat;
+}
+.gelz-review-photo[data-index="0"]{background-position:0% 0%}
+.gelz-review-photo[data-index="1"]{background-position:50% 0%}
+.gelz-review-photo[data-index="2"]{background-position:100% 0%}
+.gelz-review-photo[data-index="3"]{background-position:0% 100%}
+.gelz-review-photo[data-index="4"]{background-position:50% 100%}
+.gelz-review-photo[data-index="5"]{background-position:100% 100%}
+.gelz-review-copy{min-width:0}
+.gelz-review-meta{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin:1px 0 4px}
+.gelz-review-meta strong{font-size:12px;font-weight:750}
+.gelz-review-meta small{font-size:11px;color:#aab5c3}
+.gelz-review-stars{font-size:11px;color:#ffca5c;letter-spacing:1px}
+.gelz-review-copy p{margin:4px 0 0;color:#e5e9ef;font-size:12px;line-height:1.47}
+.gelz-reviews-toggle{margin-top:13px;border:0;border-radius:12px;padding:11px 15px;background:#ffffff12;color:#eaf3fc;font-size:12px;font-weight:680}
+.gelz-reviews-toggle:hover{background:#ffffff1e}
+@media (min-width:1100px){.gelz-review-list{grid-template-columns:1fr 1fr}.gelz-review{grid-template-columns:62px 1fr}.gelz-review-photo{width:62px;height:62px}}
+@media (max-width:780px){
+ .hero{height:clamp(465px,69svh,665px);min-height:465px;border-radius:0 0 25px 25px}
+ .hero-photo img{width:100%;height:76%;top:0;left:0;right:0;object-fit:cover;object-position:center 48%;filter:brightness(.82) contrast(1.01) saturate(1.06)}
+ .hero:hover .hero-photo img{transform:scale(1.035)}
+ .hero-shade{background:linear-gradient(0deg,#070b12 0%,rgba(7,10,17,.94) 24%,rgba(7,10,17,.38) 62%,rgba(7,10,17,.1) 100%)}
+ .hero-content{position:absolute;inset:auto 0 0;padding:18px 22px 40px}
+ .hero-content h1{font-size:clamp(48px,11.2vw,75px);margin:15px 0}
+ .hero-content>p:not(.eyebrow){font-size:12px;line-height:1.55;max-width:330px;margin-bottom:18px}
+ .hero-cta.btn{min-height:40px;padding:10px 16px;border-radius:13px;font-size:11px}
+ .shop-section{padding-top:25px}
+ .toolbar{margin-bottom:11px}
+ .compact-filter-actions{margin-bottom:8px}
+ .compact-filter-panel{padding:13px;gap:9px}
+ .compact-filter-panel .filter-item{flex:1 1 calc(50% - 9px)}
+ .mobile-menu{position:fixed;top:77px;left:12px;right:12px;z-index:85}
+}
+@media (prefers-reduced-motion:reduce){.mobile-menu,.hero-photo img,.compact-filter-panel{animation:none;transition:none}}
