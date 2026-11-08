@@ -1,3 +1,4 @@
+import {gelzShortsPhotos} from './gelz-shorts-fotos.js';
 // Dados transcritos dos quatro modelos "All Information" exportados pelo próprio lojista.
 // Não há estoque disponível nos modelos: nenhuma variante está liberada para pagamento.
 // Imagens de variação: TikTok repetiu as mesmas URLs em todos os SKUs. Fotos por cor só
@@ -56,7 +57,8 @@ const knownImages = {
  '1737402795005347743': {'Azul bebê':'../bestseller-azul.webp','Branco':'../bestseller-branco.webp','Preto':'../bestseller-preto.webp','Vermelho':'../bestseller-vermelho.webp'},
  '1737492614665439135': {'Azul marinho':'../capuz-marinho.webp','Cinza':'../capuz-cinza.webp','Branco':'../capuz-branco.webp','Preto':'../capuz-preto.webp'},
  '1737559008977651615': {'Vermelho':'../running-vermelho.webp','Cinza':'../running-cinza.webp'},
- '1737402743979542431': {'Preto':'../lv-preto.webp','Bege':'../lv-bege.webp','Marrom':'../lv-marrom.webp'}
+ '1737402743979542431': {'Preto':'../lv-preto.webp','Bege':'../lv-bege.webp','Marrom':'../lv-marrom.webp'},
+ '1738180533454538655': {'Branco':gelzShortsPhotos.Branco,'Preto':gelzShortsPhotos.Preto,'Marrom':gelzShortsPhotos.Marrom,'Verde':gelzShortsPhotos.Verde}
 };
 const baseSizePattern = {P:0,M:1,G:2,GG:3,'10':0,'12':1,'14':2,'16':3};
 
