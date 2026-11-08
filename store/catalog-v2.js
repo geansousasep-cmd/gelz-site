@@ -96,6 +96,8 @@ export const catalog = rows.map(([id,category,name,price,colorRules,images]) => 
     return {name, hex:resolveSwatch(name), sizes, image:knownImages[id]?.[name]||null};
   });
   const allImages=[...new Set([...images.split(',').map(x=>x.trim()).filter(Boolean),...(extraPhotoHashes[id]||'').split(',').filter(Boolean)])].map(remote);
+  // Retira a primeira foto preta com cores conflitantes da jaqueta flanelada.
+  if(id==='1737797898574071711'&&allImages.length>1)allImages.shift();
   const brands={'1737402795005347743':'Nike TN','1737492614665439135':'Nike','1737402743979542431':'Louis Vuitton'};
   return {id, category, name, brand:brands[id]||'', price, colors, images:allImages,
     image:colors.find(x=>x.image)?.image||allImages[0], // Foto de referência apenas
