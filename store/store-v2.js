@@ -1,4 +1,4 @@
-import {catalog} from './catalog-v2.js';
+import {catalog} from './catalog-v2.js?v=20261108-logo';
 import {orderWhatsAppUrl} from './whatsapp.js?v=20261107-2';
 import {variantMedia,detectColorMedia} from './variant-media.js';
 const $=s=>document.querySelector(s);
