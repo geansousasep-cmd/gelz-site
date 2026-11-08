@@ -12,7 +12,15 @@ const colorKey = label => {
 };
 export function variantMedia(product,colorName) {
  const color=product.colors.find(c=>c.name===colorName)||product.colors[0];
- if(color?.image)return {images:[color.image],verified:true,source:'arquivo identificado por cor'};
+ if(color?.image){
+  // Conjunto com capuz: cada cor continua abrindo com sua foto correta;
+  // as demais miniaturas mostram outras cores disponíveis do mesmo modelo.
+  if(product.id==='1737492614665439135'){
+   const more=product.colors.map(c=>c.image).filter(url=>url&&url!==color.image);
+   return {images:[color.image,...more],verified:true,mixedColors:true,source:'primeira foto da cor selecionada, outras fotos das demais cores'};
+  }
+  return {images:[color.image],verified:true,source:'arquivo identificado por cor'};
+ }
  const key=colorKey(color?.name);
  const named=(product.images||[]).filter(url=>{
   const filename=decodeURIComponent(url.split('?')[0].split('/').pop()||'');
