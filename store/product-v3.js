@@ -37,7 +37,7 @@ function drawGallery(){
  $('#thumbnailRow').innerHTML=album.map((src,i)=>'<button class="'+(i===photoIndex?'selected':'')+'" data-photo="'+i+'" aria-label="Ver imagem '+(i+1)+'" aria-current="'+(i===photoIndex)+'"><img loading="lazy" src="'+clean(src)+'" alt=""></button>').join('');
  $('#galleryDots').innerHTML=album.slice(0,9).map((_,i)=>'<button class="'+(i===photoIndex?'active':'')+'" data-photo="'+i+'" aria-label="Foto '+(i+1)+'"></button>').join('');
  const c=activeColor();
- $('#photoNote').textContent=media().verified?'Foto correspondente à cor selecionada.':'Foto ilustrativa do modelo: a cor desta imagem ainda não foi confirmada. Confira a cor escolhida no pedido.';
+ $('#photoNote').textContent=media().mixedColors?'A primeira foto mostra '+chosenColor+'. As demais mostram outras cores disponíveis do mesmo conjunto.':media().verified?'Foto correspondente à cor selecionada.':'Foto ilustrativa do modelo: a cor desta imagem ainda não foi confirmada. Confira a cor escolhida no pedido.';
 }
 function drawOptions(){
  $('#selectedColor').textContent=chosenColor;
