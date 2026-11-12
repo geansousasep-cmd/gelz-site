@@ -46,8 +46,13 @@ import * as CNPJ from './cnpj-engine.js';
     }).join("");
   }
   function results(n=12){
-    return `<section class="panel panel-pad prospect-results"><div class="panel-top"><div><h2 class="panel-title">${ico("chart")} Ranking de oportunidades <span class="badge-number">${app.items.length}</span></h2><p class="panel-sub">${app.loading?"Consultando bases públicas...":app.searched?`${app.items.length} empresas verificadas nesta página`:"Pesquise para ver empresas reais"}</p></div>${app.items.length?button(ico("download")+" Exportar","capture-export"):""}</div>
+    return `<section class="panel panel-pad prospect-results"><div class="panel-top"><div><h2 class="panel-title">${ico("chart")} Ranking de oportunidades <span class="badge-number">${app.items.length}</span></h2><p class="panel-sub">${app.loading?"Consultando bases públicas...":app.searched?`${app.items.length} visíveis • ${app.total.toLocaleString("pt-BR")} na consulta${app.mode==="sector"?" • Página "+app.page+" de "+app.pages:""}`:"Pesquise para ver empresas reais"}</p></div>${app.items.length?button(ico("download")+" Exportar","capture-export"):""}</div>
     ${app.error?`<div class="warning">${safe(app.error)} <a href="https://fichario.app/api" class="link" target="_blank" rel="noopener noreferrer">Ver API</a></div>`:app.loading?'<div class="loading-stripes"><span></span><span></span><span></span></div>':app.items.length?`<div class="table-scroller"><table class="data-table"><thead><tr><th>#</th><th>Empresa</th><th>CNPJ</th><th>Sinal</th><th>Status / telefone</th><th>Ações</th></tr></thead><tbody>${rows(n)}</tbody></table></div>`:`<div class="prospect-empty">${ico("building")}<strong>${app.searched?"Nenhum CNPJ identificado":"Encontre seu próximo lead"}</strong><small>${app.searched?"Altere a busca ou tente novamente.":"Escolha um segmento ou informe o CNPJ."}</small></div>`}
+
+    ${app.mode==="sector"&&app.searched&&!app.loading? `<nav class="capture-pagination" aria-label="Páginas de empresas">
+       <span class="capture-page-caption">Página <strong>${app.page}</strong> de <strong>${app.pages}</strong> • ${Math.min(app.total,app.page*20).toLocaleString("pt-BR")} de ${app.total.toLocaleString("pt-BR")} resultados</span>
+       <div class="capture-page-actions"><button type="button" class="button button-outline" data-action="capture-page-prev" ${app.page<=1?"disabled":""}>${ico("arrow")} Anterior</button><button type="button" class="button button-primary" data-action="capture-page-next" ${app.page>=app.pages?"disabled":""}>Próxima página ${ico("arrow")}</button></div>
+       </nav>` :""}
     <p class="prospect-footnote">Ranking indicativo por porte e capital social declarado. Não mede faturamento, patrimônio nem capacidade de investir. Fonte: <a href="https://fichario.app/api" target="_blank" rel="noopener noreferrer">Fichário</a> / dados abertos da Receita. ${safe(app.notice||"")}</p></section>`;
   }
   function stats(){
@@ -60,7 +65,7 @@ import * as CNPJ from './cnpj-engine.js';
     return `<div class="dashboard-lower prospect-stats"><section class="panel panel-pad"><div class="panel-top"><h2 class="panel-title">${ico("chart")} CRM em números</h2>${button("Ver funil","nav-pipeline")}</div><div class="prospect-chart-row"><div class="prospect-donut" style="background:conic-gradient(${gradients.length?gradients.join(","):"#29364a 0 100%"})"><div><b>${total}</b><span>Leads</span></div></div><div class="prospect-legend">${entries.map(([label,n],i)=>`<div><i style="background:${colors[i]}"></i><span>${safe(label)}</span><b>${n}</b></div>`).join("")||'<span class="muted">Nenhum lead salvo.</span>'}</div></div></section><section class="panel panel-pad"><div class="panel-top"><h2 class="panel-title">${ico("clock")} Próximos passos</h2>${button(ico("plus"),"task-new")}</div>${upcoming.length?upcoming.map(t=>`<div class="activity"><div class="activity-icon">${ico("calendar")}</div><div><strong>${safe(t.title)}</strong><p>${h.fmtDate(t.due_at)}</p></div></div>`).join(""):'<div class="prospect-empty compact"><strong>Agenda livre</strong><small>Cadastre o próximo acompanhamento.</small></div>'}</section></div>`;
   }
   function pageHeader(explore=false){return `<div class="page-header prospect-page-heading"><div><div class="eyebrow">${explore?"PESQUISA EMPRESARIAL":"GELZ PROSPECT / HOME"}</div><h1>${explore?"Capturar empresas.":"Seu próximo cliente começa aqui."}</h1><p>${explore?"CNPJ e setores reais, organizados por oportunidade.":"Busque empresas, salve leads e acompanhe conversas."}</p></div><div class="page-actions">${button(ico("users")+" CRM","nav-leads")}${button(ico("plus")+" Novo lead","lead-new","","button-primary")}</div></div>`;}
-  function home(){return pageHeader(false)+form()+metrics()+results(10)+stats();}
+  function home(){return pageHeader(false)+form()+metrics()+results(20)+stats();}
   function discover(){return pageHeader(true)+form()+results(40);}
   function setup(deps){h=deps;}
 
@@ -132,7 +137,30 @@ import * as CNPJ from './cnpj-engine.js';
     <div class="insight-block"><h3>Informações cadastrais</h3><p>${safe(x.razao_social||x.company_name)}<br>${safe([x.neighborhood,x.city,x.uf].filter(Boolean).join(" • "))}<br>${safe(x.sector||"Sem atividade")}<br>Telefone comercial: ${safe(x.phone||"Não divulgado")}</p></div>
     <div class="info" style="margin-top:14px">Pontuação para triagem, não significa patrimônio ou caixa disponíveis. ${safe(s.evidence)}</div>
     <p><a href="${safe(x.sourceUrl||"https://fichario.app/api")}" target="_blank" rel="noopener noreferrer" class="link">Conferir cadastro na fonte</a></p>
-    <div class="modal-actions">${stored?button("Abrir no CRM","lead-view",stored.id,"button-primary"):button(ico("plus")+" Salvar no CRM","capture-save",id,"button-primary")}</div>`,"CAPTURA / CNPJ");
+    <div class="modal-actions">${button(ico("users")+" Sócios e contatos","capture-partners",id)}${stored?button("Abrir no CRM","lead-view",stored.id,"button-primary"):button(ico("plus")+" Salvar no CRM","capture-save",id,"button-primary")}</div>`,"CAPTURA / CNPJ");
+  }
+
+  const secureLink=(link)=>{try{const u=new URL(String(link||""));return ["https:","http:"].includes(u.protocol)?u.toString():"";}catch{return "";}};
+  async function partners(id){
+    const x=app.items.find(y=>y.cnpj===id);if(!x)return;
+    h.openModal("Sócios e canais de contato",'<div class="loading-stripes"><span></span><span></span></div>',"QUADRO SOCIETÁRIO / RECEITA");
+    let result=null,error="";
+    try{result=await CNPJ.partners(id);}catch(e){error=e.message||"Não foi possível consultar o quadro societário."; }
+    const panel=document.querySelector("#modal-body");if(!panel)return;
+    const socios=result?.partners||[];
+    const canUsePhone=!x.contactHidden;
+    const phone=canUsePhone?(x.phone||result?.corporatePhone||""):"";
+    const email=canUsePhone?(x.email||result?.corporateEmail||""):"";
+    const website=secureLink(x.site);
+    panel.innerHTML=`<div class="info">${ico("info")} Nomes e funções registrados no QSA. O telefone é da <strong>empresa</strong>, não um número pessoal comprovado do sócio.</div>
+      ${error?`<div class="warning" style="margin-top:12px">${safe(error)}</div>`:""}
+      <div class="partner-section-head"><h3>${ico("users")} Sócios / administradores</h3><span class="chip blue">${socios.length} identificado(s)</span></div>
+      ${socios.length?socios.map((p,i)=>`<article class="partner-card"><div class="partner-avatar">${ico("users")}</div><div><strong>${safe(p.name)}</strong><small>${safe(p.role)}</small></div><a class="partner-search" target="_blank" rel="noopener noreferrer" href="https://www.google.com/search?q=${encodeURIComponent(p.name+" "+x.company_name+" perfil profissional contato comercial")}">Buscar perfil profissional ↗</a></article>`).join(""):'<div class="prospect-empty compact">QSA não localizado na fonte consultada. Alguns registros individuais não apresentam quadro societário.</div>'}
+      <div class="partner-section-head"><h3>${ico("phone")} Canais comerciais da empresa</h3></div>
+      <div class="partner-company-contacts"><div><small>Telefone comercial</small><strong>${safe(phone||"Não divulgado")}</strong></div><div><small>E-mail comercial</small><strong>${safe(email||"Não divulgado")}</strong></div></div>
+      ${website?`<a class="link" href="${safe(website)}" target="_blank" rel="noopener noreferrer">Site oficial da empresa ↗</a>`:""}
+      <p class="prospect-footnote">Fonte do QSA: BrasilAPI (dados cadastrais da Receita Federal). Os canais divulgados podem ser gerais, não diretos do proprietário. Não extraímos telefones pessoais ocultos nem presumimos autorização para WhatsApp.</p>
+      <div class="modal-actions">${button(ico("info")+" Ficha da empresa","capture-detail",id)}</div>`;
   }
   async function save(id){
     const x=app.items.find(x=>x.cnpj===id);if(!x)return;const old=linked(x);if(old){h.viewLead(old.id);return;}
@@ -154,6 +182,7 @@ import * as CNPJ from './cnpj-engine.js';
   }
   async function action(name,id){
     if(name==="capture-detail")detail(id);
+    else if(name==="capture-partners")await partners(id);
     else if(name==="capture-save")await save(id);
     else if(name==="capture-export")csv();
     else if(name==="capture-page-next")await loadPage(app.page+1);
