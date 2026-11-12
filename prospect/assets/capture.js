@@ -43,7 +43,7 @@ import * as CONTACT from './contact-utils.js';
   function rows(n){
     return order().slice(0,n).map((x,i)=>{
       const s=score(x),saved=linked(x),phone=x.contactHidden?"":(saved?.contact_phone||x.phone||""),contact=phone?`<a class="link mono contact-no" href="tel:${digits(phone)}" title="Ligar para telefone comercial">${safe(phone)}</a>`:"<small class='muted'>Sem contato comercial</small>";
-      return `<tr><td><span class="rank-idx">${String((app.mode==="sector"?(app.firstPage-1)*20:0)+i+1).padStart(2,"0")}</span></td><td><strong class="result-name">${safe(x.company_name)}</strong><small>${safe([x.neighborhood,x.city,x.uf].filter(Boolean).join(" • "))}</small></td><td><span class="mono">${safe(x.cnpj)}</span></td><td><span class="prospect-score">${s.score==null?"—":s.score}<small>/100</small></span><small>${safe(s.evidence)}</small></td><td>${badge(x)}<div style="margin-top:5px">${contact}</div></td><td class="result-buttons">${saved?button("Abrir","lead-view",saved.id):button(ico("plus")+" Salvar","capture-save",x.cnpj,"button-primary")}${button(ico("users")+" Sócios","capture-partners",x.cnpj)}${button(ico("info"),"capture-detail",x.cnpj)}</td></tr>`;
+      return `<tr><td><span class="rank-idx">${String((app.mode==="sector"?(app.firstPage-1)*20:0)+i+1).padStart(2,"0")}</span></td><td><a href="#" data-action="capture-detail" data-id="${safe(x.cnpj)}" class="result-name link">${safe(x.company_name)}</a><small>${safe([x.neighborhood,x.city,x.uf].filter(Boolean).join(" • "))}</small></td><td><span class="mono">${safe(x.cnpj)}</span></td><td><span class="prospect-score">${s.score==null?"—":s.score}<small>/100</small></span><small>${safe(s.evidence)}</small></td><td>${badge(x)}<div style="margin-top:5px">${contact}</div></td><td class="result-buttons">${saved?button("Abrir","lead-view",saved.id):button(ico("plus")+" Salvar","capture-save",x.cnpj,"button-primary")}${!x.contactHidden&&CONTACT.normalizeBrazilPhone(x.phone)?button(ico("phone")+" WhatsApp","capture-whatsapp",x.cnpj,"button-green"):""}${button(ico("users")+" Sócios","capture-partners",x.cnpj)}${button(ico("info"),"capture-detail",x.cnpj)}</td></tr>`;
     }).join("");
   }
   function results(n=12){
@@ -164,6 +164,20 @@ import * as CONTACT from './contact-utils.js';
       <p class="prospect-footnote">Fonte do QSA: BrasilAPI (dados cadastrais da Receita Federal). Os canais divulgados podem ser gerais, não diretos do proprietário. Não extraímos telefones pessoais ocultos nem presumimos autorização para WhatsApp.</p>
       <div class="modal-actions">${button(ico("info")+" Ficha da empresa","capture-detail",id)}</div>`;
   }
+
+  function quickWhats(id){
+    const company=app.items.find(x=>x.cnpj===id)||h.state.leads.find(x=>x.cnpj===id);
+    if(!company||company.contactHidden)return;
+    const phone=company.phone||company.contact_phone||"";
+    const name=company.company_name||"sua empresa";
+    const advisor=h.state.settings?.advisor_name||"Junior Sousa";
+    const institution=h.state.settings?.institution||"Quattro Investimentos";
+    const link=CONTACT.whatsappLink(phone,CONTACT.advisorIntro(name,advisor,institution));
+    if(!link){h.toast("Telefone sem DDD ou incompleto. Corrija-o antes de abrir o WhatsApp.","error");return;}
+    const result=window.open(link,"_blank","noopener,noreferrer");
+    if(!result)window.location.assign(link);
+    h.toast("Conversa individual aberta. Nenhuma mensagem enviada automaticamente.");
+  }
   async function save(id){
     const x=app.items.find(x=>x.cnpj===id);if(!x)return;const old=linked(x);if(old){h.viewLead(old.id);return;}
     const raw=digits(x.phone||"");const phone=/^55\d{10,11}$/.test(raw)?raw:/^\d{10,11}$/.test(raw)?"55"+raw:"";
@@ -183,7 +197,8 @@ import * as CONTACT from './contact-utils.js';
     const url=URL.createObjectURL(new Blob(["\uFEFF"+content],{type:"text/csv;charset=utf-8"}));const a=document.createElement("a");a.href=url;a.download="gelz-cnpj-oportunidades.csv";a.click();setTimeout(()=>URL.revokeObjectURL(url),6000);
   }
   async function action(name,id){
-    if(name==="capture-detail")detail(id);
+    if(name==="capture-detail")await detail(id);
+    else if(name==="capture-whatsapp")quickWhats(id);
     else if(name==="capture-partners")await partners(id);
     else if(name==="capture-save")await save(id);
     else if(name==="capture-export")csv();
