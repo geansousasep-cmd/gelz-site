@@ -29,5 +29,5 @@ test("Server functions require authenticated admin and bounded sources",()=>{
  const enrich=get("supabase/functions/prospect-enrich/index.ts");
  const ai=get("supabase/functions/prospect-analyze/index.ts");
  for(const code of [enrich,ai]){assert.ok(code.includes('auth.getUser'));assert.ok(code.includes("prospect_admins"));assert.ok(code.includes("must_change_password"));}
- assert.ok(enrich.includes('mode==="contacts"'));assert.ok(ai.includes("Não avalie capacidade financeira real"));
+ assert.ok(enrich.includes('mode==="contacts"'));assert.ok(ai.includes("Não deduza faturamento, lucro, patrimônio"));
 });
