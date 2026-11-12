@@ -93,7 +93,7 @@ const pending=state.tasks.filter(t=>!t.completed).sort((a,b)=>String(a.due_at||"
 const item=t=>`<div class="task-row ${t.completed?"done":""}"><input aria-label="Concluir tarefa" type="checkbox" data-task-check="${attr(t.id)}" ${t.completed?"checked":""}><div class="task-main"><strong>${safe(t.title)}</strong><small>${safe(t.description||"")} ${t.lead_id?"• Lead vinculado":""}</small></div><span class="task-date">${fmtDate(t.due_at)}</span><button class="icon-button" data-action="task-edit" data-id="${attr(t.id)}" title="Editar tarefa">${ic("more")}</button></div>`;
 return `${pageHeader("AGENDA","Acompanhamentos.","Reuniões e próximos contatos.",btn(ic("calendarPlus")+" Nova tarefa","task-new","button-primary"))}<div class="split"><section class="panel panel-pad"><div class="panel-top"><h2 class="panel-title">Pendentes <span class="badge-number">${pending.length}</span></h2></div><div class="task-list">${pending.length?pending.map(item).join(""):'<div class="empty-list">Nenhuma tarefa pendente.</div>'}</div></section><section class="panel panel-pad"><div class="panel-top"><h2 class="panel-title">Concluídas <span class="badge-number">${done.length}</span></h2></div><div class="task-list">${done.length?done.slice(0,30).map(item).join(""):'<div class="empty-list">Nenhuma tarefa concluída.</div>'}</div></section></div>`;}
 function intelligence(){
-  const id=state.analysisLeadId||state.leads[0]?.id||"";
+  const id=state.analysisLeadId||(state.publicAnalysis?"":state.leads[0]?.id||"");
   const l=state.leads.find(x=>x.id===id);
   const report=state.publicAnalysis||l?.ai_analysis||null;
   const business=report?.company||{};
