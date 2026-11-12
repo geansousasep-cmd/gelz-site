@@ -18,6 +18,17 @@ Os limites do Fichário podem mudar. Documentação: https://fichario.app/api . 
 
 **IMPORTANTE:** quando não há Supabase configurado, `admin/admin` abre somente uma **demonstração sem login privado e sem persistência segura de leads**. A pesquisa externa usa empresas reais, mas o CRM demonstrativo é temporário. **Não cadastre dados pessoais ou comerciais sigilosos nele.**
 
+## Novidades: base maior, bairros e sócios (novembro de 2026)
+
+- A busca `Cidade / segmento` agora aceita **Todos os segmentos**, e o padrão não prioriza empresas de grande capital.
+- **Paginação real:** a fonte envia 20 empresas por página; os controles `Anterior` e `Próxima página` chegam a até **50 páginas** (no máximo 1.000 listagens navegáveis por consulta, sujeitas ao limite/documentação da API). Uma página não é a base de dados inteira.
+- **Filtros:** porte (ME, EPP, ME+EPP, demais), faixa de capital social declarada, ordenação por nome/menor/maior capital.
+- **Bairro:** o Fichário não filtra bairros no endpoint público de listagem. Quando um bairro é informado, a aplicação consulta os detalhes de até 20 CNPJs da página atual e filtra aqueles cujo bairro cadastral corresponde. A contagem total permanece referente à cidade e CNAE, **não ao bairro**. Para cobertura completa por bairro é necessário contratar uma API que aceite `bairro` com `municipio` (ex.: fornecedor com busca B2B), hospedar o acesso em backend e usar o token somente no servidor.
+- **Sócios e administradores (QSA):** clique no botão de pessoas na tabela ou dentro da ficha do lead. Consulta pública BrasilAPI (dados Receita), mostrando apenas nome e qualificação. Não mostra CPF, endereço particular ou telefone pessoal. QSA pode estar ausente em registros individuais ou por indisponibilidade de origem.
+- **Contato comercial:** exibe o telefone e e-mail empresariais publicamente divulgados, quando disponíveis. O dado **não comprova contato direto do sócio**. Há um link para pesquisar presença profissional pública sem extração automática de números pessoais.
+- **Uso consciente da API gratuita:** consulte uma página por vez, evite coleta massiva; o filtro por bairro demanda consultas adicionais e pode sofrer limites de requisições.
+- **CRM:** fichas capturadas também possuem botão para consultar sócios. Nada disso substitui a necessidade de Supabase para dados persistentes e login privado.
+
 ## 1. Login privado + CRM persistente
 
 GitHub Pages não executa backend de autenticação.

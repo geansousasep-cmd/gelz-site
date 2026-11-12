@@ -35,6 +35,31 @@ try{
  await waitFor("document.querySelector('#nav-lead-count').textContent==='1'");
  await evaluate("document.querySelector('[data-view=leads]').click()");
  assert.equal(await evaluate("!!document.querySelector('.data-table .cell-name')"),true,"Captured CNPJ appears in CRM");
- console.log("BROWSER E2E PASS: login demonstrativo, sidebar, modo CNPJ, consulta real, captura e CRM.");
+
+ await evaluate("document.querySelector('[data-view=discover]').click()");
+ await evaluate("const el=document.querySelector('#capture-mode');el.value='sector';el.dispatchEvent(new Event('change',{bubbles:true}));true");
+ assert.equal(await evaluate("!!document.querySelector('select[name=porte]') && !!document.querySelector('select[name=capitalBand]') && !!document.querySelector('input[name=bairro]')"),true,"Neighborhood and capital filter controls");
+ await evaluate("document.querySelector('select[name=cnae]').value='';document.querySelector('select[name=porte]').value='ME';document.querySelector('select[name=capitalBand]').value='under50k';document.querySelector('select[name=order]').value='razao_asc';document.querySelector('#capture-form').requestSubmit();true");
+ await waitFor("document.querySelector('.capture-pagination') && !document.querySelector('.loading-stripes')",125);
+ const count1=await evaluate("document.querySelectorAll('.prospect-results tbody tr').length");
+ assert.ok(count1>0&&count1<=20,"real source returns one page of up to 20 small companies");
+ assert.equal(await evaluate("document.querySelector('.capture-page-caption').textContent.includes('Página')"),true);
+ const firstPage=await evaluate("document.querySelector('.capture-page-caption').textContent");
+ assert.ok(firstPage.includes('1'),"first page shown");
+ await evaluate("window.__gelzOriginalFetch=window.fetch;window.fetch=(input,options)=>{const url=String(input);if(url.includes('/busca-avancada') && url.includes('pagina=2'))return Promise.resolve(new Response(JSON.stringify({total_numero:40,paginas:2,pagina:2,resultados:[{cnpj:'07396951000170',nome_fantasia:'EMPRESA TESTE SOMENTE EM CI',razao_social:'EMPRESA TESTE',municipio:'SAO PAULO',uf:'SP',porte:'ME',capital_social:35000}]}),{status:200,headers:{'content-type':'application/json'}}));return window.__gelzOriginalFetch(input,options);};true");
+ await evaluate("document.querySelector('[data-action=capture-page-next]').click()");
+ await waitFor("document.querySelector('.capture-page-caption') && document.querySelector('.capture-page-caption').textContent.includes('Página 2') && !document.querySelector('.loading-stripes')",125);
+ const count2=await evaluate("document.querySelectorAll('.prospect-results tbody tr').length");
+
+ console.log("PAGINATION E2E: fixture validates page 2 transition; live CNPJ query remains separately tested.");
+ assert.ok(count2>0,"next page contains business listings");
+
+ await evaluate("window.fetch=window.__gelzOriginalFetch;true");
+ await evaluate("const mode=document.querySelector('#capture-mode');mode.value='cnpj';mode.dispatchEvent(new Event('change',{bubbles:true}));document.querySelector('input[name=cnpj]').value='19131243000197';document.querySelector('#capture-form').requestSubmit();true");
+ await waitFor("document.querySelector('[data-action=capture-partners]') && !document.querySelector('.loading-stripes')",125);
+ await evaluate("document.querySelector('[data-action=capture-partners]').click()");
+ await waitFor("document.querySelector('.partner-section-head') && !document.querySelector('#modal-body .loading-stripes')",95);
+ assert.equal(await evaluate("document.querySelector('#modal-body').textContent.includes('Sócios')"),true,"QSA panel in browser");
+ console.log("BROWSER E2E PASS: login demonstrativo, sidebar, modo CNPJ, consulta real, captura e CRM, paginação, capital baixo e QSA.");
  ws.close();
 }catch(err){console.error("BROWSER E2E FAIL",err);process.exitCode=1;}finally{finish();}

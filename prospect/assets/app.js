@@ -142,7 +142,7 @@ openModal(l.company_name||"Empresa",`
 <div class="insight-block" style="margin-top:12px"><h3>Origem e autorização</h3><p>Origem: ${safe(l.source_type||"manual")}<br>WhatsApp: ${l.opt_in_whatsapp?"Autorização registrada":"Sem autorização registrada"}<br>Fonte: ${safe(l.contact_source_url||"Não informada")}</p></div>
 ${l.notes?`<div class="insight-block" style="margin-top:12px"><h3>Notas</h3><p>${safe(l.notes)}</p></div>`:""}
 ${ai?`<div class="insight-block" style="margin-top:12px"><h3>Análise GELZ Intelligence</h3><p>${safe(ai.summary||"")}<br>${safe(ai.next_action||"")}</p></div>`:""}
-<div class="button-row" style="margin-top:20px">${btn(ic("phone")+" Conversar no WhatsApp","wa-compose","button-green",`data-id="${attr(l.id)}"`)}${btn(ic("sparkles")+" Avaliar com IA","lead-analyze","button-subtle",`data-id="${attr(l.id)}"`)}${btn(ic("building")+" Consultar CNPJ","lead-cnpj","button-subtle",`data-id="${attr(l.id)}"`)}${btn(ic("search")+" Buscar contato comercial","lead-contacts","button-subtle",`data-id="${attr(l.id)}"`)}</div>
+<div class="button-row" style="margin-top:20px">${btn(ic("phone")+" Conversar no WhatsApp","wa-compose","button-green",`data-id="${attr(l.id)}"`)}${btn(ic("sparkles")+" Avaliar com IA","lead-analyze","button-subtle",`data-id="${attr(l.id)}"`)}${btn(ic("building")+" Consultar CNPJ","lead-cnpj","button-subtle",`data-id="${attr(l.id)}"`)}${btn(ic("search")+" Buscar contato comercial","lead-contacts","button-subtle",`data-id="${attr(l.id)}"`)}${l.cnpj?btn(ic("users")+" Sócios / responsáveis","lead-partners","button-subtle",`data-id="${attr(l.id)}"`):""}</div>
 <div class="button-row" style="margin-top:12px">${btn(ic("calendarPlus")+" Criar lembrete","task-new","button-outline",`data-id="${attr(l.id)}"`)}${btn("Editar ficha","lead-edit","button-outline",`data-id="${attr(l.id)}"`)}${hasConfirmedContact(l)?"":btn(ic("check")+" Já contatei","lead-contact-confirm","button-outline",`data-id="${attr(l.id)}"`)}</div>
 <div class="divider"></div><h3 style="font-size:13px">Histórico de interação</h3>${state.events.filter(e=>e.lead_id===l.id).slice(0,12).map(e=>`<div class="activity"><div class="activity-icon">${ic("clock")}</div><div><strong>${safe(e.kind||"Atividade")}</strong><p>${safe(e.note||"")} • ${fmtDate(e.created_at)}</p></div></div>`).join("")||'<p class="muted small">Nenhuma interação registrada.</p>'}
 `,"PERFIL EMPRESARIAL");}
@@ -221,6 +221,7 @@ case "lead-analyze":state.analysisLeadId=id;closeModal();go("intelligence");brea
 case "ai-run":await runAI($("#ai-lead")?.value||state.analysisLeadId);break;
 case "lead-cnpj":enrichCnpj(id);break;
 case "lead-contacts":await commercialContacts(id);break;
+case "lead-partners":{const company=state.leads.find(x=>x.id===id);if(company?.cnpj)await CAPTURE.action("capture-partners",company.cnpj);else toast("Lead sem CNPJ válido.","error");break;}
 case "cnpj-search":await searchCnpjByName(id);break;
 case "cnpj-save":await saveCnpj(id,element.dataset.cnpj,element.dataset.cnae);break;
 case "cnpj-candidate":{const input=$("#cnpj-form input[name=cnpj]");if(input){input.value=element.dataset.cnpj;$("#cnpj-form").requestSubmit();}}break;
