@@ -37,7 +37,9 @@ async function request(url,{post,limit=timeout}={}){
 }
 const textField=(d,...keys)=>{for(const k of keys){const v=d?.[k];if(v!==undefined&&v!==null&&String(v).trim())return String(v);}return "";};
 export function normalize(item={},origin="Fichário"){
-const d=item?.empresa||item?.dados||item||{};const addr=d.endereco||d.address||{};
+const root=item||{};
+const d={...root,...(root?.dados||{}),...(root?.empresa||{}),...(root?.estabelecimento||{})};
+const addr=d.endereco||d.address||root.endereco||{};
 const cnpj=normalizeCnpj(textField(d,"cnpj","documento","cnpj_basico"));
 const capitalValue=capital(d.capital_social??d.capitalSocial??d.capital_social_empresa??0);
 let phone=textField(d,"telefone","telefone_comercial","ddd_telefone_1","telefone1","telefone1_completo");
@@ -53,13 +55,40 @@ city:textField(addr,"municipio","cidade")||textField(d,"municipio","cidade"),
 uf:textField(addr,"uf")||textField(d,"uf"),
 neighborhood:textField(addr,"bairro")||textField(d,"bairro"),
 cep:digits(textField(addr,"cep")||textField(d,"cep")).slice(0,8),
-phone,contactHidden,email:contactHidden?"":textField(d,"email","email_comercial","correio_eletronico"),site:textField(d,"site","website","websiteURI"),
+phone,contactHidden,email:contactHidden?"":textField(d,"email","email_comercial","correio_eletronico"),
+site:textField(d,"site","website","websiteURI","site_oficial"),
+street:textField(addr,"logradouro","rua","endereco")||textField(d,"logradouro","rua"),
+number:textField(addr,"numero","numero_endereco")||textField(d,"numero","numero_endereco"),
+complement:textField(addr,"complemento")||textField(d,"complemento"),
+openingDate:textField(d,"data_inicio_atividade","data_abertura","abertura","data_inicio_atividades"),
+legalNature:textField(d,"natureza_juridica","descricao_natureza_juridica","codigo_natureza_juridica"),
+unit:textField(d,"identificador_matriz_filial","descricao_identificador_matriz_filial","matriz_filial"),
 porte:textField(d,"porte","porte_empresa","porteEmpresa"),
 capital_social:capitalValue,
 situacao:textField(d,"situacao","situacao_cadastral","descricao_situacao_cadastral"),
 source:origin,sourceUrl:cnpj?"https://fichario.app/cnpj/"+cnpj:"",verified:!!cnpj&&validCNPJ(cnpj),
 raw:d
 };}
+
+/** Priorização inicial de relacionamento PJ; não estima saldo, patrimônio nem chance de investimento.
+ * Favorece empresas ME/EPP, inclusive capital social modesto. Não usa dados pessoais ou sensíveis. */
+export function xpFit(item){
+ const cap=Number(item?.capital_social)||0;
+ const porte=str(item?.porte).toUpperCase();
+ if(!cap&&!porte)return {score:null,label:"Sem dados",evidence:"Dados cadastrais insuficientes"};
+ let score=40, factors=[];
+ if(/EPP|PEQUEN/.test(porte)){score+=19;factors.push("Pequeno porte");}
+ else if(/ME\\b|MICRO/.test(porte)){score+=17;factors.push("Microempresa");}
+ else if(/DEMAIS|GRANDE/.test(porte)){score+=1;factors.push("Porte maior");}
+ if(cap>0&&cap<20000){score+=8;factors.push("Capital social baixo");}
+ else if(cap>=20000&&cap<100000){score+=15;factors.push("Capital social até R$ 100 mil");}
+ else if(cap>=100000&&cap<=1000000){score+=18;factors.push("Capital social de R$ 100 mil a R$ 1 mi");}
+ else if(cap>1000000&&cap<=3000000){score+=12;factors.push("Capital social intermediário");}
+ else if(cap>3000000){score+=3;factors.push("Capital social maior");}
+ if(item?.phone&&!item?.contactHidden){score+=4;factors.push("Canal comercial disponível");}
+ if(item?.site){score+=2;factors.push("Site comercial");}
+ return {score:Math.min(95,score),label:"Afinidade para abordagem PJ",evidence:factors.join(" • ")||"Sinais empresariais limitados"};
+}
 export function potential(item){
 const cap=Number(item.capital_social)||0;const porte=str(item.porte).toUpperCase();
 if(!cap&&!porte)return {score:null,label:"Sem dados",evidence:"Sem capital social ou porte"};
