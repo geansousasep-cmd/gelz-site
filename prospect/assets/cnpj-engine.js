@@ -56,6 +56,14 @@ export async function bySector({uf="SP",city="São Paulo",cnae="6920601",page=1}
 const p=new URLSearchParams({uf:str(uf).toUpperCase(),cidade:str(city),cnae:digits(cnae),pagina:String(page),por_pagina:"20",ordem:"capital_desc",situacao:"ativa"});if(!p.get("cnae")||p.get("cnae").length!==7)throw Error("Informe o CNAE com 7 dígitos.");
 const data=await request(API+"/busca-avancada?"+p);const items=unwrap(data).map(x=>normalize(x,"Fichário / busca por setor")).filter(x=>x.verified);return {items,total:Number(data?.total||data?.total_resultados||items.length),mode:"sector",page,notice:String(data?.aviso||"")};}
 export async function enrich(items,max=8){const arr=items.slice(0,max);const results=await Promise.allSettled(arr.map(x=>byCNPJ(x.cnpj)));return items.map((x,i)=>i<max&&results[i].status==="fulfilled"?{...results[i].value,source:x.source}:x);}
+export async function geocodeCenter({city="São Paulo",neighborhood="Tatuapé"}){
+const q=[str(neighborhood),str(city),"Brasil"].filter(Boolean).join(", ");
+const data=await request("https://nominatim.openstreetmap.org/search?"+new URLSearchParams({q,format:"json",limit:"1",countrycodes:"br",addressdetails:"1"}));
+const match=Array.isArray(data)?data[0]:null;if(!match)throw Error("Região não localizada. Confira bairro e cidade.");
+const latitude=Number(match.lat),longitude=Number(match.lon);
+if(!Number.isFinite(latitude)||!Number.isFinite(longitude))throw Error("Coordenadas não disponíveis.");
+return {latitude,longitude};
+}
 export async function byRadius({city="São Paulo",neighborhood="Tatuapé",radiusKm=3,sector=""}){
 const km=Math.max(1,Math.min(15,Number(radiusKm)||3));
 const q=[str(neighborhood),str(city),"Brasil"].filter(Boolean).join(", ");
