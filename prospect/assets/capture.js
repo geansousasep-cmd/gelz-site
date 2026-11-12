@@ -1,5 +1,6 @@
 import * as CNPJ from './cnpj-engine.js';
 import * as CONTACT from './contact-utils.js';
+import * as RESEARCH from './research.js';
 
   let h=null;
   const segments=[["6920601","Contabilidade"],["7020400","Consultoria"],["6204000","Tecnologia"],["6821801","Imobiliárias"],["4930202","Transportadoras"],["4781400","Vestuário"],["5611201","Restaurantes"],["8630503","Clínicas"]];
@@ -43,7 +44,7 @@ import * as CONTACT from './contact-utils.js';
   function rows(n){
     return order().slice(0,n).map((x,i)=>{
       const s=score(x),saved=linked(x),phone=x.contactHidden?"":(saved?.contact_phone||x.phone||""),contact=phone?`<a class="link mono contact-no" href="tel:${digits(phone)}" title="Ligar para telefone comercial">${safe(phone)}</a>`:"<small class='muted'>Sem contato comercial</small>";
-      return `<tr><td><span class="rank-idx">${String((app.mode==="sector"?(app.firstPage-1)*20:0)+i+1).padStart(2,"0")}</span></td><td><a href="#" data-action="capture-detail" data-id="${safe(x.cnpj)}" class="result-name link">${safe(x.company_name)}</a><small>${safe([x.neighborhood,x.city,x.uf].filter(Boolean).join(" • "))}</small></td><td><span class="mono">${safe(x.cnpj)}</span></td><td><span class="prospect-score">${s.score==null?"—":s.score}<small>/100</small></span><small>${safe(s.evidence)}</small></td><td>${badge(x)}<div style="margin-top:5px">${contact}</div></td><td class="result-buttons">${saved?button("Abrir","lead-view",saved.id):button(ico("plus")+" Salvar","capture-save",x.cnpj,"button-primary")}${!x.contactHidden&&CONTACT.normalizeBrazilPhone(x.phone)?button(ico("phone")+" WhatsApp","capture-whatsapp",x.cnpj,"button-green"):""}${button(ico("users")+" Sócios","capture-partners",x.cnpj)}${button(ico("info"),"capture-detail",x.cnpj)}</td></tr>`;
+      return `<tr><td><span class="rank-idx">${String((app.mode==="sector"?(app.firstPage-1)*20:0)+i+1).padStart(2,"0")}</span></td><td><a href="#" data-action="capture-detail" data-id="${safe(x.cnpj)}" class="result-name link">${safe(x.company_name)}</a><small>${safe([x.neighborhood,x.city,x.uf].filter(Boolean).join(" • "))}</small></td><td><span class="mono">${safe(x.cnpj)}</span></td><td><span class="prospect-score">${s.score==null?"—":s.score}<small>/100</small></span><small>${safe(s.evidence)}</small></td><td>${badge(x)}<div style="margin-top:5px">${contact}</div></td><td class="result-buttons">${saved?button("Abrir","lead-view",saved.id):button(ico("plus")+" Salvar","capture-save",x.cnpj,"button-primary")}${!x.contactHidden&&CONTACT.normalizeBrazilPhone(x.phone)?button(ico("phone")+" WhatsApp","capture-whatsapp",x.cnpj,"button-green"):""}${button(ico("users")+" Sócios","capture-partners",x.cnpj)}${button(ico("sparkles")+" Analisar","capture-analyze",x.cnpj)}${button(ico("info"),"capture-detail",x.cnpj)}</td></tr>`;
     }).join("");
   }
   function results(n=12){
@@ -171,7 +172,7 @@ import * as CONTACT from './contact-utils.js';
       <div class="button-row">
         ${normalized?button(ico("phone")+" Abrir WhatsApp","capture-whatsapp",id,"button-green"):""}
         ${website?`<a class="button button-outline" href="${safe(website)}" target="_blank" rel="noopener noreferrer">${ico("globe")} Site oficial</a>`:""}
-        ${button(ico("users")+" Sócios / responsáveis","capture-partners",id)}
+        ${button(ico("users")+" Sócios / responsáveis","capture-partners",id)}${button(ico("sparkles")+" Analisar empresa","capture-analyze",id)}
       </div>
       <div class="info" style="margin-top:15px">Afinidade de abordagem calculada com sinais de empresa ME/EPP e capital cadastral. Não representa patrimônio, renda, saldo nem disposição para investir.</div>
       <p class="prospect-footnote">Fonte: ${x.source? safe(x.source):"Dados empresariais públicos"} • <a class="link" href="${safe(sourceUrl)}" target="_blank" rel="noopener noreferrer">Conferir na fonte</a></p>
@@ -190,12 +191,15 @@ import * as CONTACT from './contact-utils.js';
     const phone=canUsePhone?(x.phone||result?.corporatePhone||""):"";
     const email=canUsePhone?(x.email||result?.corporateEmail||""):"";
     const website=secureLink(x.site||x.website);
-    panel.innerHTML=`<div class="info">${ico("info")} Nomes e funções registrados no QSA. O telefone é da <strong>empresa</strong>, não um número pessoal comprovado do sócio.</div>
+    const corporateWa=canUsePhone?RESEARCH.bareWhatsAppLink(phone):"";
+    const confirmedLinkedIn=RESEARCH.cleanVerifiedLinkedIn(x.contact_linkedin_url||"");
+    const contactMatch=socios.find(p=>p.name.toLowerCase().trim()===String(x.contact_name||"").toLowerCase().trim());
+    panel.innerHTML=`<div class="info">${ico("info")} Nomes e funções registrados no QSA. A lista mostra nomes e funções públicas; os links de LinkedIn são <strong>pesquisas</strong>, nunca perfis atribuídos sem confirmação.</div>
       ${error?`<div class="warning" style="margin-top:12px">${safe(error)}</div>`:""}
       <div class="partner-section-head"><h3>${ico("users")} Sócios / administradores</h3><span class="chip blue">${socios.length} identificado(s)</span></div>
-      ${socios.length?socios.map((p,i)=>`<article class="partner-card"><div class="partner-avatar">${ico("users")}</div><div><strong>${safe(p.name)}</strong><small>${safe(p.role)}</small></div><a class="partner-search" target="_blank" rel="noopener noreferrer" href="https://www.google.com/search?q=${encodeURIComponent(p.name+" "+x.company_name+" perfil profissional contato comercial")}">Buscar perfil profissional ↗</a></article>`).join(""):'<div class="prospect-empty compact">QSA não localizado na fonte consultada. Alguns registros individuais não apresentam quadro societário.</div>'}
+      ${socios.length?socios.map((p,i)=>`<article class="partner-card"><div class="partner-avatar">${ico("users")}</div><div><strong>${safe(p.name)}</strong><small>${safe(p.role)}</small></div><div class="partner-links"><a class="partner-search" target="_blank" rel="noopener noreferrer" href="${safe(confirmedLinkedIn&&contactMatch&&contactMatch.name===p.name?confirmedLinkedIn:RESEARCH.linkedInSearch(p.name,x.company_name))}">${confirmedLinkedIn&&contactMatch&&contactMatch.name===p.name?"LinkedIn confirmado":"Pesquisar LinkedIn"} ↗</a><a class="partner-search" target="_blank" rel="noopener noreferrer" href="${safe(RESEARCH.publicProfessionalSearch(p.name,x.company_name))}">Busca profissional ↗</a></div></article>`).join(""):'<div class="prospect-empty compact">QSA não localizado na fonte consultada. Alguns registros individuais não apresentam quadro societário.</div>'}
       <div class="partner-section-head"><h3>${ico("phone")} Canais comerciais da empresa</h3></div>
-      <div class="partner-company-contacts"><div><small>Telefone comercial</small><strong>${safe(phone||"Não divulgado")}</strong></div><div><small>E-mail comercial</small><strong>${safe(email||"Não divulgado")}</strong></div></div>
+      <div class="partner-company-contacts"><div><small>WhatsApp / telefone comercial</small><strong>${corporateWa?`<a class="link mono" href="${safe(corporateWa)}" target="_blank" rel="noopener noreferrer">${safe(corporateWa)}</a>`:safe(phone||"Não divulgado")}</strong></div><div><small>E-mail comercial</small><strong>${safe(email||"Não divulgado")}</strong></div></div><div class="info" style="margin-top:12px">Telefone direto pessoal do sócio: não identificado ou não verificado. Exibimos apenas canais profissionais explicitamente disponíveis; não associamos o número geral da empresa a um sócio.</div>
       ${website?`<a class="link" href="${safe(website)}" target="_blank" rel="noopener noreferrer">Site oficial da empresa ↗</a>`:""}
       <p class="prospect-footnote">Fonte do QSA: BrasilAPI (dados cadastrais da Receita Federal). Os canais divulgados podem ser gerais, não diretos do proprietário. Não extraímos telefones pessoais ocultos nem presumimos autorização para WhatsApp.</p>
       <div class="modal-actions">${button(ico("info")+" Ficha da empresa","capture-detail",id)}</div>`;
@@ -299,6 +303,7 @@ import * as CONTACT from './contact-utils.js';
   async function action(name,id){
     if(name==="capture-detail")await detail(id);
     else if(name==="capture-whatsapp")quickWhats(id);
+    else if(name==="capture-analyze")await h.analyzeCompany(id);
     else if(name==="capture-partners")await partners(id);
     else if(name==="capture-save")await save(id);
     else if(name==="capture-export")csv();
