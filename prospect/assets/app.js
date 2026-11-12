@@ -186,8 +186,8 @@ function messageText(l,kind="intro"){
 function openWAUrl(phone,message,leadId=null){
  const url=CONTACT.whatsappLink(phone,message);
  if(!url){toast("Telefone comercial incompleto. Confira DDD e número.","error");return false;}
- const opened=window.open(url,"_blank","noopener,noreferrer");
- if(!opened)window.location.assign(url);
+ const opened=window.open(url,"_blank");
+ if(opened){try{opened.opener=null;}catch{}}else window.location.assign(url);
  if(leadId)void recordEvent(leadId,"WhatsApp","Link individual aberto. Mensagem não confirmada como enviada.");
  toast("Conversa aberta. Revise o destinatário e envie manualmente.");
  return true;
