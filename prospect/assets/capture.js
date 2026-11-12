@@ -226,7 +226,7 @@ import * as RESEARCH from './research.js';
       city:x.city||app.city,neighborhood:x.neighborhood||"",cnpj:x.cnpj,
       cnpj_verified:false,cnae:x.cnae||"",place_id:"",source_type:"fichario_cnpj",
       contact_name:"",contact_phone:x.contactHidden?"":CONTACT.normalizeBrazilPhone(x.phone),
-      contact_email:x.contactHidden?"":(x.email||""),contact_source_url:x.sourceUrl||"",
+      contact_email:x.contactHidden?"":(x.email||""),contact_linkedin_url:"",contact_source_url:x.sourceUrl||"",
       website:x.site||"",opt_in_whatsapp:false,opt_in_evidence:"",stage:"Descoberto",
       notes:"Fonte pública: "+x.source+". Capital social cadastral declarado: "+(x.capital_social||"não informado")+". Não representa saldo, faturamento ou disposição para investir.",
       next_contact_at:null,ai_score:null,ai_analysis:null,created_at:date,updated_at:date
