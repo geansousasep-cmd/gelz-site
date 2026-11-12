@@ -142,7 +142,7 @@ import * as CNPJ from './cnpj-engine.js';
 
   const secureLink=(link)=>{try{const u=new URL(String(link||""));return ["https:","http:"].includes(u.protocol)?u.toString():"";}catch{return "";}};
   async function partners(id){
-    const x=app.items.find(y=>y.cnpj===id);if(!x)return;
+    const x=app.items.find(y=>y.cnpj===id)||h.state.leads.find(y=>y.cnpj===id);if(!x)return;
     h.openModal("Sócios e canais de contato",'<div class="loading-stripes"><span></span><span></span></div>',"QUADRO SOCIETÁRIO / RECEITA");
     let result=null,error="";
     try{result=await CNPJ.partners(id);}catch(e){error=e.message||"Não foi possível consultar o quadro societário."; }
@@ -151,7 +151,7 @@ import * as CNPJ from './cnpj-engine.js';
     const canUsePhone=!x.contactHidden;
     const phone=canUsePhone?(x.phone||result?.corporatePhone||""):"";
     const email=canUsePhone?(x.email||result?.corporateEmail||""):"";
-    const website=secureLink(x.site);
+    const website=secureLink(x.site||x.website);
     panel.innerHTML=`<div class="info">${ico("info")} Nomes e funções registrados no QSA. O telefone é da <strong>empresa</strong>, não um número pessoal comprovado do sócio.</div>
       ${error?`<div class="warning" style="margin-top:12px">${safe(error)}</div>`:""}
       <div class="partner-section-head"><h3>${ico("users")} Sócios / administradores</h3><span class="chip blue">${socios.length} identificado(s)</span></div>
