@@ -130,16 +130,52 @@ import * as CONTACT from './contact-utils.js';
     el.querySelectorAll("[data-capture-field]").forEach(f=>{const k=f.dataset.captureField;f.style.display=k==="mode"||k===mode||(mode!=="cnpj"&&["city","uf"].includes(k))||(mode==="radius"&&k==="sector")||(["sector","name"].includes(mode)&&k==="bairro")||(mode==="sector"&&["porte","capitalBand","order"].includes(k))?"":"none";});
     const caption=document.querySelector("#capture-hint");if(caption)caption.textContent=hint();
   }
-  function detail(id){
-    const x=app.items.find(x=>x.cnpj===id);if(!x)return;const money=Number(x.capital_social||0),s=score(x),stored=linked(x);
-    h.openModal(x.company_name,`<div class="chip blue">${ico("building")} CNPJ ${safe(x.cnpj)}</div><div class="prospect-profile">
-    <div><small>Porte</small><strong>${safe(x.porte||"Não informado")}</strong></div>
-    <div><small>Capital social</small><strong>${money?money.toLocaleString("pt-BR",{style:"currency",currency:"BRL"}):"Não informado"}</strong></div>
-    <div><small>Sinal comercial</small><strong>${s.score===null?"—":s.score+"/100"}</strong></div></div>
-    <div class="insight-block"><h3>Informações cadastrais</h3><p>${safe(x.razao_social||x.company_name)}<br>${safe([x.neighborhood,x.city,x.uf].filter(Boolean).join(" • "))}<br>${safe(x.sector||"Sem atividade")}<br>Telefone comercial: ${safe(x.phone||"Não divulgado")}</p></div>
-    <div class="info" style="margin-top:14px">Pontuação para triagem, não significa patrimônio ou caixa disponíveis. ${safe(s.evidence)}</div>
-    <p><a href="${safe(x.sourceUrl||"https://fichario.app/api")}" target="_blank" rel="noopener noreferrer" class="link">Conferir cadastro na fonte</a></p>
-    <div class="modal-actions">${button(ico("users")+" Sócios e contatos","capture-partners",id)}${stored?button("Abrir no CRM","lead-view",stored.id,"button-primary"):button(ico("plus")+" Salvar no CRM","capture-save",id,"button-primary")}</div>`,"CAPTURA / CNPJ");
+
+  async function detail(id){
+    const existing=app.items.find(x=>x.cnpj===id)||h.state.leads.find(x=>x.cnpj===id);
+    if(!existing)return;
+    h.openModal(existing.company_name||"Ficha da empresa",'<div class="loading-stripes"><span></span><span></span></div>',"EMPRESA / INFORMAÇÕES CADASTRAIS");
+    let fresh=null,error="";
+    try{fresh=await CNPJ.byCNPJ(id);}catch(e){error=e.message||"Não foi possível atualizar os dados cadastrais.";}
+    const x=fresh?{...existing,...fresh,source:fresh.source}:existing;
+    if(fresh)Object.assign(existing,x);
+    const panel=document.querySelector("#modal-body");if(!panel)return;
+    const number=x.contactHidden?"":(x.phone||x.contact_phone||"");
+    const normalized=CONTACT.normalizeBrazilPhone(number);
+    const money=Number(x.capital_social||0);
+    const moneyStr=money?money.toLocaleString("pt-BR",{style:"currency",currency:"BRL"}):"Não informado";
+    const scoring=score(x);
+    const website=secureLink(x.site||x.website);
+    const address=[x.street,x.number,x.complement,x.neighborhood,x.city,x.uf].filter(Boolean).join(", ");
+    const sourceUrl=secureLink(x.sourceUrl||x.contact_source_url||"https://fichario.app/cnpj/"+id);
+    const linkedLead=linked(x);
+    panel.innerHTML=`<div class="company-detail-head"><span class="chip blue">${ico("building")} ${safe(id)}</span><span class="chip dim">${safe(x.situacao||"Situação a confirmar")}</span></div>
+      ${error?`<div class="warning" style="margin-top:12px">Dados complementares indisponíveis: ${safe(error)}. Mostrando o cadastro já disponível.</div>`:""}
+      <div class="prospect-profile">
+        <div><small>Porte</small><strong>${safe(x.porte||"Não informado")}</strong></div>
+        <div><small>Capital social declarado</small><strong>${safe(moneyStr)}</strong></div>
+        <div><small>Afinidade comercial XP/PJ</small><strong>${scoring.score==null?"—":scoring.score+"/100"}</strong></div>
+      </div>
+      <section class="company-info-grid">
+        <div><small>Razão social</small><strong>${safe(x.razao_social||x.company_name)}</strong></div>
+        <div><small>CNAE / atividade</small><strong>${safe(x.sector||"Não informado")}</strong></div>
+        <div><small>Data de abertura</small><strong>${safe(x.openingDate||"Não informada")}</strong></div>
+        <div><small>Natureza jurídica</small><strong>${safe(x.legalNature||"Não informada")}</strong></div>
+        <div class="company-info-full"><small>Endereço cadastral</small><strong>${safe(address||"Não informado")}${x.cep?" • CEP "+safe(x.cep):""}</strong></div>
+      </section>
+      <div class="partner-section-head"><h3>${ico("phone")} Canais comerciais</h3></div>
+      <div class="partner-company-contacts">
+        <div><small>Telefone da empresa</small><strong>${number?`<a class="link" href="tel:${safe(normalized||number.replace(/\D/g,""))}">${safe(number)}</a>`:"Não divulgado"}</strong></div>
+        <div><small>E-mail da empresa</small><strong>${x.contactHidden?"Não divulgado":safe(x.email||x.contact_email||"Não divulgado")}</strong></div>
+      </div>
+      <div class="button-row">
+        ${normalized?button(ico("phone")+" Abrir WhatsApp","capture-whatsapp",id,"button-green"):""}
+        ${website?`<a class="button button-outline" href="${safe(website)}" target="_blank" rel="noopener noreferrer">${ico("globe")} Site oficial</a>`:""}
+        ${button(ico("users")+" Sócios / responsáveis","capture-partners",id)}
+      </div>
+      <div class="info" style="margin-top:15px">Afinidade de abordagem calculada com sinais de empresa ME/EPP e capital cadastral. Não representa patrimônio, renda, saldo nem disposição para investir.</div>
+      <p class="prospect-footnote">Fonte: ${x.source? safe(x.source):"Dados empresariais públicos"} • <a class="link" href="${safe(sourceUrl)}" target="_blank" rel="noopener noreferrer">Conferir na fonte</a></p>
+      <div class="modal-actions">${linkedLead?button("Abrir no CRM","lead-view",linkedLead.id,"button-primary"):button(ico("plus")+" Salvar no CRM","capture-save",id,"button-primary")}</div>`;
   }
 
   const secureLink=(link)=>{try{const u=new URL(String(link||""));return ["https:","http:"].includes(u.protocol)?u.toString():"";}catch{return "";}};
