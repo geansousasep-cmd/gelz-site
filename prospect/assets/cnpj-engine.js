@@ -78,7 +78,7 @@ export function xpFit(item){
  if(!cap&&!porte)return {score:null,label:"Sem dados",evidence:"Dados cadastrais insuficientes"};
  let score=40, factors=[];
  if(/EPP|PEQUEN/.test(porte)){score+=19;factors.push("Pequeno porte");}
- else if(/ME\\b|MICRO/.test(porte)){score+=17;factors.push("Microempresa");}
+ else if(/ME\b|MICRO/.test(porte)){score+=17;factors.push("Microempresa");}
  else if(/DEMAIS|GRANDE/.test(porte)){score+=1;factors.push("Porte maior");}
  if(cap>0&&cap<20000){score+=8;factors.push("Capital social baixo");}
  else if(cap>=20000&&cap<100000){score+=15;factors.push("Capital social até R$ 100 mil");}
