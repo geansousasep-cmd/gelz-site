@@ -3,6 +3,7 @@
 const C=window.GELZ_CONFIG||{};
 const CAPTURE=await import("./capture.js");
 const CNPJ_API=await import("./cnpj-engine.js");
+const CONTACT=await import("./contact-utils.js");
 const $=s=>document.querySelector(s);
 const $$=s=>Array.from(document.querySelectorAll(s));
 const safe=v=>String(v??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
@@ -135,14 +136,14 @@ function editLead(id=null,pid=null){const l=state.leads.find(x=>x.id===id)||null
 openModal(l?"Editar informações":"Capturar novo lead",body,"CRM / CADASTRO");}
 function hasConfirmedContact(l){return !!l&&(["Em conversa","Reunião agendada","Proposta","Convertido"].includes(l.stage)||state.events.some(e=>e.lead_id===l.id&&e.kind==="Contato confirmado"));}
 function viewLead(id){const l=state.leads.find(x=>x.id===id);if(!l)return;
-const tel=l.contact_phone?`<span class="mono">${safe(l.contact_phone)}</span>`:"Não informado";const ai=l.ai_analysis;
+const tel=l.contact_phone?`<a class="link mono" href="tel:${CONTACT.normalizeBrazilPhone(l.contact_phone)||attr(l.contact_phone.replace(/\\D/g,""))}">${safe(l.contact_phone)}</a>`:"Não informado";const ai=l.ai_analysis;
 openModal(l.company_name||"Empresa",`
 <div class="button-row" style="margin-bottom:18px">${pill(l.stage)}${l.ai_score!=null?`<span class="chip blue">Potencial ${Number(l.ai_score)}/100</span>`:""}${l.cnpj_verified?'<span class="chip green">CNPJ verificado</span>':""}</div>
-<div class="split"><div class="insight-block"><h3>Contato</h3><p>${safe(l.contact_name||"Não identificado")}<br>${tel}<br>${safe(l.contact_email||"Sem e-mail")}</p></div><div class="insight-block"><h3>Empresa</h3><p>${safe(l.sector||"Segmento não informado")}<br>${safe([l.neighborhood,l.city].filter(Boolean).join(", ")||"Localização não informada")}<br>CNPJ: ${safe(l.cnpj||"Não identificado")}</p></div></div>
-<div class="insight-block" style="margin-top:12px"><h3>Origem e autorização</h3><p>Origem: ${safe(l.source_type||"manual")}<br>WhatsApp: ${l.opt_in_whatsapp?"Autorização registrada":"Sem autorização registrada"}<br>Fonte: ${safe(l.contact_source_url||"Não informada")}</p></div>
+<div class="split"><div class="insight-block"><h3>Contato comercial</h3><p>${safe(l.contact_name||"Não identificado")}<br>${tel}<br>${safe(l.contact_email||"Sem e-mail")}</p></div><div class="insight-block"><h3>Empresa</h3><p>${safe(l.sector||"Segmento não informado")}<br>${safe([l.neighborhood,l.city].filter(Boolean).join(", ")||"Localização não informada")}<br>CNPJ: ${safe(l.cnpj||"Não identificado")}</p></div></div>
+<div class="insight-block" style="margin-top:12px"><h3>Histórico e fonte</h3><p>Origem: ${safe(l.source_type||"manual")}<br>WhatsApp: ${l.opt_in_whatsapp?"Permissão registrada":"Permissão ainda não documentada"}<br>Fonte: ${safe(l.contact_source_url||"Não informada")}</p></div>
 ${l.notes?`<div class="insight-block" style="margin-top:12px"><h3>Notas</h3><p>${safe(l.notes)}</p></div>`:""}
 ${ai?`<div class="insight-block" style="margin-top:12px"><h3>Análise GELZ Intelligence</h3><p>${safe(ai.summary||"")}<br>${safe(ai.next_action||"")}</p></div>`:""}
-<div class="button-row" style="margin-top:20px">${btn(ic("phone")+" Conversar no WhatsApp","wa-compose","button-green",`data-id="${attr(l.id)}"`)}${btn(ic("sparkles")+" Avaliar com IA","lead-analyze","button-subtle",`data-id="${attr(l.id)}"`)}${btn(ic("building")+" Consultar CNPJ","lead-cnpj","button-subtle",`data-id="${attr(l.id)}"`)}${btn(ic("search")+" Buscar contato comercial","lead-contacts","button-subtle",`data-id="${attr(l.id)}"`)}${l.cnpj?btn(ic("users")+" Sócios / responsáveis","lead-partners","button-subtle",`data-id="${attr(l.id)}"`):""}</div>
+<div class="button-row" style="margin-top:20px">${btn(ic("phone")+" Abrir WhatsApp","wa-direct","button-green",`data-id="${attr(l.id)}" ${validWhats(l)?"":"disabled"}`)}${btn(ic("copy")+" Editar mensagem","wa-compose","button-subtle",`data-id="${attr(l.id)}"`)}${btn(ic("sparkles")+" Avaliar com IA","lead-analyze","button-subtle",`data-id="${attr(l.id)}"`)}${btn(ic("building")+" Consultar CNPJ","lead-cnpj","button-subtle",`data-id="${attr(l.id)}"`)}${btn(ic("search")+" Buscar contato comercial","lead-contacts","button-subtle",`data-id="${attr(l.id)}"`)}${l.cnpj?btn(ic("users")+" Sócios / responsáveis","lead-partners","button-subtle",`data-id="${attr(l.id)}"`):""}</div>
 <div class="button-row" style="margin-top:12px">${btn(ic("calendarPlus")+" Criar lembrete","task-new","button-outline",`data-id="${attr(l.id)}"`)}${btn("Editar ficha","lead-edit","button-outline",`data-id="${attr(l.id)}"`)}${hasConfirmedContact(l)?"":btn(ic("check")+" Já contatei","lead-contact-confirm","button-outline",`data-id="${attr(l.id)}"`)}</div>
 <div class="divider"></div><h3 style="font-size:13px">Histórico de interação</h3>${state.events.filter(e=>e.lead_id===l.id).slice(0,12).map(e=>`<div class="activity"><div class="activity-icon">${ic("clock")}</div><div><strong>${safe(e.kind||"Atividade")}</strong><p>${safe(e.note||"")} • ${fmtDate(e.created_at)}</p></div></div>`).join("")||'<p class="muted small">Nenhuma interação registrada.</p>'}
 `,"PERFIL EMPRESARIAL");}
@@ -168,16 +169,54 @@ function taskForm(id=null,leadId=null){const t=state.tasks.find(x=>x.id===id);op
 async function saveTask(form){const f=new FormData(form);const id=String(f.get("id")||"");const old=state.tasks.find(t=>t.id===id);const obj={id:old?.id||uid(),owner_id:state.user?.id||null,title:title(f.get("title")),description:title(f.get("description")),due_at:f.get("due_at")||null,lead_id:f.get("lead_id")||null,completed:old?.completed||false,created_at:old?.created_at||new Date().toISOString()};if(!obj.title){toast("Informe o título.","error");return;}if(!state.demo){const {error}=await state.client.from("prospect_tasks").upsert(obj);if(error){toast("Erro: "+error.message,"error");return;}}
 const i=state.tasks.findIndex(t=>t.id===obj.id);if(i<0)state.tasks.unshift(obj);else state.tasks[i]=obj;closeModal();render();toast("Acompanhamento salvo.");}
 async function toggleTask(id,completed){const t=state.tasks.find(x=>x.id===id);if(!t)return;const old=t.completed;t.completed=completed;if(!state.demo){const {error}=await state.client.from("prospect_tasks").update({completed}).eq("id",id);if(error){t.completed=old;toast("Erro ao atualizar tarefa.","error");return;}}render();}
-function validWhats(l){return !!(l?.opt_in_whatsapp&&l.opt_in_evidence&&/^55\d{10,11}$/.test(l.contact_phone||""));}
-function messageText(l,kind="intro"){const advisor=state.settings.advisor_name||"Junior Sousa";const company=l.company_name||"sua empresa";const institution=state.settings.institution||"Quattro Investimentos";
-const templates={
-intro:`Olá! Tudo bem? Sou ${advisor}, assessor de investimentos da ${institution}. Gostaria de apresentar brevemente o atendimento e entender se existem demandas financeiras relevantes para a ${company}. Podemos conversar?`,
-pj:`Olá! Tudo bem? Sou ${advisor}, da ${institution}. Gostaria de conhecer as necessidades da ${company} e verificar se soluções para conta PJ e gestão financeira podem ser úteis. Você teria alguns minutos?`,
-meeting:`Olá! Sou ${advisor}, da ${institution}. Podemos agendar 15 minutos para entender objetivos e conversar sobre soluções financeiras que façam sentido para a ${company}?`,
-followup:`Olá! Passando para retomar nossa conversa sobre as necessidades financeiras da ${company}. Qual seria um bom momento para continuarmos?`
-};return templates[kind]||templates.intro;}
-function whatsCompose(id){const l=state.leads.find(x=>x.id===id);if(!l)return;openModal("Preparar conversa",`<div class="info" style="margin-bottom:16px">O sistema abre uma conversa individual no WhatsApp. Você revisa e envia manualmente. O botão depende de permissão registrada para esse canal.</div><form id="wa-form"><input type="hidden" name="lead_id" value="${attr(l.id)}"><div class="field"><label>Empresa</label><input value="${attr(l.company_name)}" disabled></div><div class="field" style="margin-top:15px"><label>Tipo de abordagem</label><select id="wa-template"><option value="intro">Apresentação institucional</option><option value="pj">Soluções empresariais</option><option value="meeting">Agendar conversa</option><option value="followup">Acompanhamento</option></select></div><div class="field" style="margin-top:15px"><label>Mensagem editável</label><textarea id="wa-message" rows="8">${safe(messageText(l))}</textarea></div><div class="small muted" style="margin-top:9px">Número: ${safe(l.contact_phone||"Não cadastrado")} • ${l.opt_in_whatsapp?"Autorização registrada":"Sem autorização"}</div><div class="modal-actions">${btn(ic("copy")+" Copiar texto","wa-copy","button-outline")}<button type="submit" class="button button-green" ${validWhats(l)?"":"disabled"}>${ic("phone")} Abrir WhatsApp</button></div></form>${!validWhats(l)?'<div class="warning" style="margin-top:14px">Para habilitar, edite a ficha e registre telefone no formato 55 + DDD + número e evidência de autorização para mensagens comerciais.</div>':""}`,"CONTATO / WHATSAPP");}
-async function openWhatsapp(form){const l=state.leads.find(x=>x.id===new FormData(form).get("lead_id"));if(!validWhats(l)){toast("Contato sem autorização documentada ou telefone válido.","error");return;}const text=title($("#wa-message").value);if(!text){toast("Escreva uma mensagem.","error");return;}window.open(`https://wa.me/${l.contact_phone}?text=${encodeURIComponent(text)}`,"_blank","noopener,noreferrer");await recordEvent(l.id,"WhatsApp","Link de conversa aberto manualmente; envio não confirmado.");toast("WhatsApp aberto. O envio da mensagem é manual.");}
+
+function validWhats(l){return !!CONTACT.normalizeBrazilPhone(l?.contact_phone);}
+function messageText(l,kind="intro"){
+  const advisor=state.settings.advisor_name||"Junior Sousa";
+  const institution=state.settings.institution||"Quattro Investimentos";
+  const company=l.company_name||"sua empresa";
+  const templates={
+    intro:CONTACT.advisorIntro(company,advisor,institution),
+    pj:"Olá! Tudo bem? Sou "+advisor+", da "+institution+". Gostaria de conhecer as necessidades da "+company+" e verificar se soluções de conta PJ e gestão de caixa podem ser úteis. Podemos conversar brevemente?",
+    meeting:"Olá! Sou "+advisor+", da "+institution+". Podemos agendar 15 minutos para conversar sobre as necessidades da "+company+"?",
+    followup:"Olá! Retomando nossa conversa sobre a "+company+". Qual seria um bom momento para continuarmos?"
+  };
+  return templates[kind]||templates.intro;
+}
+function openWAUrl(phone,message,leadId=null){
+ const url=CONTACT.whatsappLink(phone,message);
+ if(!url){toast("Telefone comercial incompleto. Confira DDD e número.","error");return false;}
+ const opened=window.open(url,"_blank","noopener,noreferrer");
+ if(!opened)window.location.assign(url);
+ if(leadId)void recordEvent(leadId,"WhatsApp","Link individual aberto. Mensagem não confirmada como enviada.");
+ toast("Conversa aberta. Revise o destinatário e envie manualmente.");
+ return true;
+}
+function directWhats(id){
+ const l=state.leads.find(x=>x.id===id);
+ if(!l)return;
+ openWAUrl(l.contact_phone,messageText(l),l.id);
+}
+function whatsCompose(id){
+ const l=state.leads.find(x=>x.id===id);if(!l)return;
+ const num=CONTACT.normalizeBrazilPhone(l.contact_phone);
+ openModal("Mensagem para WhatsApp",`<form id="wa-form"><input type="hidden" name="lead_id" value="${attr(l.id)}">
+   <div class="wa-topline">${ic("building")} <strong>${safe(l.company_name)}</strong></div>
+   <div class="field"><label>Telefone comercial (55 + DDD + número)</label><input id="wa-phone" name="phone" inputmode="tel" autocomplete="tel" value="${attr(num||l.contact_phone||"")}" placeholder="5511999999999"></div>
+   <div class="field" style="margin-top:13px"><label>Tipo de abordagem</label><select id="wa-template"><option value="intro">Apresentação</option><option value="pj">Conta PJ</option><option value="meeting">Agendar conversa</option><option value="followup">Retomar contato</option></select></div>
+   <div class="field" style="margin-top:13px"><label>Mensagem (você pode editar)</label><textarea name="message" id="wa-message" rows="5">${safe(messageText(l))}</textarea></div>
+   <div class="modal-actions">${btn(ic("copy")+" Copiar","wa-copy","button-outline")}<button type="submit" class="button button-green">${ic("phone")} Abrir WhatsApp</button></div>
+   <div class="wa-disclaimer">Contato individual. Nenhuma mensagem é enviada automaticamente. Confira se o número é comercial e respeite solicitações para não receber novas mensagens.</div>
+   </form>`,"CONTATO / WHATSAPP");
+}
+async function openWhatsapp(form){
+ const data=new FormData(form);
+ const leadId=String(data.get("lead_id")||"");
+ const phone=String(data.get("phone")||"");
+ const message=String(data.get("message")||"").trim();
+ if(!message){toast("Digite uma mensagem antes de continuar.","error");return;}
+ openWAUrl(phone,message,leadId);
+}
 async function runAI(id){if(state.demo){demoWarn();return;}const l=state.leads.find(x=>x.id===id);if(!l)return;if(!C.aiEnabled){toast("A IA depende da Edge Function e da chave de API no servidor.","error");return;}
 toast("Solicitando análise, usando apenas dados documentados...");
 const {data,error}=await state.client.functions.invoke("prospect-analyze",{body:{lead:l}});if(error||!data?.analysis){toast("Não foi possível analisar: "+(error?.message||data?.error||"Resposta indisponível"),"error");return;}
@@ -216,6 +255,7 @@ case "lead-contact-confirm":await CAPTURE.action("capture-contacted",id);break;
 case "task-new":taskForm(null,id);break;
 case "task-edit":taskForm(id);break;
 case "wa-compose":whatsCompose(id);break;
+case "wa-direct":directWhats(id);break;
 case "wa-copy":await navigator.clipboard.writeText($("#wa-message")?.value||"");toast("Mensagem copiada.");break;
 case "lead-analyze":state.analysisLeadId=id;closeModal();go("intelligence");break;
 case "ai-run":await runAI($("#ai-lead")?.value||state.analysisLeadId);break;
