@@ -32,6 +32,40 @@ if(!res.ok)return json({error:"Consulta cadastral indisponível ou CNPJ não enc
 const d=await res.json();
 return json({company:{cnpj,razao_social:String(d.razao_social||""),nome:String(d.nome_fantasia||""),cnae_fiscal_descricao:String(d.cnae_fiscal_descricao||""),municipio:String(d.municipio||""),uf:String(d.uf||""),situacao_cadastral:String(d.descricao_situacao_cadastral||"")},source:"BrasilAPI / CNPJ",retrievedAt:new Date().toISOString()});
 }
+
+if(mode==="radius"){
+const secret=Deno.env.get("PROSPECT_RADIUS_API_KEY");
+if(!secret)return json({error:"Busca completa por raio requer ativação de fornecedor geográfico e token no servidor."},503);
+const latitude=Number(input.latitude),longitude=Number(input.longitude);
+const radiusKm=Number(input.radiusKm)||3;
+const cnae=String(input.cnae||"").replace(/\D/g,"");
+if(!Number.isFinite(latitude)||!Number.isFinite(longitude)||latitude<-35||latitude>7||longitude<-75||longitude>-28||radiusKm<1||radiusKm>25)return json({error:"Coordenadas ou raio inválidos"},422);
+if(cnae&&cnae.length!==7)return json({error:"CNAE inválido"},422);
+const payload={latitude,longitude,raio_km:radiusKm,page:1,page_size:30,...(cnae?{cnae}:{})};
+const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),16000);
+let response;try{response=await fetch("https://api.apicnpjs.com.br/v1/cnpj/search/location",{method:"POST",signal:controller.signal,headers:{"authorization":"Bearer "+secret,"content-type":"application/json","accept":"application/json"},body:JSON.stringify(payload)});}finally{clearTimeout(timer);}
+if(!response.ok)return json({error:"Fornecedor de geolocalização não respondeu corretamente ("+response.status+")."},response.status===401?503:502);
+const result=await response.json();
+const entries=Array.isArray(result?.data)?result.data:Array.isArray(result?.resultados)?result.resultados:Array.isArray(result?.empresas)?result.empresas:Array.isArray(result?.items)?result.items:Array.isArray(result)?result:[];
+const items=entries.slice(0,30).map(x=>{
+const d=x?.empresa||x||{};
+const address=d.endereco||{};
+return {
+cnpj:String(d.cnpj||d.documento||"").replace(/\D/g,"").slice(0,14),
+razao_social:String(d.razao_social||d.razaoSocial||d.nome_empresarial||"").slice(0,180),
+nome_fantasia:String(d.nome_fantasia||d.nomeFantasia||"").slice(0,180),
+municipio:String(d.municipio||d.cidade||address.municipio||"").slice(0,80),
+uf:String(d.uf||address.uf||"").slice(0,2),
+bairro:String(d.bairro||address.bairro||"").slice(0,110),
+porte:String(d.porte||d.porte_empresa||"").slice(0,80),
+capital_social:d.capital_social||d.capitalSocial||null,
+telefone:String(d.telefone_comercial||d.telefone||"").slice(0,35),
+atividade_principal:typeof d.atividade_principal==="object"?{codigo:String(d.atividade_principal.codigo||""),descricao:String(d.atividade_principal.descricao||"")}:undefined,
+cnae_fiscal_descricao:String(d.cnae_fiscal_descricao||"").slice(0,150),
+distancia_km:Number(d.distancia_km||d.distancia||0)||null
+};}).filter(x=>x.cnpj.length===14);
+return json({items,total:Number(result?.total||entries.length),source:"API CNPJs / busca geográfica",retrievedAt:new Date().toISOString(),radiusKm});
+}
 if(mode==="search"||mode==="contacts"){
 const envName=mode==="search"?"PROSPECT_CNPJ_SEARCH_ENDPOINT":"PROSPECT_CONTACT_ENDPOINT";
 const tokenName=mode==="search"?"PROSPECT_CNPJ_PROVIDER_KEY":"PROSPECT_CONTACT_PROVIDER_KEY";

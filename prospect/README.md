@@ -1,153 +1,120 @@
-# GELZ Prospect — Financial Intelligence
+# GELZ Prospect — CNPJ-first Financial Intelligence
 
-Aplicativo privado de prospecção B2B em **/prospect/** do domínio **gelz.tech**. Design GELZ/Apple/Windows/fintech, em português, responsivo. Front-end sem build (HTML, CSS e JavaScript moderno), com backend previsto em Supabase PostgreSQL + Edge Functions.
+**Produção:** https://gelz.tech/prospect/  
+**Repositório:** geansousasep-cmd/gelz-site  
+**Stack:** GitHub Pages (frontend estático), Supabase Auth/PostgreSQL/Edge Functions (opcional para produção real) e fontes públicas de CNPJ.
 
-> **ESTADO ATUAL: branch de homologação.** Não conectado a banco, Google Maps, API de IA nem fornecedores de enriquecimento. A interface abre um **modo de demonstração com empresas explicitamente fictícias** enquanto não houver configuração. NÃO publicar em produção como sistema operacional até concluir as etapas e os testes abaixo.
+## O que já funciona sem chave paga
 
-## O que está implementado
+- Busca de **CNPJ exato**, com verificação de dígitos e consulta à base pública do Fichário (fallback OpenCNPJ).
+- Busca empresarial por **nome, UF/cidade e CNAE**. Base cadastral gratuita do Fichário, sujeita a limites de uso e disponibilidade.
+- Dados de empresa retornados pela fonte: nome fantasia, razão social, CNPJ, atividade, porte, capital social declarado, cidade e telefone comercial **quando divulgado e permitido**. Não confundir capital social com faturamento.
+- Pesquisa por **raio real em quilômetros** usando OpenStreetMap/Nominatim/Overpass, limitada a estabelecimentos que têm um CNPJ explicitamente informado no mapa; esta modalidade **não é exaustiva** e pode retornar poucos resultados.
+- Ranking por **sinais comerciais cadastrais** (porte e capital declarado), não por patrimônios, caixa, capacidade de investimento ou renda estimada.
+- Cadastro de CNPJ no CRM, histórico, status, funil, tarefas, exportação CSV, botão WhatsApp com revisão e autorização, e gráficos.
+- Navegação por sidebar no computador e pelo menu no celular, testada em Chrome headless.
 
-- Login privado pelo Supabase Auth e cadastro permitido somente ao administrador registrado em `prospect_admins`.
-- Usuário visível: **admin**. A senha é validada exclusivamente no Supabase; **NUNCA** há senha no repositório.
-- Bloqueio de operações do CRM por RLS até a senha temporária ter sido substituída. Função de trigger no banco detecta troca real de senha.
-- Dashboard, métricas, design premium, responsividade, tabelas, menu, busca global Ctrl/⌘+K, modais e notificações.
-- CRM CRUD, deduplicação por CNPJ/Place ID, funil Kanban, histórico, tarefas, relatórios, CSV e impressão para PDF.
-- Google Maps dentro do painel e Google Places Text Search/Place Details, ao configurar API.
-- Persistência no CRM apenas do Place ID da fonte Google; dados exibidos em tempo real não são automaticamente gravados.
-- Consulta e validação CNPJ (por número via BrasilAPI); correspondência por nome via fornecedor contratado, com seleção manual.
-- Consulta de contatos **comerciais** via fornecedor licenciado, com indicação de fonte e sem persistência automática.
-- Análise de potencial **comercial**, com IA no servidor; sem inferir patrimônio, caixa, lucro, faturamento ou capacidade de investimento.
-- WhatsApp individual `wa.me`, prévia/editável, somente quando há número válido e autorização registrada; **não dispara mensagens**.
-- Integrações exibem estado pendente, em vez de simular pesquisa real.
-- Modo de demonstração opcional, SEM acesso a dados reais e SEM autenticação de produção.
+Os limites do Fichário podem mudar. Documentação: https://fichario.app/api . Termos: https://fichario.app/termos . API pública atual de leitura aceita CORS (testada com origem gelz.tech). O provedor pode suspender acesso ou alterar limites.
 
-## Arquitetura
+**IMPORTANTE:** quando não há Supabase configurado, `admin/admin` abre somente uma **demonstração sem login privado e sem persistência segura de leads**. A pesquisa externa usa empresas reais, mas o CRM demonstrativo é temporário. **Não cadastre dados pessoais ou comerciais sigilosos nele.**
 
-```text
-gelz.tech/prospect/        GitHub Pages: HTML/CSS/JS estático
-              │
-              ├── Supabase Auth + Postgres (RLS)
-              ├── Google Maps JavaScript + Places API (New)
-              ├── Supabase Edge Function prospect-enrich
-              │       ├── BrasilAPI CNPJ por número
-              │       ├── provedor comercial opcional por nome
-              │       └── provedor licenciado de contatos opcionais
-              └── Supabase Edge Function prospect-analyze
-                      └── OpenAI API (token somente no servidor)
-```
+## 1. Login privado + CRM persistente
 
-GitHub Pages não executa código de servidor, não autentica usuários e não armazena segredos. **Não usar credenciais privadas em `config.js`**. Somente chave pública restrita do Google Maps e chave publicável/anon do Supabase são adequadas ali.
+GitHub Pages não executa backend de autenticação.
 
-## 1. Banco, autenticação e segurança (necessário)
+1. Crie uma conta/projeto próprio no Supabase.
+2. Execute `prospect/supabase/schema.sql` no SQL Editor.
+3. Desative cadastro público no Supabase Auth.
+4. Crie um único administrador no Auth com **senha temporária forte aleatória**, nunca `admin/admin` em produção.
+5. Insira o UUID do usuário em `public.prospect_admins` conforme SQL; o login público continua exibindo nome `admin`.
+6. Configure os 3 campos públicos do `prospect/config.js`: `supabaseUrl`, `supabaseAnonKey` e `adminEmail`.
+7. Teste troca obrigatória de senha e RLS de todas as tabelas. Só usuários autorizados podem consultar CRM persistente.
 
-1. Crie um projeto **Supabase dedicado** ao GELZ Prospect.
-2. Execute o SQL completo em `supabase/schema.sql` no SQL Editor.
-3. Em **Authentication > Providers**, desative cadastro público. Não permita registro anônimo. Configure o envio de email do Auth, se necessário.
-4. Crie um usuário único no Auth com email que você controla. A tela do site continuará exibindo o **username `admin`**. Não use o e-mail de contato público como senha ou identificador de segurança.
-5. **Senha:** o pedido original especifica `admin/admin`. Esta combinação é insegura e não é provisionada automaticamente. Se precisar reproduzi-la, faça SOMENTE em ambiente local isolado sem dados reais e troque imediatamente. Na hospedagem pública, crie uma **senha temporária aleatória e forte**; a aplicação exige sua troca no primeiro login.
-6. Registre o UUID do usuário em `public.prospect_admins` seguindo o comando ao final de `schema.sql` (substitua o email).
-7. Confirme `must_change_password=true` antes do primeiro acesso.
-8. Atualize `config.js`: `supabaseUrl`, `supabaseAnonKey` (chave **publicável/anon**, NÃO `service_role`) e `adminEmail`.
-9. A aplicação só permite operar depois de validação Auth + cadastro `prospect_admins`; as tabelas só permitem operações após mudança da senha. Revise os logs e a configuração de RLS no dashboard.
+Não colocar senha, token privado ou chave service_role no GitHub.
 
-O nome de usuário `admin` é único e fixo. Não existe cadastro público ou opção de registrar contas adicionais pela interface.
+## 2. Raio exato com cobertura ampla — requer autorização
 
-## 2. Google Maps integrado (necessário)
-
-1. No Google Cloud, crie projeto com faturamento e quotas de gastos.
-2. Habilite **Maps JavaScript API**, **Places API (New)** e **Geocoding API**.
-3. Gere chave para navegador e restrinja a origem HTTP para `https://gelz.tech/*` e, se usar, `https://www.gelz.tech/*`. Restrinja também a chave às APIs estritamente usadas.
-4. Preencha `googleMapsKey` em `config.js`. **Não habilite serviços adicionais além do necessário**.
-5. Teste geocodificação, busca por segmento e detalhes de um lugar, no navegador, observando a cobrança.
-
-O Google Places **não fornece CNPJ**. O nome, endereço, telefone e site são mostrados sob demanda; o CRM armazena apenas o `place_id` e eventuais dados empresariais declarados manualmente ou provenientes de fontes independentes licenciadas. Respeite atribuição ao Google e os termos para uso/caching.
-
-Referências:
-- https://developers.google.com/maps/documentation/javascript/place-search
-- https://developers.google.com/maps/documentation/javascript/reference/place
-- https://developers.google.com/maps/documentation/places/web-service/policies
-
-## 3. Deploy das Edge Functions
-
-Os arquivos estão em:
-- `supabase/functions/prospect-enrich/index.ts`
-- `supabase/functions/prospect-analyze/index.ts`
-
-Implante usando Supabase CLI em um projeto Supabase autorizado. Em um projeto local Supabase, copie a pasta `functions` para `supabase/functions` e execute:
-
-```bash
-supabase login
-supabase link --project-ref SEU_PROJECT_REF
-supabase functions deploy prospect-enrich
-supabase functions deploy prospect-analyze
-```
-
-Os endpoints são autenticados e validam a conta admin no banco. Configure os segredos pelo dashboard ou CLI, **nunca no GitHub**:
+A busca OSM gratuita serve para casos em que o CNPJ está cadastrado no mapa. Para buscar empresas no raio definido de **1, 2, 3, 5, 10 ou 15 km com cobertura empresarial**, há adaptador pronto na Edge Function `prospect-enrich` para:
 
 ```text
-OPENAI_API_KEY=...                  (somente backend)
-OPENAI_MODEL=gpt-4.1-mini          (ajuste conforme modelo acessível)
-PROSPECT_CNPJ_SEARCH_ENDPOINT=...  (opcional: fornecedor por nome)
-PROSPECT_CNPJ_PROVIDER_KEY=...     (opcional)
-PROSPECT_CONTACT_ENDPOINT=...      (opcional: contatos comerciais licenciados)
-PROSPECT_CONTACT_PROVIDER_KEY=...  (opcional)
+POST https://api.apicnpjs.com.br/v1/cnpj/search/location
+Authorization: Bearer TOKEN_PRIVADO
+{
+  "latitude": -23.55,
+  "longitude": -46.63,
+  "raio_km": 3,
+  "cnae": "6920601",
+  "page": 1,
+  "page_size": 30
+}
 ```
 
-`SUPABASE_URL` e `SUPABASE_ANON_KEY` são disponibilizadas automaticamente em muitos ambientes Supabase; confirme no ambiente da função.
+Referência da documentação do fornecedor: https://site.apicnpjs.com.br/documentacao
 
-Depois de testar cada função com uma sessão autenticada, habilite em `config.js`: `enrichmentEnabled`, `contactProviderEnabled` e `aiEnabled` conforme integrações realmente conectadas. Esses valores são sinalizadores de interface, não prova de conectividade.
+**O serviço exige contratar/obter token.** Não foi contratado nem configurado; nenhuma cobrança foi autorizada. Para ativar:
 
-**Contratos de integração opcionais (POST JSON):**
-- `PROSPECT_CNPJ_SEARCH_ENDPOINT`: recebe `{companyName,city,cnpj}` e retorna `{candidates:[{cnpj,razao_social,nome,municipio,uf,source}]}`. O usuário escolhe e valida o registro.
-- `PROSPECT_CONTACT_ENDPOINT`: recebe `{companyName,city,cnpj}` e retorna `{contacts:[{value,contactType:"commercial",channel,source}]}`. Nenhum dado de pessoa privada deve ser enviado.
+1. Contrate um plano compatível com a busca por raio no provedor.
+2. No painel do Supabase Edge Functions, salve o segredo `PROSPECT_RADIUS_API_KEY`, **nunca** no arquivo `config.js`.
+3. Implante `prospect/supabase/functions/prospect-enrich/index.ts`.
+4. Depois de validar uma consulta real, configure `radiusProviderEnabled: true` em `prospect/config.js`.
+5. A aplicação usa endereço/bairro para obter coordenadas (Nominatim), passa lat/lon e raio à Edge Function e lista CNPJs retornados.
 
-Somente obtenha e use contatos empresariais conforme contrato do fornecedor, legislação e autorização de comunicação.
+**Sem ativação:** a modalidade de raio usa OpenStreetMap com aviso de cobertura limitada. Não apresenta busca por cidade como se fosse raio exato.
 
-## 4. Configuração da identidade
+## 3. Funções adicionais opcionais
 
-No painel `Configurações`, personalize nome do assessor, instituição e assinatura. Antes do uso comercial, valide a identidade profissional e mensagens com o compliance da instituição e as normas aplicáveis da CVM.
+- `prospect-enrich`: consulta CNPJ BrasilAPI, fornecedor de nomes empresariais, fornecedor de contatos licenciados e raio comercial.
+- `prospect-analyze`: análise IA com `OPENAI_API_KEY` no backend. Não inferir faturamento, lucro, patrimônio ou capacidade financeira.
+- `PROSPECT_CNPJ_SEARCH_ENDPOINT`, `PROSPECT_CNPJ_PROVIDER_KEY`, `PROSPECT_CONTACT_ENDPOINT`, `PROSPECT_CONTACT_PROVIDER_KEY`: integrações opcionais de fornecedores licenciados.
+- Configuração pública do frontend: `prospect/config.js`.
+- Supabase CLI:
+  ```bash
+  supabase login
+  supabase link --project-ref SEU_PROJECT_REF
+  supabase functions deploy prospect-enrich
+  supabase functions deploy prospect-analyze
+  ```
 
-## 5. Publicação no gelz.tech
+O painel mostra quais integrações estão pendentes.
 
-O repositório `geansousasep-cmd/gelz-site` já possui:
-- `CNAME` apontando para `gelz.tech`;
-- workflow de publicação GitHub Pages em `main`.
+## 4. WhatsApp e histórico de contato
 
-Os arquivos do Prospect foram criados na branch `feature/gelz-prospect-premium` sem editar a loja principal. Faça os testes e configuração **antes de mesclar a PR**. Ao mesclar e após o workflow Pages passar, a rota prevista é `https://gelz.tech/prospect/`. Publicar frontend sem Supabase mostra apenas o painel de instalação e demonstração fictícia.
+- Telefones vêm apenas de informações comerciais permitidas, quando disponíveis.
+- Número **público não é automaticamente autorização para receber mensagens de marketing por WhatsApp**.
+- `Conversar no WhatsApp`: link individual com mensagem editável, aberto somente quando há autorização documentada no CRM.
+- Abrir WhatsApp **não significa** que alguém foi contatado; o evento registra apenas abertura do link.
+- Marque **Já contatei** manualmente quando houve contato de fato. O indicador da página inicial reflete essa confirmação.
+- Nenhum envio em massa ou coleta de celulares privados por bots.
 
-## 6. Verificações antes de produção
+## 5. Indicadores do painel
 
-- [ ] Autenticação real funciona apenas para admin.
-- [ ] Tentativa de usar `admin/admin` em produção não funciona.
-- [ ] Troca de senha ativa acesso; sem troca, RLS nega dados.
-- [ ] Sessão expira, logout funciona, refresh mantém login quando permitido.
-- [ ] Conta desconhecida não acessa CRM e RLS nega consultas.
-- [ ] Banco sem usuários de demonstração.
-- [ ] Maps carrega com chave restrita e Places faturado com quotas.
-- [ ] Busca por bairro mostra empresas reais e mapa.
-- [ ] Captura não grava conteúdo sujeito a restrições Google.
-- [ ] CNPJ inválido é recusado e correspondência é confirmada.
-- [ ] Contatos vêm somente de fornecedores licenciados e fontes verificáveis.
-- [ ] Mensagens WhatsApp só abrem com autorização registrada.
-- [ ] IA não inventa informações financeiras ou pontuação com dados insuficientes.
-- [ ] CSV importado não herda consentimento WhatsApp.
-- [ ] CRUD, pipeline, agenda, exportação e edição funcionam em mobile e desktop.
-- [ ] Criptografia em trânsito; logs sem tokens ou dados sensíveis.
-- [ ] Quotas e limites de APIs definidos; orçamento monitorado.
-- [ ] Plano de backups, exclusão e retenção de dados aprovado.
-- [ ] Compliance Quattro/XP revisou fluxos e mensagens.
-- [ ] Site GELZ Store continua funcionando como antes.
+- `CNPJs encontrados`: registros retornados e verificados na pesquisa atual.
+- `Em destaque`: pontuação cadastral ≥70, baseada em dados públicos; não comprova dinheiro ou faturamento.
+- `Salvos no CRM`: empresas cadastradas.
+- `Contatados`: contatos confirmados manualmente ou leads em estágios avançados.
+- Gráfico de etapas: distribuição dos registros salvos.
 
-## 7. Desenvolvimento local
-
-Qualquer servidor estático é suficiente para a interface, por exemplo:
+## 6. Testes e publicação
 
 ```bash
-cd prospect
-python -m http.server 8000
+node --check prospect/assets/app.js
+node --check prospect/assets/capture.js
+node --check prospect/assets/cnpj-engine.js
+node --test prospect/tests/smoke.test.mjs prospect/tests/capture.test.mjs
+node prospect/tests/browser-smoke.mjs
 ```
 
-Abra `http://localhost:8000` para a interface. Sem credenciais, utilize **admin / admin** somente para entrar na **demonstração fictícia** ou clique em **Explorar demonstração fictícia**. Não existe autenticação privada nesse modo e nenhum dado real é carregado. Não cadastre dados reais na demonstração.
+O teste de navegador precisa de Chrome/Chromium, Python 3 e rede; ele abre o site local, testa a sidebar, faz consulta CNPJ pública e salva lead na demo.
 
-## Limitações atuais — não ocultar
+CI: `.github/workflows/prospect-ci.yml` (testes unitários, navegador e fonte pública).
 
-Não é possível habilitar funcionalidades externas reais **sem** as contas, chaves, quotas, fornecedor autorizado e configuração de backend pelo proprietário. Não é possível inferir faturamento ou patrimônio a partir de CNPJ. Telefone público não implica autorização para mensagens pelo WhatsApp. A versão em branch está preparada, mas **não está publicada em gelz.tech**.
+O workflow existente `.github/workflows/gelz-pages.yml` publica `main` em `gelz.tech`. O Prospect fica em `/prospect/` sem alterar a GELZ Store. Use pull request e confirme CI antes do merge.
+
+## Transparência
+
+- As fontes cadastrais podem ter defasagem ou campos faltantes.
+- Nome parecido **não basta** para identificar CNPJ; a pesquisa por nome lista candidatos. O usuário confirma o registro.
+- “Capital social” é capital declarado em registro público, **não** receita, lucro, valor patrimonial ou dinheiro disponível.
+- CNPJ de MEI/empresário individual pode incluir nome de pessoa física; fornecedores públicos redigem contatos particulares, e o sistema respeita o campo `contato_oculto`.
+- Precisão geográfica e cobertura dependem da fonte escolhida.
+- Respeite a LGPD, termos de API, políticas do WhatsApp e compliance da instituição financeira.

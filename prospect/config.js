@@ -6,7 +6,7 @@ window.GELZ_CONFIG = Object.freeze({
   supabaseUrl: "",
   supabaseAnonKey: "",
   adminEmail: "",
-  googleMapsKey: "",
+  radiusProviderEnabled: false, // exige Supabase + PROSPECT_RADIUS_API_KEY privado
   enrichmentEnabled: false,
   contactProviderEnabled: false,
   aiEnabled: false
