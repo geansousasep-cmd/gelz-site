@@ -65,8 +65,13 @@ try{
  const count1=await evaluate("document.querySelectorAll('.prospect-results tbody tr').length");
  assert.ok(count1>0&&count1<=20,"real source returns one page of up to 20 small companies");
 
+ // Deterministic bulk test: the live provider may return only one matching company.
+ // Mock a business-list page AFTER live API checks, then verify batch capture.
+ await evaluate("window.__gelzLiveFetch=window.fetch;window.fetch=(input,opts)=>{const u=String(input);if(u.includes('/busca-avancada')&&u.includes('pagina=1'))return Promise.resolve(new Response(JSON.stringify({total_numero:400,paginas:20,pagina:1,resultados:[{cnpj:'07396951000170',nome_fantasia:'TRANSPORTES EMPRESA',razao_social:'TRANSPORTES EMPRESA LTDA',municipio:'SAO PAULO',uf:'SP',porte:'ME',capital_social:20000},{cnpj:'19131243000197',nome_fantasia:'NEGOCIO LOCAL',razao_social:'NEGOCIO LOCAL LTDA',municipio:'SAO PAULO',uf:'SP',porte:'ME',capital_social:35000}]}),{status:200,headers:{'content-type':'application/json'}}));return window.__gelzLiveFetch(input,opts);};document.querySelector('#capture-form').requestSubmit();true");
+ await waitFor("document.querySelectorAll('.prospect-results tbody tr').length===2 && !document.querySelector('.loading-stripes')",90);
  await evaluate("window.confirm=()=>true;document.querySelector('[data-action=capture-bulk]').click();true");
  await waitFor("Number(document.querySelector('#nav-lead-count').textContent)>1");
+ await evaluate("window.fetch=window.__gelzLiveFetch;true");
 
  assert.equal(await evaluate("document.querySelector('.capture-page-caption').textContent.includes('Página')"),true);
  const firstPage=await evaluate("document.querySelector('.capture-page-caption').textContent");
