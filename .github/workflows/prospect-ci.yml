@@ -28,6 +28,8 @@ jobs:
           node --check prospect/assets/capture.js
       - name: Run Prospect smoke tests
         run: node --test prospect/tests/smoke.test.mjs prospect/tests/capture.test.mjs
+      - name: Browser E2E navigation and live CNPJ capture
+        run: node prospect/tests/browser-smoke.mjs
       - name: Probe public CNPJ API and CORS (non-blocking)
         continue-on-error: true
         run: |
