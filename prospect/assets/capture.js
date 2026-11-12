@@ -63,28 +63,64 @@ import * as CNPJ from './cnpj-engine.js';
   function home(){return pageHeader(false)+form()+metrics()+results(10)+stats();}
   function discover(){return pageHeader(true)+form()+results(40);}
   function setup(deps){h=deps;}
-  async function submit(formElement){
-    const f=new FormData(formElement);app.mode=String(f.get("mode")||"sector");app.city=String(f.get("city")||app.city);app.uf=String(f.get("uf")||app.uf);app.neighborhood=String(f.get("neighborhood")||app.neighborhood);app.radius=Number(f.get("radius")||app.radius);app.cnae=String(f.get("cnae")||app.cnae);app.term=String(f.get(app.mode==="cnpj"?"cnpj":"name")||"").trim();
+
+  const capitalRanges={all:[null,null],under10k:[0,10000],under50k:[0,50000],under100k:[0,100000],"50to200k":[50000,200000],"100to500k":[100000,500000],"500kto1m":[500000,1000000],over1m:[1000000,null]};
+  const fold=t=>String(t||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
+  async function loadPage(page=1){
+    if(app.loading)return;
+    app.page=Math.max(1,Math.min(50,Math.floor(Number(page)||1)));
     app.loading=true;app.error="";app.notice="";app.searched=true;app.items=[];h.render();
     try{
       let result;
-      if(app.mode==="cnpj"){result={items:[await CNPJ.byCNPJ(app.term)]};}
-      else if(app.mode==="name"){result=await CNPJ.byName({query:app.term,city:app.city,uf:app.uf});}
-      else if(app.mode==="sector"){result=await CNPJ.bySector({city:app.city,uf:app.uf,cnae:app.cnae});}
-      else if(window.GELZ_CONFIG?.radiusProviderEnabled&&!h.state.demo&&h.state.client){
+      if(app.mode==="cnpj")result={items:[await CNPJ.byCNPJ(app.term)],total:1,pages:1};
+      else if(app.mode==="name")result=await CNPJ.byName({query:app.term,city:app.city,uf:app.uf});
+      else if(app.mode==="sector"){
+        const [min,max]=capitalRanges[app.capitalBand]||capitalRanges.all;
+        result=await CNPJ.bySector({city:app.city,uf:app.uf,cnae:app.cnae,page:app.page,porte:app.porte,capitalMin:min,capitalMax:max,order:app.order});
+      }else if(window.GELZ_CONFIG?.radiusProviderEnabled&&!h.state.demo&&h.state.client){
         const center=await CNPJ.geocodeCenter({city:app.city,neighborhood:app.neighborhood});
         const {data,error}=await h.state.client.functions.invoke("prospect-enrich",{body:{mode:"radius",latitude:center.latitude,longitude:center.longitude,radiusKm:app.radius,cnae:app.cnae}});
         if(error||data?.error)throw Error(error?.message||data?.error||"Busca geográfica indisponível");
-        result={items:(data?.items||[]).map(x=>CNPJ.normalize(x,"API CNPJs / raio exato")),total:data?.total||0,notice:"Empresas localizadas dentro do raio definido. Fonte: fornecedor cadastral contratado."};
+        result={items:(data?.items||[]).map(x=>CNPJ.normalize(x,"API CNPJs / raio")),total:data?.total||0,pages:1,notice:"Resultados dentro do raio fornecido pela API contratada."};
       }else result=await CNPJ.byRadius({city:app.city,neighborhood:app.neighborhood,radiusKm:app.radius});
-      if(result.items?.length&&app.mode!=="cnpj"&&app.mode!=="radius")result.items=await CNPJ.enrich(result.items,Math.min(8,result.items.length));
-      app.items=(result.items||[]).filter(x=>x.verified);app.total=result.total??app.items.length;app.notice=result.notice||"";
-      if(!app.items.length)h.toast("Nenhum resultado confirmado para esta busca.");
-    }catch(err){app.error=err.message||"Consulta indisponível";h.toast("CNPJ: "+app.error,"error");}finally{app.loading=false;h.render();}
+      app.total=Number(result?.total)||0;
+      app.pages=app.mode==="sector"?Math.min(50,Math.max(1,result?.pages||Math.ceil(Math.min(app.total,10000)/20)||1)):1;
+      let items=(result?.items||[]).filter(x=>x.verified);
+      app.checkedBairro=0;
+      if(app.bairro&&(app.mode==="sector"||app.mode==="name")){
+        const subset=items.slice(0,20);
+        const detailed=await CNPJ.enrich(subset,subset.length);
+        app.checkedBairro=detailed.length;
+        items=detailed.filter(x=>fold(x.neighborhood).includes(fold(app.bairro)));
+        app.notice="Bairro aplicado SOMENTE às "+app.checkedBairro+" empresas conferidas nesta página; não é uma pesquisa exaustiva no bairro. Navegue pelas páginas para ampliar.";
+      }else{
+        app.notice=result?.notice||"";
+        if(items.length&&app.mode!=="radius"&&app.mode!=="cnpj")items=await CNPJ.enrich(items,Math.min(items.length,4));
+      }
+      app.items=items;
+      if(!items.length)h.toast("Nenhuma empresa localizada nesta página com esses filtros.");
+    }catch(err){app.error=err.message||"Consulta indisponível";h.toast("Consulta: "+app.error,"error");}
+    finally{app.loading=false;h.render();}
+  }
+  async function submit(formElement){
+    const f=new FormData(formElement);
+    app.mode=String(f.get("mode")||"sector");
+    app.city=String(f.get("city")||app.city).trim();
+    app.uf=String(f.get("uf")||app.uf).toUpperCase();
+    app.neighborhood=String(f.get("neighborhood")||app.neighborhood).trim();
+    app.bairro=String(f.get("bairro")||"").trim().slice(0,90);
+    app.radius=Number(f.get("radius")||app.radius);
+    app.cnae=String(f.get("cnae")||"");
+    app.porte=String(f.get("porte")||"");
+    app.capitalBand=String(f.get("capitalBand")||"all");
+    app.order=String(f.get("order")||"razao_asc");
+    app.term=String(f.get(app.mode==="cnpj"?"cnpj":"name")||"").trim();
+    app.page=1;app.pages=1;app.total=0;
+    await loadPage(1);
   }
   function changeMode(mode){
     app.mode=mode;const el=document.querySelector("#capture-form");if(!el)return;
-    el.querySelectorAll("[data-capture-field]").forEach(f=>{const k=f.dataset.captureField;f.style.display=k==="mode"||k===mode||(mode!=="cnpj"&&["city","uf"].includes(k))||(mode==="radius"&&k==="sector")?"":"none";});
+    el.querySelectorAll("[data-capture-field]").forEach(f=>{const k=f.dataset.captureField;f.style.display=k==="mode"||k===mode||(mode!=="cnpj"&&["city","uf"].includes(k))||(mode==="radius"&&k==="sector")||(["sector","name"].includes(mode)&&k==="bairro")||(mode==="sector"&&["porte","capitalBand","order"].includes(k))?"":"none";});
     const caption=document.querySelector("#capture-hint");if(caption)caption.textContent=hint();
   }
   function detail(id){
@@ -120,6 +156,8 @@ import * as CNPJ from './cnpj-engine.js';
     if(name==="capture-detail")detail(id);
     else if(name==="capture-save")await save(id);
     else if(name==="capture-export")csv();
+    else if(name==="capture-page-next")await loadPage(app.page+1);
+    else if(name==="capture-page-prev")await loadPage(app.page-1);
     else if(name==="capture-contacted")await contacted(id);
   }
 
