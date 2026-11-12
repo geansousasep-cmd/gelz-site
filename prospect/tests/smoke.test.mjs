@@ -9,7 +9,7 @@ test("App shell and local assets exist",()=>{
 });
 test("CRM and Google Places workflows are wired to the UI",()=>{
  const js=get("assets/app.js");
- for(const k of ["saveLead","stageChange","runAI","searchPlaces","placeDetails","enrichCnpj","validWhats","openWhatsapp","commercialContacts","importCSV","downloadCSV","renderCommand"])assert.ok(js.includes(k),k);
+ for(const k of ["storeLead","stageChange","runAI","searchPlaces","placeDetails","enrichCnpj","validWhats","openWhatsapp","commercialContacts","importCSV","downloadCSV","renderCommand"])assert.ok(js.includes(k),k);
  assert.ok(js.includes('opt_in_evidence'));
  assert.ok(js.includes("searchByText"));
 });
