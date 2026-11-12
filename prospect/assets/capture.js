@@ -1,15 +1,16 @@
 import * as CNPJ from './cnpj-engine.js';
+import * as CONTACT from './contact-utils.js';
 
   let h=null;
   const segments=[["6920601","Contabilidade"],["7020400","Consultoria"],["6204000","Tecnologia"],["6821801","Imobiliárias"],["4930202","Transportadoras"],["4781400","Vestuário"],["5611201","Restaurantes"],["8630503","Clínicas"]];
-  const app={mode:"sector",city:"São Paulo",uf:"SP",neighborhood:"Tatuapé",bairro:"",radius:3,cnae:"",porte:"",capitalBand:"all",order:"razao_asc",page:1,pages:1,advanced:false,term:"",items:[],total:0,loading:false,searched:false,error:"",notice:"",checkedBairro:0};
+  const app={mode:"sector",city:"São Paulo",uf:"SP",neighborhood:"Tatuapé",bairro:"",radius:3,cnae:"",porte:"ME,EPP",capitalBand:"all",order:"xp_fit",page:1,firstPage:1,pages:1,advanced:false,term:"",items:[],total:0,loading:false,searched:false,error:"",notice:"",checkedBairro:0};
   const safe=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   const digits=v=>String(v??"").replace(/\D/g,"");
   const ico=(name)=>h.ic(name,16);
   const button=(label,action,id="",kind="button-subtle")=>`<button class="button ${kind}" type="button" data-action="${action}" ${id?`data-cnpj="${safe(id)}" data-id="${safe(id)}"`:""}>${label}</button>`;
   const linked=x=>h.state.leads.find(l=>x.cnpj&&l.cnpj===x.cnpj);
   const touched=l=>!!l&&(["Em conversa","Reunião agendada","Proposta","Convertido"].includes(l.stage)||h.state.events.some(e=>e.lead_id===l.id&&e.kind==="Contato confirmado"));
-  const score=x=>CNPJ.potential(x);
+  const score=x=>CNPJ.xpFit(x);
   const order=()=>[...app.items].sort((a,b)=>app.order==="capital_asc"?Number(a.capital_social||0)-Number(b.capital_social||0):app.order==="razao_asc"?String(a.razao_social||a.company_name).localeCompare(String(b.razao_social||b.company_name),"pt-BR"):(score(b).score??-1)-(score(a).score??-1));
   const badge=x=>{const l=linked(x);return !l?'<span class="chip dim">Novo</span>':touched(l)?'<span class="chip green">Contatado</span>':l.stage==="Sem interesse"?'<span class="chip red">Sem interesse</span>':'<span class="chip blue">Salvo</span>';};
   function form(){
@@ -29,20 +30,20 @@ import * as CNPJ from './cnpj-engine.js';
       ${field("bairro","Bairro (página atual)",`<input name="bairro" value="${safe(app.bairro)}" placeholder="Ex.: Tatuapé">`,app.mode==="sector"||app.mode==="name")}
       ${field("porte","Porte",`<select name="porte"><option value="">Todos os portes</option><option value="ME" ${app.porte==="ME"?"selected":""}>Microempresa (ME)</option><option value="EPP" ${app.porte==="EPP"?"selected":""}>Pequena (EPP)</option><option value="ME,EPP" ${app.porte==="ME,EPP"?"selected":""}>ME + EPP</option><option value="Demais" ${app.porte==="Demais"?"selected":""}>Demais</option></select>`,app.mode==="sector")}
       ${field("capitalBand","Capital social",`<select name="capitalBand"><option value="all" ${app.capitalBand==="all"?"selected":""}>Qualquer capital</option><option value="under10k" ${app.capitalBand==="under10k"?"selected":""}>Até R$ 10 mil</option><option value="under50k" ${app.capitalBand==="under50k"?"selected":""}>Até R$ 50 mil</option><option value="under100k" ${app.capitalBand==="under100k"?"selected":""}>Até R$ 100 mil</option><option value="50to200k" ${app.capitalBand==="50to200k"?"selected":""}>R$ 50–200 mil</option><option value="100to500k" ${app.capitalBand==="100to500k"?"selected":""}>R$ 100–500 mil</option><option value="500kto1m" ${app.capitalBand==="500kto1m"?"selected":""}>R$ 500 mil–1 mi</option><option value="over1m" ${app.capitalBand==="over1m"?"selected":""}>Acima de R$ 1 mi</option></select>`,app.mode==="sector")}
-      ${field("order","Ordenação",`<select name="order"><option value="razao_asc" ${app.order==="razao_asc"?"selected":""}>Nome (A–Z)</option><option value="capital_asc" ${app.order==="capital_asc"?"selected":""}>Menor capital</option><option value="capital_desc" ${app.order==="capital_desc"?"selected":""}>Maior capital</option></select>`,app.mode==="sector")}
+      ${field("order","Ordenação",`<select name="order"><option value="xp_fit" ${app.order==="xp_fit"?"selected":""}>Afinidade XP / negócios locais</option><option value="razao_asc" ${app.order==="razao_asc"?"selected":""}>Nome (A–Z)</option><option value="capital_asc" ${app.order==="capital_asc"?"selected":""}>Menor capital</option><option value="capital_desc" ${app.order==="capital_desc"?"selected":""}>Maior capital</option></select>`,app.mode==="sector")}
       <button type="submit" class="button button-primary prospect-cta" ${app.loading?"disabled":""}>${app.loading?ico("refresh")+" Pesquisando...":ico("search")+" Encontrar leads"}</button></form>
       <div class="prospect-hint" id="capture-hint">${hint()}</div></section>`;
   }
   function hint(){return app.mode==="radius"?(window.GELZ_CONFIG?.radiusProviderEnabled?"Busca por raio exato usando fornecedor empresarial autenticado.":"Raio real usando OpenStreetMap: somente empresas com CNPJ mapeado. Cobertura limitada."):(app.mode==="sector"?"Pesquisa por CNAE e cidade, não por distância.":"Consulta real em base pública de CNPJs.");}
   function metrics(){
     const good=app.items.filter(x=>(score(x).score??-1)>=70).length,contacted=h.state.leads.filter(touched).length;
-    const list=[["CNPJs na busca",app.total||app.items.length,"building"],["Nesta página",app.items.length,"sparkles"],["No CRM",h.state.leads.length,"users"],["Contatados",contacted,"phone"]];
+    const list=[["Empresas disponíveis",app.total||app.items.length,"building"],["Exibidas",app.items.length,"sparkles"],["No CRM",h.state.leads.length,"users"],["Contatados",contacted,"phone"]];
     return `<section class="prospect-metrics">${list.map(([label,value,icon])=>`<div class="panel prospect-metric"><span>${safe(label)} ${ico(icon)}</span><strong>${Number(value).toLocaleString("pt-BR")}</strong></div>`).join("")}</section>`;
   }
   function rows(n){
     return order().slice(0,n).map((x,i)=>{
       const s=score(x),saved=linked(x),phone=x.contactHidden?"":(saved?.contact_phone||x.phone||""),contact=phone?`<a class="link mono contact-no" href="tel:${digits(phone)}" title="Ligar para telefone comercial">${safe(phone)}</a>`:"<small class='muted'>Sem contato comercial</small>";
-      return `<tr><td><span class="rank-idx">${String((app.mode==="sector"?(app.page-1)*20:0)+i+1).padStart(2,"0")}</span></td><td><strong class="result-name">${safe(x.company_name)}</strong><small>${safe([x.neighborhood,x.city,x.uf].filter(Boolean).join(" • "))}</small></td><td><span class="mono">${safe(x.cnpj)}</span></td><td><span class="prospect-score">${s.score==null?"—":s.score}<small>/100</small></span><small>${safe(s.evidence)}</small></td><td>${badge(x)}<div style="margin-top:5px">${contact}</div></td><td class="result-buttons">${saved?button("Abrir","lead-view",saved.id):button(ico("plus")+" Salvar","capture-save",x.cnpj,"button-primary")}${button(ico("users")+" Sócios","capture-partners",x.cnpj)}${button(ico("info"),"capture-detail",x.cnpj)}</td></tr>`;
+      return `<tr><td><span class="rank-idx">${String((app.mode==="sector"?(app.firstPage-1)*20:0)+i+1).padStart(2,"0")}</span></td><td><strong class="result-name">${safe(x.company_name)}</strong><small>${safe([x.neighborhood,x.city,x.uf].filter(Boolean).join(" • "))}</small></td><td><span class="mono">${safe(x.cnpj)}</span></td><td><span class="prospect-score">${s.score==null?"—":s.score}<small>/100</small></span><small>${safe(s.evidence)}</small></td><td>${badge(x)}<div style="margin-top:5px">${contact}</div></td><td class="result-buttons">${saved?button("Abrir","lead-view",saved.id):button(ico("plus")+" Salvar","capture-save",x.cnpj,"button-primary")}${button(ico("users")+" Sócios","capture-partners",x.cnpj)}${button(ico("info"),"capture-detail",x.cnpj)}</td></tr>`;
     }).join("");
   }
   function results(n=12){
@@ -53,7 +54,7 @@ import * as CNPJ from './cnpj-engine.js';
        <span class="capture-page-caption">Página <strong>${app.page}</strong> de <strong>${app.pages}</strong> • ${Math.min(app.total,app.page*20).toLocaleString("pt-BR")} de ${app.total.toLocaleString("pt-BR")} resultados</span>
        <div class="capture-page-actions"><button type="button" class="button button-outline" data-action="capture-page-prev" ${app.page<=1?"disabled":""}>${ico("arrow")} Anterior</button><button type="button" class="button button-primary" data-action="capture-page-next" ${app.page>=app.pages?"disabled":""}>Próxima página ${ico("arrow")}</button></div>
        </nav>` :""}
-    <p class="prospect-footnote">Ranking indicativo por porte e capital social declarado. Não mede faturamento, patrimônio nem capacidade de investir. Fonte: <a href="https://fichario.app/api" target="_blank" rel="noopener noreferrer">Fichário</a> / dados abertos da Receita. ${safe(app.notice||"")}</p></section>`;
+    <p class="prospect-footnote">Ranking de afinidade comercial para conversar com negócios locais (ME/EPP). Não mede faturamento, patrimônio ou capacidade de investimento. Fonte: <a href="https://fichario.app/api" target="_blank" rel="noopener noreferrer">Fichário</a> / dados abertos da Receita. ${safe(app.notice||"")}</p></section>`;
   }
   function stats(){
     const s=h.state,counts=s.leads.reduce((a,l)=>{a[l.stage]=(a[l.stage]||0)+1;return a;},{});
@@ -73,8 +74,8 @@ import * as CNPJ from './cnpj-engine.js';
   const fold=t=>String(t||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
   async function loadPage(page=1){
     if(app.loading)return;
-    const old={page:app.page,items:app.items,total:app.total,pages:app.pages,notice:app.notice};
-    app.page=Math.max(1,Math.min(50,Math.floor(Number(page)||1)));
+    const old={page:app.page,firstPage:app.firstPage,items:app.items,total:app.total,pages:app.pages,notice:app.notice};
+    app.page=Math.max(1,Math.min(50,Math.floor(Number(page)||1)));app.firstPage=app.page;
     app.loading=true;app.error="";app.notice="";app.searched=true;app.items=[];h.render();
     try{
       let result;
@@ -82,7 +83,7 @@ import * as CNPJ from './cnpj-engine.js';
       else if(app.mode==="name")result=await CNPJ.byName({query:app.term,city:app.city,uf:app.uf});
       else if(app.mode==="sector"){
         const [min,max]=capitalRanges[app.capitalBand]||capitalRanges.all;
-        result=await CNPJ.bySector({city:app.city,uf:app.uf,cnae:app.cnae,page:app.page,porte:app.porte,capitalMin:min,capitalMax:max,order:app.order});
+        result=await CNPJ.bySector({city:app.city,uf:app.uf,cnae:app.cnae,page:app.page,porte:app.porte,capitalMin:min,capitalMax:max,order:app.order==="xp_fit"?"capital_asc":app.order});
       }else if(window.GELZ_CONFIG?.radiusProviderEnabled&&!h.state.demo&&h.state.client){
         const center=await CNPJ.geocodeCenter({city:app.city,neighborhood:app.neighborhood});
         const {data,error}=await h.state.client.functions.invoke("prospect-enrich",{body:{mode:"radius",latitude:center.latitude,longitude:center.longitude,radiusKm:app.radius,cnae:app.cnae}});
@@ -105,7 +106,7 @@ import * as CNPJ from './cnpj-engine.js';
       }
       app.items=items;
       if(!items.length)h.toast("Nenhuma empresa localizada nesta página com esses filtros.");
-    }catch(err){app.page=old.page;app.items=old.items;app.total=old.total;app.pages=old.pages;app.notice=old.notice;app.error=(err.message||"Consulta indisponível")+(old.items.length?". Resultados anteriores preservados.":"");h.toast("Consulta: "+app.error,"error");}
+    }catch(err){app.page=old.page;app.firstPage=old.firstPage;app.items=old.items;app.total=old.total;app.pages=old.pages;app.notice=old.notice;app.error=(err.message||"Consulta indisponível")+(old.items.length?". Resultados anteriores preservados.":"");h.toast("Consulta: "+app.error,"error");}
     finally{app.loading=false;h.render();}
   }
   async function submit(formElement){
@@ -119,9 +120,9 @@ import * as CNPJ from './cnpj-engine.js';
     app.cnae=String(f.get("cnae")||"");
     app.porte=String(f.get("porte")||"");
     app.capitalBand=String(f.get("capitalBand")||"all");
-    app.order=String(f.get("order")||"razao_asc");
+    app.order=String(f.get("order")||"xp_fit");
     app.term=String(f.get(app.mode==="cnpj"?"cnpj":"name")||"").trim();
-    app.page=1;app.pages=1;app.total=0;
+    app.page=1;app.firstPage=1;app.pages=1;app.total=0;
     await loadPage(1);
   }
   function changeMode(mode){
