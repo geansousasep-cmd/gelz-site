@@ -4,6 +4,7 @@ const C=window.GELZ_CONFIG||{};
 const CAPTURE=await import("./capture.js");
 const CNPJ_API=await import("./cnpj-engine.js");
 const CONTACT=await import("./contact-utils.js");
+const RESEARCH=await import("./research.js");
 const $=s=>document.querySelector(s);
 const $$=s=>Array.from(document.querySelectorAll(s));
 const safe=v=>String(v??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
@@ -13,7 +14,7 @@ const fmtDate=v=>{if(!v)return "Sem data";const d=new Date(v);return isNaN(+d)?"
 const today=()=>new Date().toISOString().slice(0,10);
 const uid=()=>globalThis.crypto?.randomUUID?.()||"local-"+Date.now()+"-"+Math.random().toString(36).slice(2);
 const STAGES=["Descoberto","Em pesquisa","Qualificado","Aguardando autorização","Em conversa","Reunião agendada","Proposta","Convertido","Sem interesse"];
-const VIEW_NAMES={dashboard:"Início",discover:"Capturar CNPJs",leads:"Meus leads",pipeline:"Funil",tasks:"Agenda",intelligence:"Inteligência",reports:"Gráficos",settings:"Ajustes"};
+const VIEW_NAMES={dashboard:"Início",discover:"Capturar CNPJs",leads:"Meus leads",pipeline:"Funil",tasks:"Agenda",intelligence:"Pesquisar empresa",reports:"Gráficos",settings:"Ajustes"};
 const paths={
 dashboard:'<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>',
 map:'<path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15M15 6v15"/>',
@@ -50,7 +51,7 @@ calendarPlus:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M
 };
 const ic=(k,size=17)=>`<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[k]||paths.info}</svg>`;
 function icons(root=document){root.querySelectorAll("[data-icon]").forEach(e=>e.innerHTML=ic(e.dataset.icon));}
-const state={client:null,user:null,account:null,demo:false,leads:[],tasks:[],events:[],view:"dashboard",map:null,mapElement:null,mapMarkers:[],places:[],placeSelected:null,details:null,loading:false,searchTerm:"",searchStage:"",analysisLeadId:"",settings:{},mapBusy:false};
+const state={publicAnalysis:null,client:null,user:null,account:null,demo:false,leads:[],tasks:[],events:[],view:"dashboard",map:null,mapElement:null,mapMarkers:[],places:[],placeSelected:null,details:null,loading:false,searchTerm:"",searchStage:"",analysisLeadId:"",settings:{},mapBusy:false};
 const fakeCompanies=[
 ["Alvorada Contábil (fictícia)","Contabilidade","Tatuapé","Qualificado"],
 ["Horizonte Atacado (fictícia)","Comércio","Brás","Em pesquisa"],
@@ -60,7 +61,7 @@ const fakeCompanies=[
 ["Vértice Gestão (fictícia)","Consultoria","Santana","Proposta"],
 ["Terranova Serviços (fictícia)","Serviços","Paulista","Sem interesse"]
 ];
-CAPTURE.setup({state,ic,render,toast,openModal,closeModal,viewLead,recordEvent,stageChange,fmtDate});
+CAPTURE.setup({state,ic,render,toast,openModal,closeModal,viewLead,recordEvent,stageChange,fmtDate,analyzeCompany});
 function createDemoLeads(){return fakeCompanies.map((a,i)=>({id:"fic-"+i,company_name:a[0],sector:a[1],neighborhood:a[2],city:"São Paulo",stage:a[3],contact_name:"",contact_phone:"",contact_email:"",contact_source_url:"",opt_in_whatsapp:false,opt_in_evidence:"",cnpj:"",cnpj_verified:false,cnae:"",source_type:"fictício",place_id:"",website:"",notes:"Dados exclusivamente fictícios para visualização do produto.",next_contact_at:null,created_at:new Date(Date.now()-i*86400000).toISOString(),updated_at:new Date(Date.now()-i*86400000).toISOString(),ai_score:null,ai_analysis:null}));}
 function toast(message,type="ok"){const d=document.createElement("div");d.className="toast"+(type==="error"?" error":"");d.textContent=message;$("#toast-root").appendChild(d);setTimeout(()=>d.remove(),4500);}
 function demoWarn(){toast("Demonstração: apenas dados fictícios e operações locais. Nenhuma integração ativa.");}
@@ -68,6 +69,7 @@ function pageHeader(eyebrow,heading,subtitle,actions=""){return `<div class="pag
 function btn(text,action,variant="button-subtle",extra=""){return `<button type="button" class="button ${variant}" data-action="${action}" ${extra}>${text}</button>`;}
 function pill(stage){const cl=stage==="Convertido"?"green":stage==="Reunião agendada"?"blue":stage==="Sem interesse"?"red":stage==="Qualificado"?"gold":"dim";return `<span class="chip ${cl}">${safe(stage)}</span>`;}
 function fmt(v){return Number(v||0).toLocaleString("pt-BR");}
+function verifiedUrl(v){try{const u=new URL(String(v||""));return u.protocol==="https:"?u.href:"";}catch{return "";}}
 function optionStage(active){return STAGES.map(st=>`<option value="${attr(st)}" ${st===active?"selected":""}>${safe(st)}</option>`).join("");}
 function render(){if($("#workspace").classList.contains("hidden"))return;$$("[data-view]").forEach(n=>n.classList.toggle("active",n.dataset.view===state.view));$("#current-breadcrumb").textContent=VIEW_NAMES[state.view];$("#nav-lead-count").textContent=state.leads.length;$("#footer-mode").textContent=state.demo?"DEMONSTRAÇÃO • NÃO PRIVADA":"Acesso privado";$("#connection-status").textContent=state.demo?"Modo local":"Sessão autenticada";$("#account-subline").textContent=state.demo?"Dados fictícios":"Administrador";
 let content="";
@@ -91,14 +93,51 @@ const pending=state.tasks.filter(t=>!t.completed).sort((a,b)=>String(a.due_at||"
 const item=t=>`<div class="task-row ${t.completed?"done":""}"><input aria-label="Concluir tarefa" type="checkbox" data-task-check="${attr(t.id)}" ${t.completed?"checked":""}><div class="task-main"><strong>${safe(t.title)}</strong><small>${safe(t.description||"")} ${t.lead_id?"• Lead vinculado":""}</small></div><span class="task-date">${fmtDate(t.due_at)}</span><button class="icon-button" data-action="task-edit" data-id="${attr(t.id)}" title="Editar tarefa">${ic("more")}</button></div>`;
 return `${pageHeader("AGENDA","Acompanhamentos.","Reuniões e próximos contatos.",btn(ic("calendarPlus")+" Nova tarefa","task-new","button-primary"))}<div class="split"><section class="panel panel-pad"><div class="panel-top"><h2 class="panel-title">Pendentes <span class="badge-number">${pending.length}</span></h2></div><div class="task-list">${pending.length?pending.map(item).join(""):'<div class="empty-list">Nenhuma tarefa pendente.</div>'}</div></section><section class="panel panel-pad"><div class="panel-top"><h2 class="panel-title">Concluídas <span class="badge-number">${done.length}</span></h2></div><div class="task-list">${done.length?done.slice(0,30).map(item).join(""):'<div class="empty-list">Nenhuma tarefa concluída.</div>'}</div></section></div>`;}
 function intelligence(){
-const id=state.analysisLeadId||state.leads[0]?.id||"",l=state.leads.find(x=>x.id===id);const analysis=l?.ai_analysis;
-return `${pageHeader("INTELIGÊNCIA","Análises comerciais.","Sinais verificados, sem inventar faturamento.",btn(ic("info")+" Como funciona","ai-info"))}
-<div class="split"><section class="panel panel-pad"><div class="panel-top"><div><h2 class="panel-title">Diagnóstico de oportunidade</h2><p class="panel-sub">Selecione um lead e avalie seu posicionamento comercial</p></div></div>
-<div class="field"><label>Empresa para análise</label><select id="ai-lead"><option value="">Selecione uma empresa</option>${state.leads.map(x=>`<option value="${attr(x.id)}" ${x.id===id?"selected":""}>${safe(x.company_name||x.place_id||"Empresa")}</option>`).join("")}</select></div>
-<div class="button-row" style="margin-top:16px">${btn(ic("sparkles")+" Analisar com IA","ai-run","button-primary",!l||state.demo?'disabled title="Requer lead real e API configurada"':"")}${l?btn("Abrir lead","lead-view","button-outline",`data-id="${attr(l.id)}"`):""}</div>
-<p class="discovery-note">${state.demo?"Demonstração: não serão exibidos resultados artificiais de IA.":'A análise usa informações declaradas e resultados de fontes verificadas. A API de IA deve estar configurada em uma Edge Function protegida.'}</p></section><section class="panel panel-pad">
-${analysis?`<div class="panel-top"><h2 class="panel-title">Potencial comercial estimado</h2><span class="chip blue">Análise documentada</span></div><div class="insight-score mono">${l.ai_score==null?"—":Number(l.ai_score)}<span class="muted" style="font-size:17px">${l.ai_score==null?" sem nota":" /100"}</span></div>${l.ai_score==null?"":`<div class="score-track"><div style="width:${Math.max(0,Math.min(100,Number(l.ai_score)))}%"></div></div>`}<p class="small muted">Pontuação de aderência comercial; não representa patrimônio, faturamento ou capacidade de investimento.</p><div class="divider"></div><strong>${safe(analysis.summary||"Resumo indisponível")}</strong><p class="small muted">${safe(analysis.next_action||"")}</p>`:`<div class="empty">${ic("sparkles",30)}<h3>Uma inteligência que explica</h3><p>Ao configurar a IA, você verá resumos, fatores, fontes, limitações e próximos passos — nunca números financeiros inventados.</p></div>`}
-</section></div>${analysis?`<div class="three" style="margin-top:15px"><section class="insight-block"><h3>Oportunidades</h3><p>${(analysis.opportunities||[]).map(safe).join(" • ")||"Não disponível"}</p></section><section class="insight-block"><h3>Fatores e evidências</h3><p>${(analysis.factors||[]).map(safe).join(" • ")||"Não disponível"}</p></section><section class="insight-block"><h3>Limitações da análise</h3><p>${(analysis.missing_data||[]).map(safe).join(" • ")||"Não informado"}</p></section></div>`:""}`;}
+  const id=state.analysisLeadId||(state.publicAnalysis?"":state.leads[0]?.id||"");
+  const l=state.leads.find(x=>x.id===id);
+  const report=state.publicAnalysis||l?.ai_analysis||null;
+  const business=report?.company||{};
+  const reportMode=report?.mode||report?.type||"";
+  const verifiedAI=reportMode==="web_ai"||reportMode==="ai_web";
+  const sourceLinks=(report?.sources||[]).map(x=>{
+    if(typeof x==="string")return `<span class="chip dim">${safe(x)}</span>`;
+    const link=verifiedUrl(x.url);const caption=safe(x.title||x.name||"Fonte");
+    return link?`<a href="${attr(link)}" target="_blank" rel="noopener noreferrer" class="chip blue">${ic("link",12)} ${caption}</a>`:`<span class="chip dim">${caption}</span>`;
+  }).join("");
+  const people=(report?.partners||[]).slice(0,8).map(x=>`<div class="research-person"><div><strong>${safe(x.name)}</strong><small>${safe(x.role||"Sócio/administrador")}</small></div><a href="${attr(RESEARCH.linkedInSearch(x.name,business.name||l?.company_name))}" target="_blank" rel="noopener noreferrer">${ic("globe",13)} Buscar LinkedIn</a></div>`).join("");
+  const url=verifiedUrl(report?.webSearches?.company);
+  const news=verifiedUrl(report?.webSearches?.news);
+  const website=verifiedUrl(business.website);
+  const wa=RESEARCH.bareWhatsAppLink(business.phone);
+  const score=report?.score??l?.ai_score??null;
+  return `${pageHeader("INTELIGÊNCIA EMPRESARIAL","Pesquisa e análise.","Dados públicos verificados + pesquisa web por IA quando conectada.",btn(ic("info")+" Fontes e limites","ai-info"))}
+  <div class="split research-main">
+    <section class="panel panel-pad">
+      <div class="panel-top"><div><h2 class="panel-title">${ic("search")} Empresa para investigar</h2><p class="panel-sub">Selecione um lead ou abra a pesquisa diretamente de um CNPJ</p></div></div>
+      <div class="field"><label>Empresa</label><select id="ai-lead"><option value="">${report?.company?.name&&!l?safe(report.company.name+" (consulta atual)"):"Selecione uma empresa"}</option>${state.leads.map(x=>`<option value="${attr(x.id)}" ${x.id===id?"selected":""}>${safe(x.company_name||"Lead")}</option>`).join("")}</select></div>
+      <div class="button-row" style="margin-top:16px">${btn(ic("sparkles")+" "+(C.aiEnabled&&!state.demo?"Pesquisar com IA + web":"Consultar dados públicos"),"ai-run","button-primary",!l&&!report?'disabled':"")}${l?btn(ic("building")+" Abrir no CRM","lead-view","button-outline",`data-id="${attr(l.id)}"`):""}</div>
+      <p class="discovery-note">${C.aiEnabled&&!state.demo?"A IA consulta a web, cruza dados empresariais e apresenta links das fontes utilizadas.":"A consulta cadastral funciona agora. A pesquisa automática com IA + web requer configurar o backend e a chave privada da API."}</p>
+      ${report?`<div class="divider"></div><div class="eyebrow">${verifiedAI?"IA + PESQUISA NA WEB":"RELATÓRIO CADASTRAL • SEM IA ATIVA"}</div><h2 class="research-company-title">${safe(business.name||l?.company_name||"Empresa consultada")}</h2><p class="small muted">${safe(business.cnpj||l?.cnpj||"")} • ${safe([business.neighborhood,business.city].filter(Boolean).join(" / ")||"Região não informada")}</p><p class="research-summary">${safe(report.summary||"Sem resumo disponível.")}</p>`:"<div class='empty'>Selecione uma empresa ou clique em Analisar na pesquisa de CNPJ.</div>"}
+    </section>
+    <section class="panel panel-pad">
+      <div class="panel-top"><h2 class="panel-title">${ic("target")} Diagnóstico comercial</h2>${verifiedAI?'<span class="chip green">IA com pesquisa</span>':'<span class="chip dim">CNPJ / Receita</span>'}</div>
+      ${report?`<div class="research-score-row"><div class="insight-score mono">${score==null?"—":Number(score)}<span class="muted" style="font-size:16px">${score==null?" sem nota":" /100"}</span></div><span class="chip gold">Afinidade comercial PJ</span></div>
+      ${score==null?"":`<div class="score-track"><div style="width:${Math.max(0,Math.min(100,Number(score)))}%"></div></div>`}
+      <p class="discovery-note">Pontuação estimada de adequação à abordagem comercial, não de patrimônio, renda ou dinheiro disponível.</p>
+      <div class="research-company-kpis"><div><small>Porte</small><strong>${safe(business.porte||"Não informado")}</strong></div><div><small>Capital social declarado</small><strong>${business.capitalSocial?Number(business.capitalSocial).toLocaleString("pt-BR",{style:"currency",currency:"BRL"}):"Não informado"}</strong></div><div><small>Segmento</small><strong>${safe(business.sector||l?.sector||"Não informado")}</strong></div><div><small>Fundação / abertura</small><strong>${safe(business.openingDate||"Não informada")}</strong></div></div>
+      <div class="research-contact-row">${wa?`<a class="link mono" href="${attr(wa)}" target="_blank" rel="noopener noreferrer">${ic("phone",13)} ${safe(wa)}</a>`:'<span class="muted small">Contato comercial não identificado</span>'}${website?`<a class="link" href="${attr(website)}" target="_blank" rel="noopener noreferrer">${ic("globe",13)} Site da empresa</a>`:""}</div>`
+      :`<div class="empty">${ic("sparkles",28)}<h3>Dados reais, fontes visíveis</h3><p>Consulte um CNPJ para ver sinais empresariais e oportunidades.</p></div>`}
+    </section>
+  </div>
+  ${report?`${(report.company_updates||[]).length?`<section class="panel panel-pad research-news"><div class="panel-top"><h2 class="panel-title">${ic("globe")} Descobertas na internet</h2><span class="chip blue">Pesquisa web com IA</span></div><div class="research-web-facts">${report.company_updates.map(x=>`<p>${safe(x)}</p>`).join("")}</div></section>`:""}<div class="three research-extra">
+    <section class="insight-block"><h3>${ic("briefcase")} Oportunidades de conversa</h3><div class="research-bullets">${(report.opportunities||[]).slice(0,6).map(x=>`<p>${safe(x)}</p>`).join("")||"<p>Dados insuficientes.</p>"}</div></section>
+    <section class="insight-block"><h3>${ic("chart")} Fatos e sinais</h3><div class="research-bullets">${(report.factors||[]).slice(0,7).map(x=>`<p>${safe(x)}</p>`).join("")||"<p>Sem dados conclusivos.</p>"}</div></section>
+    <section class="insight-block"><h3>${ic("info")} Dados não disponíveis</h3><div class="research-bullets">${(report.missing_data||[]).slice(0,6).map(x=>`<p>${safe(x)}</p>`).join("")||"<p>Sem observações adicionais.</p>"}</div></section>
+  </div><div class="split research-bottom">
+    <section class="panel panel-pad"><div class="panel-top"><h2 class="panel-title">${ic("users")} Responsáveis públicos</h2><span class="chip dim">QSA</span></div>${people||"<p class='muted small'>Nenhum sócio listado na fonte consultada.</p>"}<p class="discovery-note">LinkedIn abre uma busca por nome e empresa. Confirme a identidade antes de associar um perfil ao contato.</p></section>
+    <section class="panel panel-pad"><div class="panel-top"><h2 class="panel-title">${ic("link")} Fontes e pesquisas</h2></div><div class="research-source-list">${sourceLinks||"<span class='muted small'>Fontes não retornadas.</span>"}</div><div class="button-row" style="margin-top:15px">${url?`<a class="button button-outline" target="_blank" rel="noopener noreferrer" href="${attr(url)}">${ic("search")} Empresa na web</a>`:""}${news?`<a class="button button-outline" target="_blank" rel="noopener noreferrer" href="${attr(news)}">${ic("globe")} Notícias</a>`:""}</div><div class="divider"></div><p class="small muted"><strong>Próximo passo: </strong>${safe(report.next_action||"Confirmar dados e identificar contato profissional.")}</p><p class="discovery-note">Consultado em ${fmtDate(report.checkedAt||new Date().toISOString())}. Informações podem estar desatualizadas.</p></section>
+  </div>`:""}`;
+}
 function reports(){
 const total=state.leads.length,won=state.leads.filter(l=>l.stage==="Convertido").length,meeting=state.leads.filter(l=>l.stage==="Reunião agendada").length,consent=state.leads.filter(l=>l.opt_in_whatsapp).length;
 const distribution={};state.leads.forEach(l=>{const key=l.sector||"Não informado";distribution[key]=(distribution[key]||0)+1;});let sectors=Object.entries(distribution).sort((a,b)=>b[1]-a[1]).slice(0,7);
@@ -125,7 +164,7 @@ function editLead(id=null,pid=null){const l=state.leads.find(x=>x.id===id)||null
 <div class="field full"><label>Nome da empresa *</label><input name="company_name" required maxlength="180" value="${v("company_name")}" placeholder="Razão social ou nome comercial confirmado"></div>
 <div class="field"><label>Segmento</label><input name="sector" value="${v("sector")}" placeholder="Ex.: Contabilidade"></div><div class="field"><label>CNPJ (se conhecido)</label><input name="cnpj" value="${v("cnpj")}" placeholder="00.000.000/0000-00" maxlength="18"></div>
 <div class="field"><label>Bairro</label><input name="neighborhood" value="${v("neighborhood")}"></div><div class="field"><label>Cidade</label><input name="city" value="${attr(l?.city||"São Paulo")}"></div>
-<div class="field"><label>Nome do contato comercial</label><input name="contact_name" value="${v("contact_name")}" placeholder="Informado pela empresa"></div><div class="field"><label>Telefone comercial</label><input name="contact_phone" value="${v("contact_phone")}" placeholder="5511999999999"></div>
+<div class="field"><label>Nome do contato comercial</label><input name="contact_name" value="${v("contact_name")}" placeholder="Informado pela empresa"></div><div class="field"><label>Telefone comercial</label><input name="contact_phone" value="${v("contact_phone")}" placeholder="5511999999999"></div><div class="field full"><label>LinkedIn profissional confirmado (opcional)</label><input name="contact_linkedin_url" value="${v("contact_linkedin_url")}" placeholder="https://www.linkedin.com/in/perfil-confirmado"><span class="hint">Confirme a identidade antes de salvar.</span></div>
 <div class="field"><label>E-mail comercial</label><input type="email" name="contact_email" value="${v("contact_email")}" placeholder="contato@empresa.com.br"></div><div class="field"><label>Site oficial</label><input name="website" type="url" value="${v("website")}" placeholder="https://empresa.com.br"></div>
 <div class="field full"><label>Fonte do contato / URL de comprovação</label><input name="contact_source_url" value="${v("contact_source_url")}" placeholder="https://empresa.com.br/contato ou origem documentada"></div>
 <div class="field"><label>Etapa comercial</label><select name="stage">${optionStage(l?.stage||"Descoberto")}</select></div><div class="field"><label>Próximo contato</label><input type="date" name="next_contact_at" value="${attr(l?.next_contact_at?String(l.next_contact_at).slice(0,10):"")}"></div>
@@ -136,18 +175,18 @@ function editLead(id=null,pid=null){const l=state.leads.find(x=>x.id===id)||null
 openModal(l?"Editar informações":"Capturar novo lead",body,"CRM / CADASTRO");}
 function hasConfirmedContact(l){return !!l&&(["Em conversa","Reunião agendada","Proposta","Convertido"].includes(l.stage)||state.events.some(e=>e.lead_id===l.id&&e.kind==="Contato confirmado"));}
 function viewLead(id){const l=state.leads.find(x=>x.id===id);if(!l)return;
-const tel=l.contact_phone?`<a class="link mono" href="tel:${CONTACT.normalizeBrazilPhone(l.contact_phone)||attr(l.contact_phone.replace(/\D/g,""))}">${safe(l.contact_phone)}</a>`:"Não informado";const ai=l.ai_analysis;
+const businessWA=RESEARCH.bareWhatsAppLink(l.contact_phone);const tel=l.contact_phone?`<a class="link mono" href="tel:${CONTACT.normalizeBrazilPhone(l.contact_phone)||attr(l.contact_phone.replace(/\D/g,""))}">${safe(l.contact_phone)}</a>`:"Não informado";const ai=l.ai_analysis;
 openModal(l.company_name||"Empresa",`
 <div class="button-row" style="margin-bottom:18px">${pill(l.stage)}${l.ai_score!=null?`<span class="chip blue">Potencial ${Number(l.ai_score)}/100</span>`:""}${l.cnpj_verified?'<span class="chip green">CNPJ verificado</span>':""}</div>
-<div class="split"><div class="insight-block"><h3>Contato comercial</h3><p>${safe(l.contact_name||"Não identificado")}<br>${tel}<br>${safe(l.contact_email||"Sem e-mail")}</p></div><div class="insight-block"><h3>Empresa</h3><p>${safe(l.sector||"Segmento não informado")}<br>${safe([l.neighborhood,l.city].filter(Boolean).join(", ")||"Localização não informada")}<br>CNPJ: ${safe(l.cnpj||"Não identificado")}</p></div></div>
+<div class="split"><div class="insight-block"><h3>Contato comercial</h3><p>${safe(l.contact_name||"Não identificado")}<br>${tel}<br>${businessWA?`<a class="link mono" href="${attr(businessWA)}" target="_blank" rel="noopener noreferrer">${safe(businessWA)}</a>`:"WhatsApp não informado"}<br>${safe(l.contact_email||"Sem e-mail")}</p>${l.contact_linkedin_url?`<a class="link" target="_blank" rel="noopener noreferrer" href="${attr(l.contact_linkedin_url)}">LinkedIn profissional confirmado ↗</a>`:""}</div><div class="insight-block"><h3>Empresa</h3><p>${safe(l.sector||"Segmento não informado")}<br>${safe([l.neighborhood,l.city].filter(Boolean).join(", ")||"Localização não informada")}<br>CNPJ: ${safe(l.cnpj||"Não identificado")}</p></div></div>
 <div class="insight-block" style="margin-top:12px"><h3>Histórico e fonte</h3><p>Origem: ${safe(l.source_type||"manual")}<br>WhatsApp: ${l.opt_in_whatsapp?"Permissão registrada":"Permissão ainda não documentada"}<br>Fonte: ${safe(l.contact_source_url||"Não informada")}</p></div>
 ${l.notes?`<div class="insight-block" style="margin-top:12px"><h3>Notas</h3><p>${safe(l.notes)}</p></div>`:""}
 ${ai?`<div class="insight-block" style="margin-top:12px"><h3>Análise GELZ Intelligence</h3><p>${safe(ai.summary||"")}<br>${safe(ai.next_action||"")}</p></div>`:""}
-<div class="button-row" style="margin-top:20px">${btn(ic("phone")+" Abrir WhatsApp","wa-direct","button-green",`data-id="${attr(l.id)}" ${validWhats(l)?"":"disabled"}`)}${btn(ic("copy")+" Editar mensagem","wa-compose","button-subtle",`data-id="${attr(l.id)}"`)}${btn(ic("sparkles")+" Avaliar com IA","lead-analyze","button-subtle",`data-id="${attr(l.id)}"`)}${l.cnpj?btn(ic("building")+" Ficha completa","lead-company-detail","button-subtle",`data-id="${attr(l.id)}"`):btn(ic("building")+" Consultar CNPJ","lead-cnpj","button-subtle",`data-id="${attr(l.id)}"`)}${btn(ic("search")+" Buscar contato comercial","lead-contacts","button-subtle",`data-id="${attr(l.id)}"`)}${l.cnpj?btn(ic("users")+" Sócios / responsáveis","lead-partners","button-subtle",`data-id="${attr(l.id)}"`):""}</div>
+<div class="button-row" style="margin-top:20px">${btn(ic("phone")+" Abrir WhatsApp","wa-direct","button-green",`data-id="${attr(l.id)}" ${validWhats(l)?"":"disabled"}`)}${btn(ic("copy")+" Editar mensagem","wa-compose","button-subtle",`data-id="${attr(l.id)}"`)}${btn(ic("sparkles")+" Pesquisar + IA","lead-analyze","button-subtle",`data-id="${attr(l.id)}"`)}${l.cnpj?btn(ic("building")+" Ficha completa","lead-company-detail","button-subtle",`data-id="${attr(l.id)}"`):btn(ic("building")+" Consultar CNPJ","lead-cnpj","button-subtle",`data-id="${attr(l.id)}"`)}${btn(ic("search")+" Buscar contato comercial","lead-contacts","button-subtle",`data-id="${attr(l.id)}"`)}${l.cnpj?btn(ic("users")+" Sócios / responsáveis","lead-partners","button-subtle",`data-id="${attr(l.id)}"`):""}</div>
 <div class="button-row" style="margin-top:12px">${btn(ic("calendarPlus")+" Criar lembrete","task-new","button-outline",`data-id="${attr(l.id)}"`)}${btn("Editar ficha","lead-edit","button-outline",`data-id="${attr(l.id)}"`)}${hasConfirmedContact(l)?"":btn(ic("check")+" Já contatei","lead-contact-confirm","button-outline",`data-id="${attr(l.id)}"`)}</div>
 <div class="divider"></div><h3 style="font-size:13px">Histórico de interação</h3>${state.events.filter(e=>e.lead_id===l.id).slice(0,12).map(e=>`<div class="activity"><div class="activity-icon">${ic("clock")}</div><div><strong>${safe(e.kind||"Atividade")}</strong><p>${safe(e.note||"")} • ${fmtDate(e.created_at)}</p></div></div>`).join("")||'<p class="muted small">Nenhuma interação registrada.</p>'}
 `,"PERFIL EMPRESARIAL");}
-async function storeLead(form){const f=new FormData(form);let data=Object.fromEntries(f.entries());const original=state.leads.find(l=>l.id===data.id);data.company_name=title(data.company_name).slice(0,180);if(!data.company_name){toast("Informe o nome da empresa.","error");return;}
+async function storeLead(form){const f=new FormData(form);let data=Object.fromEntries(f.entries());const original=state.leads.find(l=>l.id===data.id);data.company_name=title(data.company_name).slice(0,180);data.contact_linkedin_url=title(data.contact_linkedin_url);if(data.contact_linkedin_url){const verified=RESEARCH.cleanVerifiedLinkedIn(data.contact_linkedin_url);if(!verified){toast("Link profissional do LinkedIn inválido.","error");return;}data.contact_linkedin_url=verified;}if(!data.company_name){toast("Informe o nome da empresa.","error");return;}
 const cleanPhone=String(data.contact_phone||"").replace(/\D/g,"");data.contact_phone=cleanPhone;data.cnpj=String(data.cnpj||"").replace(/\D/g,"");
 data.opt_in_whatsapp=f.has("opt_in_whatsapp");if(data.opt_in_whatsapp&&(!data.opt_in_evidence||!data.contact_phone)){toast("Para registrar autorização, informe telefone e evidência da permissão.","error");return;}
 if(data.contact_phone&&!/^55\d{10,11}$/.test(data.contact_phone)){toast("Informe o telefone com DDI 55, DDD e número.","error");return;}
@@ -217,11 +256,57 @@ async function openWhatsapp(form){
  if(!message){toast("Digite uma mensagem antes de continuar.","error");return;}
  openWAUrl(phone,message,leadId);
 }
-async function runAI(id){if(state.demo){demoWarn();return;}const l=state.leads.find(x=>x.id===id);if(!l)return;if(!C.aiEnabled){toast("A IA depende da Edge Function e da chave de API no servidor.","error");return;}
-toast("Solicitando análise, usando apenas dados documentados...");
-const {data,error}=await state.client.functions.invoke("prospect-analyze",{body:{lead:l}});if(error||!data?.analysis){toast("Não foi possível analisar: "+(error?.message||data?.error||"Resposta indisponível"),"error");return;}
-const rawScore=data.analysis.score;const score=rawScore===null||rawScore===undefined?null:Math.max(0,Math.min(100,Number(rawScore)));const updated={...l,ai_score:score,ai_analysis:data.analysis,updated_at:new Date().toISOString()};const {error:dbError}=await state.client.from("prospect_leads").update({ai_score:score,ai_analysis:data.analysis,updated_at:updated.updated_at}).eq("id",l.id);if(dbError){toast("A análise não pôde ser salva: "+dbError.message,"error");return;}
-Object.assign(l,updated);await recordEvent(l.id,"Análise","Potencial comercial avaliado com dados informados e limitações documentadas.");state.analysisLeadId=l.id;closeModal();go("intelligence");toast("Análise atualizada.");}
+async function analyzeCompany(cnpj){
+  const id=String(cnpj||"").replace(/\D/g,"");
+  const saved=state.leads.find(x=>x.cnpj===id);
+  state.analysisLeadId=saved?.id||"";
+  state.publicAnalysis=null;
+  closeModal();go("intelligence");
+  toast("Consultando CNPJ e quadro societário nas fontes públicas...");
+  try{
+    const dossier=await RESEARCH.buildPublicDossier(saved||{cnpj:id});
+    state.publicAnalysis=dossier;
+    if(state.view==="intelligence")render();
+    toast("Relatório empresarial atualizado com fontes.");
+  }catch(error){
+    toast("Consulta empresarial: "+(error.message||"Fonte indisponível"),"error");
+  }
+}
+async function runAI(id){
+  const lead=state.leads.find(x=>x.id===id)||null;
+  const cnpj=String(lead?.cnpj||state.publicAnalysis?.company?.cnpj||"").replace(/\D/g,"");
+  if(!cnpj){toast("Selecione um lead com CNPJ válido para pesquisar.","error");return;}
+  toast("Atualizando dados cadastrais e informações empresariais...");
+  let dossier;
+  try{dossier=await RESEARCH.buildPublicDossier(lead||{cnpj});}
+  catch(error){toast("Não foi possível pesquisar: "+error.message,"error");return;}
+  state.publicAnalysis=dossier;
+  state.analysisLeadId=lead?.id||"";
+  if(state.view==="intelligence")render();
+  if(state.demo||!state.client||!C.aiEnabled){
+    toast("Dados públicos atualizados. IA com pesquisa web requer API e banco configurados.");
+    return;
+  }
+  toast("Pesquisando a empresa na internet com IA e verificando fontes...");
+  const safeLead={cnpj:dossier.company.cnpj,company_name:dossier.company.name,razao_social:dossier.company.legalName,sector:dossier.company.sector,cnae:dossier.company.cnae,city:dossier.company.city,neighborhood:dossier.company.neighborhood,website:dossier.company.website,porte:dossier.company.porte,capital_social:dossier.company.capitalSocial};
+  let response;
+  try{response=await state.client.functions.invoke("prospect-analyze",{body:{lead:safeLead}});}
+  catch(err){toast("Falha na integração IA: "+err.message,"error");return;}
+  const {data,error}=response||{};
+  if(error||data?.error||!data?.analysis){toast("A pesquisa IA não foi concluída: "+(error?.message||data?.error||"Sem retorno")+". O relatório cadastral permanece disponível.","error");return;}
+  const result=data.analysis;
+  const score=result.score==null?dossier.score:Math.max(0,Math.min(100,Number(result.score)));
+  const normalizedSources=(result.sources||[]).filter(x=>x&&typeof x==="object"&&verifiedUrl(x.url)).slice(0,12).map(x=>({title:String(x.title||"Fonte web").slice(0,140),url:verifiedUrl(x.url),status:"pesquisa web"}));
+  const report={...dossier,mode:"web_ai",type:"web_ai",score,confidence:result.confidence||"baixa",summary:result.summary||dossier.summary,company_updates:Array.isArray(result.company_updates)?result.company_updates:[],opportunities:Array.isArray(result.opportunities)?result.opportunities:dossier.opportunities,factors:Array.isArray(result.factors)?result.factors:dossier.factors,missing_data:Array.isArray(result.missing_data)?result.missing_data:dossier.missing_data,next_action:result.next_action||dossier.next_action,sources:[...dossier.sources,...normalizedSources],checkedAt:new Date().toISOString()};
+  state.publicAnalysis=report;
+  if(lead&&!state.demo){
+    const {error:dbError}=await state.client.from("prospect_leads").update({ai_score:score,ai_analysis:report,updated_at:new Date().toISOString()}).eq("id",lead.id);
+    if(dbError)toast("Análise pronta, mas não foi possível salvá-la no CRM: "+dbError.message,"error");
+    else{lead.ai_score=score;lead.ai_analysis=report;await recordEvent(lead.id,"Análise web","Pesquisa por IA com fontes registradas.");}
+  }
+  if(state.view==="intelligence")render();
+  toast("Pesquisa com IA concluída. Confira as fontes e informações encontradas.");
+}
 async function enrichCnpj(id){const l=state.leads.find(x=>x.id===id);if(!l)return;openModal("Consultar CNPJ",`<div class="info" style="margin-bottom:16px">Google Maps não contém CNPJ. A validação utiliza serviço empresarial separado, em uma Edge Function segura. Consulta por nome só é feita se houver fornecedor habilitado.</div><form id="cnpj-form"><input name="lead_id" type="hidden" value="${attr(l.id)}"><div class="field"><label>CNPJ para validar</label><input name="cnpj" inputmode="numeric" placeholder="00.000.000/0000-00" value="${attr(l.cnpj||"")}"></div><div class="modal-actions"><button class="button button-primary" type="submit">Validar CNPJ</button></div></form><div class="divider"></div><button class="button" data-action="cnpj-search" data-id="${attr(l.id)}">${ic("search")} Procurar por nome empresarial (se conectado)</button><div id="cnpj-result"></div>`,"PESQUISA EMPRESARIAL");}
 async function callEnrichment(body){if(state.demo){demoWarn();return null;}if(!state.client){toast("Configure o Supabase.","error");return null;}const {data,error}=await state.client.functions.invoke("prospect-enrich",{body});if(error){toast("Consulta não disponível: "+error.message,"error");return null;}if(data?.error){toast("Consulta: "+data.error,"error");return null;}return data;}
 async function submitCnpj(form){const l=state.leads.find(x=>x.id===new FormData(form).get("lead_id"));const cnpj=String(new FormData(form).get("cnpj")||"").replace(/\D/g,"");if(!l||cnpj.length!==14){toast("Informe CNPJ com 14 dígitos.","error");return;}let result;
@@ -236,11 +321,11 @@ if((state.demo||!C.contactProviderEnabled)&&l.cnpj){try{const data=await CNPJ_AP
 async function searchCnpjByName(id){const l=state.leads.find(x=>x.id===id);if(!l)return;let r;
 if(state.demo||!C.enrichmentEnabled){try{const data=await CNPJ_API.byName({query:l.company_name,city:l.city||"São Paulo",uf:"SP"});r={candidates:data.items.map(x=>({cnpj:x.cnpj,razao_social:x.razao_social||x.company_name,municipio:x.city,uf:x.uf}))};}catch(err){toast("Busca CNPJ: "+err.message,"error");return;}}else r=await callEnrichment({mode:"search",companyName:l.company_name,city:l.city});if(!r)return;const candidates=r.candidates||[];$("#cnpj-result").innerHTML=candidates.length?`<div class="list-stack" style="margin-top:15px">${candidates.slice(0,8).map(x=>`<div class="insight-block"><strong>${safe(x.razao_social||x.nome||"Empresa")}</strong><p>CNPJ: ${safe(x.cnpj||"")}<br>${safe(x.municipio||"")} • ${safe(x.uf||"")}</p>${btn("Validar este CNPJ","cnpj-candidate","button-outline",`data-id="${attr(id)}" data-cnpj="${attr(x.cnpj||"")}"`)}</div>`).join("")}</div>`:'<p class="muted small">Sem candidatos encontrados. Revise os dados ou informe o CNPJ manualmente.</p>';}
 async function saveProfile(form){const f=new FormData(form);state.settings={advisor_name:title(f.get("advisor_name")),institution:title(f.get("institution")),signature:title(f.get("signature"))};if(state.demo){toast("Preferências somente nesta demonstração.");return;}const {error}=await state.client.from("prospect_preferences").upsert({owner_id:state.user.id,...state.settings},{onConflict:"owner_id"});if(error){toast("Falha ao salvar preferências: "+error.message,"error");return;}toast("Identidade profissional atualizada.");}
-function downloadCSV(){const cols=["company_name","sector","cnpj","contact_name","contact_phone","contact_email","contact_source_url","opt_in_whatsapp","opt_in_evidence","city","neighborhood","stage","notes","next_contact_at","place_id","source_type"];const data=[cols.join(";"),...state.leads.map(l=>cols.map(k=>{const v=String(l[k]??"");const safeCsv=/^[=+\-@\t\r]/.test(v)?"'"+v:v;return `"${safeCsv.replace(/"/g,'""')}"`;}).join(";"))].join("\r\n");const a=document.createElement("a");const url=URL.createObjectURL(new Blob(["\uFEFF"+data],{type:"text/csv;charset=utf-8"}));a.href=url;a.download="gelz-prospect-leads.csv";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000);}
+function downloadCSV(){const cols=["company_name","sector","cnpj","contact_name","contact_phone","contact_email","contact_linkedin_url","contact_source_url","opt_in_whatsapp","opt_in_evidence","city","neighborhood","stage","notes","next_contact_at","place_id","source_type"];const data=[cols.join(";"),...state.leads.map(l=>cols.map(k=>{const v=String(l[k]??"");const safeCsv=/^[=+\-@\t\r]/.test(v)?"'"+v:v;return `"${safeCsv.replace(/"/g,'""')}"`;}).join(";"))].join("\r\n");const a=document.createElement("a");const url=URL.createObjectURL(new Blob(["\uFEFF"+data],{type:"text/csv;charset=utf-8"}));a.href=url;a.download="gelz-prospect-leads.csv";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000);}
 function parseCSV(input){const rows=[];let row=[],cell="",quoted=false;for(let i=0;i<input.length;i++){const c=input[i];if(quoted){if(c==='"'&&input[i+1]==='"'){cell+='"';i++;}else if(c==='"')quoted=false;else cell+=c;}else if(c==='"')quoted=true;else if(c===";"||c===","){row.push(cell);cell="";}else if(c==="\n"){row.push(cell.replace(/\r$/,""));rows.push(row);row=[];cell="";}else cell+=c;}if(cell.length||row.length){row.push(cell);rows.push(row);}return rows;}
 async function importCSV(file){if(!file)return;let rows=parseCSV((await file.text()).replace(/^\uFEFF/,""));if(!rows.length){toast("Arquivo vazio.","error");return;}const headers=rows.shift().map(s=>s.trim());if(!headers.includes("company_name")){toast("CSV deve conter coluna company_name.","error");return;}
 let inserted=0;for(const r of rows.slice(0,400)){const obj={};headers.forEach((key,i)=>obj[key]=r[i]||"");if(!obj.company_name?.trim())continue;const existing=state.leads.some(l=>(obj.cnpj&&l.cnpj===obj.cnpj)||(obj.place_id&&l.place_id===obj.place_id));if(existing)continue;
-const candidate={id:uid(),owner_id:state.user?.id||null,company_name:String(obj.company_name).slice(0,180),sector:obj.sector||"",city:obj.city||"",neighborhood:obj.neighborhood||"",cnpj:String(obj.cnpj||"").replace(/\D/g,""),cnpj_verified:false,cnae:"",place_id:obj.place_id||"",source_type:"importado",contact_name:obj.contact_name||"",contact_phone:String(obj.contact_phone||"").replace(/\D/g,""),contact_email:obj.contact_email||"",contact_source_url:obj.contact_source_url||"",opt_in_whatsapp:false,opt_in_evidence:"",website:"",notes:obj.notes||"",next_contact_at:null,stage:STAGES.includes(obj.stage)?obj.stage:"Descoberto",ai_score:null,ai_analysis:null,created_at:new Date().toISOString(),updated_at:new Date().toISOString()};
+const candidate={id:uid(),owner_id:state.user?.id||null,company_name:String(obj.company_name).slice(0,180),sector:obj.sector||"",city:obj.city||"",neighborhood:obj.neighborhood||"",cnpj:String(obj.cnpj||"").replace(/\D/g,""),cnpj_verified:false,cnae:"",place_id:obj.place_id||"",source_type:"importado",contact_name:obj.contact_name||"",contact_phone:String(obj.contact_phone||"").replace(/\D/g,""),contact_email:obj.contact_email||"",contact_linkedin_url:RESEARCH.cleanVerifiedLinkedIn(obj.contact_linkedin_url||""),contact_source_url:obj.contact_source_url||"",opt_in_whatsapp:false,opt_in_evidence:"",website:"",notes:obj.notes||"",next_contact_at:null,stage:STAGES.includes(obj.stage)?obj.stage:"Descoberto",ai_score:null,ai_analysis:null,created_at:new Date().toISOString(),updated_at:new Date().toISOString()};
 if(!state.demo){const {error}=await state.client.from("prospect_leads").insert(candidate);if(error){toast("Falha ao importar: "+error.message,"error");break;}}state.leads.push(candidate);inserted++;}
 render();toast(`${inserted} leads importados. Autorizações de WhatsApp não são presumidas.`);}
 function command(open){$("#command").classList.toggle("hidden",!open);if(open){$("#command-input").value="";renderCommand("");$("#command-input").focus();}}
@@ -257,7 +342,7 @@ case "task-edit":taskForm(id);break;
 case "wa-compose":whatsCompose(id);break;
 case "wa-direct":directWhats(id);break;
 case "wa-copy":await navigator.clipboard.writeText($("#wa-message")?.value||"");toast("Mensagem copiada.");break;
-case "lead-analyze":state.analysisLeadId=id;closeModal();go("intelligence");break;
+case "lead-analyze":{const lead=state.leads.find(x=>x.id===id);if(!lead)return;closeModal();if(lead.cnpj)await analyzeCompany(lead.cnpj);else{state.analysisLeadId=id;state.publicAnalysis=null;go("intelligence");}break;}
 case "ai-run":await runAI($("#ai-lead")?.value||state.analysisLeadId);break;
 case "lead-cnpj":enrichCnpj(id);break;
 case "lead-company-detail":{const lead=state.leads.find(x=>x.id===id);if(lead?.cnpj)await CAPTURE.action("capture-detail",lead.cnpj);else toast("Cadastre o CNPJ para consultar a ficha.","error");break;}
@@ -270,7 +355,7 @@ case "export-csv":downloadCSV();break;
 case "import-csv":$("#csv-file")?.click();break;
 case "print-report":window.print();break;
 case "clear-filters":state.searchTerm="";state.searchStage="";render();break;
-case "ai-info":openModal("Análise responsável",`<p>A IA auxilia na triagem de oportunidades a partir de informações empresariais fornecidas ou verificadas. A pontuação não estima o patrimônio do empresário, faturamento não comprovado ou montante disponível para investir.</p><div class="warning">Resultados dependem de fontes confiáveis e de uma API de IA configurada no servidor. Não confundir potencial comercial com adequação a produtos de investimento.</div>`,"TRANSPARÊNCIA / IA");break;
+case "ai-info":openModal("Pesquisa com transparência",`<p>A IA auxilia na triagem de oportunidades a partir de informações empresariais fornecidas ou verificadas. A pontuação não estima o patrimônio do empresário, faturamento não comprovado ou montante disponível para investir.</p><div class="warning">Resultados dependem de fontes confiáveis e de uma API de IA configurada no servidor. Não confundir potencial comercial com adequação a produtos de investimento.</div>`,"TRANSPARÊNCIA / IA");break;
 case "privacy-info":openModal("Privacidade e conformidade",`<p>Os dados dos leads devem ter finalidade definida, origem documentada, acesso restrito e mecanismos para correção, exclusão e oposição ao contato.</p><p>Evite coleta de números pessoais por bots, coleta não autorizada e disparos automáticos. A política do WhatsApp exige condições próprias de autorização comercial. Verifique também as regras da instituição e da CVM.</p>`,"SEGURANÇA / COMPLIANCE");break;
 }}
 async function initialize(){
@@ -298,6 +383,6 @@ $("#command-input").addEventListener("input",e=>renderCommand(e.target.value));
 document.addEventListener("click",async e=>{const nav=e.target.closest("[data-view]");if(nav){e.preventDefault();go(nav.dataset.view);return;}const n=e.target.closest("[data-action]");if(!n)return;if(n.tagName==="A")e.preventDefault();await onAction(n.dataset.action,n.dataset.id||n.dataset.cnpj,n);});
 document.addEventListener("submit",async e=>{const f=e.target;const formId=f.getAttribute("id");if(!["lead-form","task-form","wa-form","cnpj-form","profile-form","capture-form"].includes(formId))return;e.preventDefault();const submit=f.querySelector('button[type="submit"]');if(submit)submit.disabled=true;try{if(formId==="lead-form")await storeLead(f);else if(formId==="task-form")await saveTask(f);else if(formId==="wa-form")await openWhatsapp(f);else if(formId==="cnpj-form")await submitCnpj(f);else if(formId==="profile-form")await saveProfile(f);else if(formId==="capture-form")await CAPTURE.submit(f);}catch(err){toast("Falha: "+err.message,"error");}finally{if(submit&&submit.isConnected)submit.disabled=false;}});
 document.addEventListener("input",e=>{if(e.target.id==="lead-search"){state.searchTerm=e.target.value;const start=e.target.selectionStart;const end=e.target.selectionEnd;render();$("#lead-search")?.focus();$("#lead-search")?.setSelectionRange(start,end);}});
-document.addEventListener("change",async e=>{const el=e.target;if(el.id==="capture-mode"){CAPTURE.changeMode(el.value);}else if(el.id==="lead-filter"){state.searchStage=el.value;render();}else if(el.dataset.changeStage){await stageChange(el.dataset.changeStage,el.value);}else if(el.dataset.taskCheck){await toggleTask(el.dataset.taskCheck,el.checked);}else if(el.id==="ai-lead"){state.analysisLeadId=el.value;render();}else if(el.id==="wa-template"){const id=$("#wa-form input[name=lead_id]").value;const l=state.leads.find(x=>x.id===id);if(l)$("#wa-message").value=messageText(l,el.value);}else if(el.id==="csv-file"){await importCSV(el.files[0]);el.value="";}});
+document.addEventListener("change",async e=>{const el=e.target;if(el.id==="capture-mode"){CAPTURE.changeMode(el.value);}else if(el.id==="lead-filter"){state.searchStage=el.value;render();}else if(el.dataset.changeStage){await stageChange(el.dataset.changeStage,el.value);}else if(el.dataset.taskCheck){await toggleTask(el.dataset.taskCheck,el.checked);}else if(el.id==="ai-lead"){state.analysisLeadId=el.value;state.publicAnalysis=null;render();}else if(el.id==="wa-template"){const id=$("#wa-form input[name=lead_id]").value;const l=state.leads.find(x=>x.id===id);if(l)$("#wa-message").value=messageText(l,el.value);}else if(el.id==="csv-file"){await importCSV(el.files[0]);el.value="";}});
 await initialize();
 })();

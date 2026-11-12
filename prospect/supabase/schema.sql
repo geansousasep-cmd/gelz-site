@@ -64,6 +64,7 @@ create table if not exists public.prospect_leads (
  contact_name text not null default '',
  contact_phone text not null default '',
  contact_email text not null default '',
+ contact_linkedin_url text not null default '',
  contact_source_url text not null default '',
  website text not null default '',
  opt_in_whatsapp boolean not null default false,
@@ -156,3 +157,6 @@ grant select,insert,update,delete on public.prospect_preferences to authenticate
 -- O login público usa o username 'admin' e internamente resolve o email configurado.
 -- IMPORTANTE: antes do deploy real use credencial inicial forte gerada ao acaso;
 -- a senha admin/admin só pode ser usada em ambiente LOCAL isolado.
+
+-- Upgrade non-destructive if your prospect_leads table already exists.
+alter table public.prospect_leads add column if not exists contact_linkedin_url text not null default '';

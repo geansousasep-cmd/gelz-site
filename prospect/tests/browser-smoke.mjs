@@ -87,9 +87,21 @@ try{
  await evaluate("window.fetch=window.__gelzOriginalFetch;true");
  await evaluate("const mode=document.querySelector('#capture-mode');mode.value='cnpj';mode.dispatchEvent(new Event('change',{bubbles:true}));document.querySelector('input[name=cnpj]').value='19131243000197';document.querySelector('#capture-form').requestSubmit();true");
  await waitFor("document.querySelector('[data-action=capture-partners]') && !document.querySelector('.loading-stripes')",125);
+ await evaluate("window.__originalCompanyFetch=window.fetch;window.fetch=(input,options)=>{const url=String(input);if(url.includes('brasilapi.com.br/api/cnpj/v1/19131243000197'))return Promise.resolve(new Response(JSON.stringify({qsa:[{nome_socio:'Responsável Comercial Exemplo',qualificacao_socio:'Sócio-Administrador'}],ddd_telefone_1:'1133334444',email:'empresa@exemplo.com.br'}),{status:200,headers:{'content-type':'application/json'}}));if(url.includes('fichario.app/api/v1/cnpj/19131243000197'))return Promise.resolve(new Response(JSON.stringify({cnpj:'19131243000197',nome_fantasia:'NEGOCIO LOCAL',razao_social:'NEGOCIO LOCAL LTDA',municipio:'SAO PAULO',uf:'SP',porte:'EPP',capital_social:50000,telefone:'1133334444',cnae_fiscal_descricao:'Consultoria empresarial'}),{status:200,headers:{'content-type':'application/json'}}));return window.__originalCompanyFetch(input,options);};true");
  await evaluate("document.querySelector('[data-action=capture-partners]').click()");
  await waitFor("document.querySelector('.partner-section-head') && !document.querySelector('#modal-body .loading-stripes')",95);
  assert.equal(await evaluate("document.querySelector('#modal-body').textContent.includes('Sócios')"),true,"QSA panel in browser");
+
+ assert.equal(await evaluate("Array.from(document.querySelectorAll('#modal-body a')).some(a=>a.href.includes('linkedin.com'))"),true,"LinkedIn people search for each public partner");
+ assert.equal(await evaluate("document.querySelector('#modal-body').innerText.includes('https://wa.me/551133334444')"),true,"corporate WhatsApp number-only link");
+ await evaluate("document.querySelector('#modal-close').click()");
+ await evaluate("document.querySelector('[data-action=capture-analyze]').click()");
+ await waitFor("document.querySelector('#current-breadcrumb').textContent==='Pesquisar empresa' && document.querySelector('.research-company-title') && !document.querySelector('.loading-stripes')",115);
+ assert.ok(await evaluate("document.querySelector('.research-source-list').textContent.includes('Dados cadastrais CNPJ')"),"Public sources shown for researched company");
+ assert.equal(await evaluate("Array.from(document.querySelectorAll('.research-person a')).some(a=>a.href.includes('linkedin.com'))"),true,"LinkedIn business source in intelligence report");
+ assert.ok(await evaluate("document.querySelector('.research-main').innerText.includes('CNPJ / Receita')"),"Public report clearly not advertised as AI");
+ await evaluate("window.fetch=window.__originalCompanyFetch;true");
+
  console.log("BROWSER E2E PASS: login demo, navigation, live CNPJ, company capture, direct WhatsApp, batch CRM, SME paging and QSA.");
  ws.close();
 }catch(err){console.error("BROWSER E2E FAIL",err);process.exitCode=1;}finally{finish();}

@@ -18,6 +18,26 @@ Os limites do Fichário podem mudar. Documentação: https://fichario.app/api . 
 
 **IMPORTANTE:** quando não há Supabase configurado, `admin/admin` abre somente uma **demonstração sem login privado e sem persistência segura de leads**. A pesquisa externa usa empresas reais, mas o CRM demonstrativo é temporário. **Não cadastre dados pessoais ou comerciais sigilosos nele.**
 
+## Atualização: LinkedIn de sócios, números WhatsApp e pesquisa empresarial com IA
+
+- **Sócios e LinkedIn:** o Quadro Societário vem da consulta pública BrasilAPI/Receita. Cada nome tem um botão `Pesquisar LinkedIn` que abre a pesquisa na rede profissional com nome e empresa. O sistema **não inventa URLs de perfis** nem afirma a identidade sem confirmação. O administrador pode colar o LinkedIn profissional verificado no CRM, que agora tem o campo `contact_linkedin_url`. O campo é aplicado ao responsável correspondente quando o nome coincide.
+- **Contato do proprietário:** números privados ocultos **não são extraídos** e o telefone geral da empresa nunca é classificado como número pessoal do sócio. O CRM permite cadastrar telefone profissional que foi disponibilizado de maneira legítima, acompanhado da fonte. O painel de QSA indica quando não existe contato direto confirmado.
+- **WhatsApp sem formatação:** os números de contato comercial são normalizados para `55` + DDD + número (somente dígitos), com link visível `https://wa.me/55...`. Clicar abre uma conversa individual, sem envio automático e sem presumir permissão de marketing.
+- **Pesquisar empresa:** tanto a ficha de CNPJ quanto o CRM possuem botão `Analisar empresa` / `Pesquisar + IA`. Sem chave privada, a plataforma consulta dados públicos do CNPJ e do QSA e produz um **relatório cadastral identificado como sem IA**, incluindo porte, capital social declarado, setor, sócios, fontes e links externos para pesquisa de empresa e notícias.
+- **Pesquisa web com IA (condicional):** código pronto na Edge Function `supabase/functions/prospect-analyze/index.ts`, usando o OpenAI **Responses API + web_search** com busca real na internet e extração de links citados. O resultado apresenta resumo empresarial, notícias/sinais encontrados, oportunidades, limitações e fontes clicáveis; fatos sem citações não são anunciados como pesquisa verificada. A operação exige Supabase Auth configurado e `OPENAI_API_KEY` guardada nos segredos do servidor, além de orçamento de API. **Não está ativa no frontend de demonstração**.
+- **Segurança:** a Edge Function verifica login do administrador e CNPJ contra o cadastro público antes de consultar a web, nunca envia dados pessoais do sócio para a IA, rejeita URL/citação sem HTTPS e não transforma capital social em patrimônio disponível.
+- **Esquema SQL:** adicionar `contact_linkedin_url` na tabela `prospect_leads`; `schema.sql` agora inclui a coluna e um `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` não destrutivo para instalações existentes.
+
+### Ativação da pesquisa web com IA
+
+1. Crie/vincule seu projeto Supabase e configure `supabaseUrl`, `supabaseAnonKey` (chave publicável) e `adminEmail` no frontend.
+2. Rode o SQL atualizado `prospect/supabase/schema.sql` e crie o único administrador. Nunca use `admin/admin` como credencial privada.
+3. Configure o segredo `OPENAI_API_KEY` no Supabase, opcionalmente `OPENAI_MODEL` (padrão `gpt-4.1-mini`). O web search é cobrado conforme o uso da API.
+4. Implante `prospect-analyze` e verifique autenticação, cotas e links citados na resposta.
+5. Só depois habilite `aiEnabled: true` em `prospect/config.js`.
+
+**Importante:** não existe no momento um Supabase vinculado a este site. Portanto esta atualização publica a experiência de consulta cadastral e a preparação técnica de IA, mas a consulta **automática na web por IA** só funcionará após concluir os passos acima.
+
 ## Atualização: WhatsApp individual, fichas e empresas locais
 
 - **WhatsApp sem etapa bloqueada:** botões `Abrir WhatsApp` nas fichas do CRM e nos resultados de CNPJ usam link individual `https://wa.me/55DDDNUMERO?text=...`, com número brasileiro validado e mensagem de apresentação. Abrem a conversa imediatamente; o usuário revisa/envia **manualmente**. O CRM registra só que o link foi aberto, nunca presume envio, resposta ou autorização.
