@@ -2,7 +2,7 @@ import * as CNPJ from './cnpj-engine.js';
 
   let h=null;
   const segments=[["6920601","Contabilidade"],["7020400","Consultoria"],["6204000","Tecnologia"],["6821801","Imobiliárias"],["4930202","Transportadoras"],["4781400","Vestuário"],["5611201","Restaurantes"],["8630503","Clínicas"]];
-  const app={mode:"sector",city:"São Paulo",uf:"SP",neighborhood:"Tatuapé",radius:3,cnae:"6920601",term:"",items:[],total:0,loading:false,searched:false,error:"",notice:""};
+  const app={mode:"sector",city:"São Paulo",uf:"SP",neighborhood:"Tatuapé",bairro:"",radius:3,cnae:"",porte:"",capitalBand:"all",order:"razao_asc",page:1,pages:1,advanced:false,term:"",items:[],total:0,loading:false,searched:false,error:"",notice:"",checkedBairro:0};
   const safe=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   const digits=v=>String(v??"").replace(/\D/g,"");
   const ico=(name)=>h.ic(name,16);
@@ -10,7 +10,7 @@ import * as CNPJ from './cnpj-engine.js';
   const linked=x=>h.state.leads.find(l=>x.cnpj&&l.cnpj===x.cnpj);
   const touched=l=>!!l&&(["Em conversa","Reunião agendada","Proposta","Convertido"].includes(l.stage)||h.state.events.some(e=>e.lead_id===l.id&&e.kind==="Contato confirmado"));
   const score=x=>CNPJ.potential(x);
-  const order=()=>[...app.items].sort((a,b)=>(score(b).score??-1)-(score(a).score??-1));
+  const order=()=>[...app.items].sort((a,b)=>app.order==="capital_asc"?Number(a.capital_social||0)-Number(b.capital_social||0):app.order==="razao_asc"?String(a.razao_social||a.company_name).localeCompare(String(b.razao_social||b.company_name),"pt-BR"):(score(b).score??-1)-(score(a).score??-1));
   const badge=x=>{const l=linked(x);return !l?'<span class="chip dim">Novo</span>':touched(l)?'<span class="chip green">Contatado</span>':l.stage==="Sem interesse"?'<span class="chip red">Sem interesse</span>':'<span class="chip blue">Salvo</span>';};
   function form(){
     const opt=(value,label)=>`<option value="${value}" ${app.mode===value?"selected":""}>${label}</option>`;
@@ -31,13 +31,13 @@ import * as CNPJ from './cnpj-engine.js';
   function hint(){return app.mode==="radius"?(window.GELZ_CONFIG?.radiusProviderEnabled?"Busca por raio exato usando fornecedor empresarial autenticado.":"Raio real usando OpenStreetMap: somente empresas com CNPJ mapeado. Cobertura limitada."):(app.mode==="sector"?"Pesquisa por CNAE e cidade, não por distância.":"Consulta real em base pública de CNPJs.");}
   function metrics(){
     const good=app.items.filter(x=>(score(x).score??-1)>=70).length,contacted=h.state.leads.filter(touched).length;
-    const list=[["CNPJs encontrados",app.items.length,"building"],["Em destaque",good,"sparkles"],["Salvos no CRM",h.state.leads.length,"users"],["Contatados",contacted,"phone"]];
+    const list=[["CNPJs na busca",app.total||app.items.length,"building"],["Nesta página",app.items.length,"sparkles"],["No CRM",h.state.leads.length,"users"],["Contatados",contacted,"phone"]];
     return `<section class="prospect-metrics">${list.map(([label,value,icon])=>`<div class="panel prospect-metric"><span>${safe(label)} ${ico(icon)}</span><strong>${Number(value).toLocaleString("pt-BR")}</strong></div>`).join("")}</section>`;
   }
   function rows(n){
     return order().slice(0,n).map((x,i)=>{
       const s=score(x),saved=linked(x),phone=saved?.contact_phone||x.phone||"",contact=phone?`<span class="mono contact-no">${safe(phone)}</span>`:"<small class='muted'>Sem número</small>";
-      return `<tr><td><span class="rank-idx">${String(i+1).padStart(2,"0")}</span></td><td><strong class="result-name">${safe(x.company_name)}</strong><small>${safe([x.neighborhood,x.city,x.uf].filter(Boolean).join(" • "))}</small></td><td><span class="mono">${safe(x.cnpj)}</span></td><td><span class="prospect-score">${s.score==null?"—":s.score}<small>/100</small></span><small>${safe(s.evidence)}</small></td><td>${badge(x)}<div style="margin-top:5px">${contact}</div></td><td class="result-buttons">${saved?button("Abrir","lead-view",saved.id):button(ico("plus")+" Salvar","capture-save",x.cnpj,"button-primary")}${button(ico("info"),"capture-detail",x.cnpj)}</td></tr>`;
+      return `<tr><td><span class="rank-idx">${String((app.mode==="sector"?(app.page-1)*20:0)+i+1).padStart(2,"0")}</span></td><td><strong class="result-name">${safe(x.company_name)}</strong><small>${safe([x.neighborhood,x.city,x.uf].filter(Boolean).join(" • "))}</small></td><td><span class="mono">${safe(x.cnpj)}</span></td><td><span class="prospect-score">${s.score==null?"—":s.score}<small>/100</small></span><small>${safe(s.evidence)}</small></td><td>${badge(x)}<div style="margin-top:5px">${contact}</div></td><td class="result-buttons">${saved?button("Abrir","lead-view",saved.id):button(ico("plus")+" Salvar","capture-save",x.cnpj,"button-primary")}${button(ico("users"),"capture-partners",x.cnpj)}${button(ico("info"),"capture-detail",x.cnpj)}</td></tr>`;
     }).join("");
   }
   function results(n=12){
