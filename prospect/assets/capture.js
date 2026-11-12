@@ -101,7 +101,7 @@ import * as CNPJ from './cnpj-engine.js';
         app.notice="Bairro aplicado SOMENTE às "+app.checkedBairro+" empresas conferidas nesta página; não é uma pesquisa exaustiva no bairro. Navegue pelas páginas para ampliar.";
       }else{
         app.notice=result?.notice||"";
-        if(items.length&&app.mode!=="radius"&&app.mode!=="cnpj")items=await CNPJ.enrich(items,Math.min(items.length,4));
+        // Detalhes e QSA são consultados sob demanda, evitando requisições lentas em lote.
       }
       app.items=items;
       if(!items.length)h.toast("Nenhuma empresa localizada nesta página com esses filtros.");
