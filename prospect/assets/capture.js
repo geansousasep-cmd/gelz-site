@@ -47,7 +47,7 @@ import * as CNPJ from './cnpj-engine.js';
   }
   function results(n=12){
     return `<section class="panel panel-pad prospect-results"><div class="panel-top"><div><h2 class="panel-title">${ico("chart")} Ranking de oportunidades <span class="badge-number">${app.items.length}</span></h2><p class="panel-sub">${app.loading?"Consultando bases públicas...":app.searched?`${app.items.length} visíveis • ${app.total.toLocaleString("pt-BR")} na consulta${app.mode==="sector"?" • Página "+app.page+" de "+app.pages:""}`:"Pesquise para ver empresas reais"}</p></div>${app.items.length?button(ico("download")+" Exportar","capture-export"):""}</div>
-    ${app.error?`<div class="warning">${safe(app.error)} <a href="https://fichario.app/api" class="link" target="_blank" rel="noopener noreferrer">Ver API</a></div>`:app.loading?'<div class="loading-stripes"><span></span><span></span><span></span></div>':app.items.length?`<div class="table-scroller"><table class="data-table"><thead><tr><th>#</th><th>Empresa</th><th>CNPJ</th><th>Sinal</th><th>Status / telefone</th><th>Ações</th></tr></thead><tbody>${rows(n)}</tbody></table></div>`:`<div class="prospect-empty">${ico("building")}<strong>${app.searched?"Nenhum CNPJ identificado":"Encontre seu próximo lead"}</strong><small>${app.searched?"Altere a busca ou tente novamente.":"Escolha um segmento ou informe o CNPJ."}</small></div>`}
+    ${app.error?`<div class="warning">${safe(app.error)} <a href="https://fichario.app/api" class="link" target="_blank" rel="noopener noreferrer">Ver API</a></div>`:""}${app.loading?'<div class="loading-stripes"><span></span><span></span><span></span></div>':app.items.length?`<div class="table-scroller"><table class="data-table"><thead><tr><th>#</th><th>Empresa</th><th>CNPJ</th><th>Sinal</th><th>Status / telefone</th><th>Ações</th></tr></thead><tbody>${rows(n)}</tbody></table></div>`:`<div class="prospect-empty">${ico("building")}<strong>${app.searched?"Nenhum CNPJ identificado":"Encontre seu próximo lead"}</strong><small>${app.searched?"Altere a busca ou tente novamente.":"Escolha um segmento ou informe o CNPJ."}</small></div>`}
 
     ${app.mode==="sector"&&app.searched&&!app.loading? `<nav class="capture-pagination" aria-label="Páginas de empresas">
        <span class="capture-page-caption">Página <strong>${app.page}</strong> de <strong>${app.pages}</strong> • ${Math.min(app.total,app.page*20).toLocaleString("pt-BR")} de ${app.total.toLocaleString("pt-BR")} resultados</span>
@@ -73,6 +73,7 @@ import * as CNPJ from './cnpj-engine.js';
   const fold=t=>String(t||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
   async function loadPage(page=1){
     if(app.loading)return;
+    const old={page:app.page,items:app.items,total:app.total,pages:app.pages,notice:app.notice};
     app.page=Math.max(1,Math.min(50,Math.floor(Number(page)||1)));
     app.loading=true;app.error="";app.notice="";app.searched=true;app.items=[];h.render();
     try{
@@ -104,7 +105,7 @@ import * as CNPJ from './cnpj-engine.js';
       }
       app.items=items;
       if(!items.length)h.toast("Nenhuma empresa localizada nesta página com esses filtros.");
-    }catch(err){app.error=err.message||"Consulta indisponível";h.toast("Consulta: "+app.error,"error");}
+    }catch(err){app.page=old.page;app.items=old.items;app.total=old.total;app.pages=old.pages;app.notice=old.notice;app.error=(err.message||"Consulta indisponível")+(old.items.length?". Resultados anteriores preservados.":"");h.toast("Consulta: "+app.error,"error");}
     finally{app.loading=false;h.render();}
   }
   async function submit(formElement){
