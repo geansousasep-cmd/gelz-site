@@ -62,7 +62,7 @@ const geo=await request("https://nominatim.openstreetmap.org/search?"+new URLSea
 const match=Array.isArray(geo)?geo[0]:null;if(!match)throw Error("Não consegui localizar essa região para aplicar o raio.");
 const lat=Number(match.lat),lon=Number(match.lon);if(!Number.isFinite(lat)||!Number.isFinite(lon))throw Error("Geolocalização inválida.");
 const meters=Math.round(km*1000);const query='[out:json][timeout:20];(nwr(around:'+meters+','+lat+','+lon+')["ref:BR:cnpj"];nwr(around:'+meters+','+lat+','+lon+')["cnpj"];);out center tags 35;';
-const data=await request("https://overpass.kumi.systems/api/interpreter",{post:{data:query},limit:26000}).catch(async()=>await request("https://overpass-api.de/api/interpreter",{post:{data:query},limit:26000}));
+const data=await request("https://overpass.kumi.systems/api/interpreter?data="+encodeURIComponent(query),{limit:26000}).catch(async()=>await request("https://overpass-api.de/api/interpreter?data="+encodeURIComponent(query),{limit:26000}));
 const base=(data?.elements||[]).map(e=>{const tags=e.tags||{};const id=normalizeCnpj(tags["ref:BR:cnpj"]||tags.cnpj||"");return {cnpj:id,lat:e.lat??e.center?.lat,lon:e.lon??e.center?.lon,company_name:tags.name||tags.brand||"Empresa",sector:tags.office||tags.shop||tags.amenity||"",neighborhood:str(neighborhood),city:str(city),source:"OpenStreetMap / CNPJ publicado",sourceUrl:"https://www.openstreetmap.org/"+e.type+"/"+e.id,verified:validCNPJ(id)};}).filter(x=>x.verified);
 const dedup=[...new Map(base.map(x=>[x.cnpj,x])).values()].slice(0,15);
 const enriched=await enrich(dedup,Math.min(dedup.length,10));
