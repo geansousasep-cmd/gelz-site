@@ -5,7 +5,7 @@ on:
       - 'prospect/**'
       - '.github/workflows/prospect-ci.yml'
   push:
-    branches: [feature/gelz-prospect-premium]
+    branches: [feature/gelz-prospect-premium, fix/prospect-cnpj-core]
     paths:
       - 'prospect/**'
       - '.github/workflows/prospect-ci.yml'
@@ -22,6 +22,16 @@ jobs:
         with:
           node-version: '24'
       - name: Validate frontend JavaScript
-        run: node --check prospect/assets/app.js
+        run: |
+          node --check prospect/assets/app.js
+          node --check prospect/assets/cnpj-engine.js
+          node --check prospect/assets/capture.js
       - name: Run Prospect smoke tests
-        run: node --test prospect/tests/smoke.test.mjs
+        run: node --test prospect/tests/smoke.test.mjs prospect/tests/capture.test.mjs
+      - name: Probe public CNPJ API and CORS (non-blocking)
+        continue-on-error: true
+        run: |
+          curl -sS --max-time 12 -D /tmp/fichario_headers -o /tmp/fichario_response -H "Origin: https://gelz.tech" "https://fichario.app/api/v1/cnpj/07396951000170"
+          grep -iE "^(HTTP/|access-control-allow-origin:|content-type:)" /tmp/fichario_headers || true
+          head -c 300 /tmp/fichario_response || true
+          echo
