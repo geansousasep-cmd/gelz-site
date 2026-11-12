@@ -43,6 +43,9 @@ try{
  await evaluate("document.querySelector('#modal [data-action=lead-edit]').click()");
  await waitFor("!!document.querySelector('#lead-form')");
  await evaluate("document.querySelector('#lead-form [name=contact_phone]').value='551198808780';document.querySelector('#lead-form').requestSubmit();true");
+ await delay(600);
+ console.log("AFTER_FORM",await evaluate("JSON.stringify({url:location.href,modalOpen:!document.querySelector('#modal').classList.contains('hidden'),form:!!document.querySelector('#lead-form'),waButtons:document.querySelectorAll('#main [data-action=wa-direct]').length,main:document.querySelector('#main')?.innerText.slice(0,620),toasts:document.querySelector('#toast-root')?.innerText.slice(-700)})"));
+
  await waitFor("!!document.querySelector('#main .data-table [data-action=wa-direct]')");
  console.log("WA DOM PRE",await evaluate("JSON.stringify({view:document.querySelector('#current-breadcrumb')?.textContent,phone:document.querySelector('#main .data-table .cell-meta')?.textContent,waButtons:document.querySelectorAll('[data-action=wa-direct]').length,mainText:document.querySelector('#main')?.innerText.slice(0,700)})"));
  await waitFor("(()=>{const el=document.querySelector('#main .data-table [data-action=wa-direct]');if(!el)return false;window.__gelzWaUrl='';window.open=(url)=>{window.__gelzWaUrl=String(url);return {};};el.click();return true;})()",60);
