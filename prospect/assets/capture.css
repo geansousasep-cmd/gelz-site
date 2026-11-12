@@ -21,3 +21,32 @@
 @media(max-width:1220px){.prospect-form{grid-template-columns:1.1fr 1.6fr 1.3fr .6fr}.prospect-cta{grid-column:1/-1}.prospect-form .prospect-cta{height:38px}}@media(max-width:830px){.prospect-form{grid-template-columns:repeat(2,minmax(0,1fr))}.prospect-cta{grid-column:1/-1}.prospect-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.prospect-chart-row{gap:18px}}
 @media(max-width:540px){.prospect-page-heading h1{font-size:26px}.prospect-search{padding:17px 14px}.prospect-search-title{align-items:start}.prospect-search-title .chip{font-size:9px;white-space:nowrap}.prospect-form{gap:9px;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.prospect-form .field:first-child{grid-column:1/-1}.prospect-metric{padding:15px 13px}.prospect-metric>strong{font-size:26px}.prospect-metric>span{font-size:9px}.prospect-results .panel-top{align-items:start}.prospect-results .panel-title{font-size:12px}.prospect-results .panel-top button{font-size:10px}.prospect-chart-row{flex-wrap:wrap}.prospect-donut{width:116px;height:116px}.prospect-donut>div{width:85px;height:85px}.prospect-profile{grid-template-columns:1fr}.prospect-profile>div{display:flex;justify-content:space-between;gap:12px}.prospect-profile small{margin-bottom:0}.prospect-profile strong{text-align:right}}
 @media(prefers-reduced-motion:reduce){.prospect-donut,.main>.prospect-page-heading,.main>.prospect-search,.main>.prospect-metrics,.main>.prospect-results,.main>.prospect-stats{animation:none}.loading-stripes span{animation:none}}
+
+
+/* GELZ Prospect 3 — business discovery, paging and public QSA */
+.prospect-form{grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.prospect-form .prospect-cta{grid-column:4;grid-row:auto;align-self:end}
+.prospect-form .field label{display:block;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+.prospect-form select{width:100%}
+.capture-pagination{border-top:1px solid var(--line);margin-top:14px;padding-top:14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.capture-page-caption{font-size:11px;color:#9cabbd}.capture-page-caption strong{color:#e1ecf9;font-size:13px}
+.capture-page-actions{display:flex;gap:8px;align-items:center}.capture-page-actions button{font-size:11px;min-height:34px}
+.capture-page-actions button:first-child svg{transform:scaleX(-1)}
+.capture-page-actions button:disabled{opacity:.35}
+.partner-section-head{display:flex;align-items:center;justify-content:space-between;gap:9px;margin:22px 0 12px}
+.partner-section-head h3{font-size:13px;display:flex;align-items:center;gap:9px;margin:0;color:#dae9fa}
+.partner-section-head svg{color:#9dc8ff}
+.partner-card{border:1px solid #ffffff17;border-radius:12px;background:#152337;display:flex;align-items:center;gap:12px;padding:13px;margin:8px 0;min-height:65px}
+.partner-avatar{width:34px;height:34px;flex:none;border-radius:10px;display:grid;place-items:center;background:#29405c;color:#c3ddff}
+.partner-card>div:nth-child(2){flex:1;min-width:0}.partner-card strong{display:block;font-weight:620;font-size:12px;line-height:1.35;overflow-wrap:anywhere}
+.partner-card small{display:block;color:#8ca2ba;margin-top:5px;font-size:10px}
+.partner-search{font-size:10px;color:#afcff6;border:1px solid #8aaede36;border-radius:8px;padding:8px 10px;white-space:nowrap}
+.partner-search:hover{background:#273a55}
+.partner-company-contacts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:10px 0 17px}
+.partner-company-contacts>div{padding:14px;background:#111e30;border:1px solid var(--line);border-radius:11px}
+.partner-company-contacts small{display:block;color:#8ba2b9;font-size:10px;margin-bottom:7px}
+.partner-company-contacts strong{display:block;font-size:12px;color:#e2efff;overflow-wrap:anywhere}
+.prospect-results .result-buttons button svg{width:14px;height:14px}
+.prospect-results .result-buttons button:nth-child(2){color:#c3d9f7}
+@media(max-width:1200px){.prospect-form{grid-template-columns:repeat(3,minmax(0,1fr))}.prospect-form .prospect-cta{grid-column:1/-1}}
+@media(max-width:820px){.prospect-form{grid-template-columns:repeat(2,minmax(0,1fr))}.capture-page-actions{width:100%;justify-content:space-between}.capture-page-actions .button{flex:1}}
+@media(max-width:520px){.prospect-form{grid-template-columns:repeat(2,minmax(0,1fr))}.prospect-form .field:first-child{grid-column:1/-1}.prospect-form .prospect-cta{grid-column:1/-1}.capture-page-caption{font-size:10px}.partner-card{flex-wrap:wrap}.partner-card>div:nth-child(2){flex-basis:calc(100% - 50px)}.partner-search{margin-left:45px}.partner-company-contacts{grid-template-columns:1fr}}
