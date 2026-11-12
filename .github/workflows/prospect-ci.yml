@@ -35,3 +35,11 @@ jobs:
           grep -iE "^(HTTP/|access-control-allow-origin:|content-type:)" /tmp/fichario_headers || true
           head -c 300 /tmp/fichario_response || true
           echo
+          echo "---- VERIFICACAO: BUSCA SETOR / CIDADE ----"
+          curl -sS --max-time 16 -D /tmp/fichario_sector_h -o /tmp/fichario_sector             -H "Origin: https://gelz.tech"             "https://fichario.app/api/v1/busca-avancada?uf=SP&cidade=Sao%20Paulo&cnae=6920601&por_pagina=3&pagina=1"
+          grep -iE "^(HTTP/|access-control-allow-origin:|content-type:)" /tmp/fichario_sector_h || true
+          node -e 'const fs=require("fs");const d=JSON.parse(fs.readFileSync("/tmp/fichario_sector","utf8"));console.log("SECTOR_KEYS",Object.keys(d),"ARRAY_LENGTH",Array.isArray(d.resultados)?d.resultados.length:Array.isArray(d.empresas)?d.empresas.length:"outro");console.log("FIRST_FIELDS",Object.keys((d.resultados||d.empresas||[])[0]||{}))'
+          echo "---- VERIFICACAO: BUSCA NOME ----"
+          curl -sS --max-time 16 -D /tmp/fichario_name_h -o /tmp/fichario_name             -H "Origin: https://gelz.tech"             "https://fichario.app/api/v1/busca?q=petrobras&uf=RJ"
+          grep -iE "^(HTTP/|access-control-allow-origin:|content-type:)" /tmp/fichario_name_h || true
+          node -e 'const fs=require("fs");const d=JSON.parse(fs.readFileSync("/tmp/fichario_name","utf8"));console.log("NAME_KEYS",Object.keys(d),"ARRAY_LENGTH",Array.isArray(d.resultados)?d.resultados.length:"outro")'
