@@ -214,13 +214,77 @@ import * as CONTACT from './contact-utils.js';
     if(!result)window.location.assign(link);
     h.toast("Conversa individual aberta. Nenhuma mensagem enviada automaticamente.");
   }
+
+  function buildRecord(x){
+    const date=new Date().toISOString();
+    return {id:crypto.randomUUID(),owner_id:h.state.user?.id||null,
+      company_name:x.company_name||x.razao_social||"Empresa",sector:x.sector||"",
+      city:x.city||app.city,neighborhood:x.neighborhood||"",cnpj:x.cnpj,
+      cnpj_verified:false,cnae:x.cnae||"",place_id:"",source_type:"fichario_cnpj",
+      contact_name:"",contact_phone:x.contactHidden?"":CONTACT.normalizeBrazilPhone(x.phone),
+      contact_email:x.contactHidden?"":(x.email||""),contact_source_url:x.sourceUrl||"",
+      website:x.site||"",opt_in_whatsapp:false,opt_in_evidence:"",stage:"Descoberto",
+      notes:"Fonte pública: "+x.source+". Capital social cadastral declarado: "+(x.capital_social||"não informado")+". Não representa saldo, faturamento ou disposição para investir.",
+      next_contact_at:null,ai_score:null,ai_analysis:null,created_at:date,updated_at:date
+    };
+  }
+  async function captureVisible(){
+    const available=order().filter(x=>x.cnpj&&!linked(x)).slice(0,100);
+    if(!available.length){h.toast("Todos os CNPJs desta consulta já estão no CRM.");return;}
+    const disclaimer=h.state.demo?" (demonstração: não ficam salvos permanentemente).":"";
+    if(!window.confirm("Adicionar "+available.length+" empresas à base de leads"+disclaimer+"?"))return;
+    const records=available.map(buildRecord);
+    if(!h.state.demo){
+      const {error}=await h.state.client.from("prospect_leads").insert(records);
+      if(error){h.toast("Erro ao salvar lote: "+error.message,"error");return;}
+    }
+    h.state.leads.push(...records);
+    h.render();
+    h.toast(records.length+" empresas adicionadas ao CRM"+(h.state.demo?" nesta sessão de demonstração.":"."));
+  }
+  async function loadMore(){
+    if(app.loading||app.mode!=="sector"||app.bairro){h.toast("A ampliação em lote exige pesquisa por cidade/segmento sem filtro de bairro.","error");return;}
+    if(app.page>=app.pages){h.toast("Última página atingida.");return;}
+    const [min,max]=capitalRanges[app.capitalBand]||capitalRanges.all;
+    const maxExtra=Math.min(4,app.pages-app.page,Math.floor((100-app.items.length)/20));
+    if(maxExtra<=0){h.toast("Limite de 100 empresas na tela. Use Próxima página para continuar.");return;}
+    app.loading=true;app.error="";h.render();
+    const dedup=new Map(app.items.map(x=>[x.cnpj,x]));
+    let added=0,stopErr="";
+    for(let k=0;k<maxExtra;k++){
+      const page=app.page+1;
+      try{
+        const result=await CNPJ.bySector({city:app.city,uf:app.uf,cnae:app.cnae,page,porte:app.porte,capitalMin:min,capitalMax:max,order:app.order==="xp_fit"?"capital_asc":app.order});
+        for(const x of result.items){if(!dedup.has(x.cnpj)){dedup.set(x.cnpj,x);added++;}}
+        app.page=page;
+        if(page<app.pages)await new Promise(resolve=>setTimeout(resolve,430));
+      }catch(err){stopErr=err.message||"Erro na fonte de CNPJ";break;}
+    }
+    app.items=[...dedup.values()];
+    app.loading=false;
+    if(stopErr)app.error="Busca interrompida: "+stopErr+". Empresas já carregadas preservadas.";
+    h.render();
+    h.toast(added+" empresas adicionais carregadas"+(stopErr?" antes da interrupção.":"."));
+  }
+  async function autoStart(){
+    if(app.searched||app.loading)return;
+    await loadPage(1);
+  }
+
   async function save(id){
-    const x=app.items.find(x=>x.cnpj===id);if(!x)return;const old=linked(x);if(old){h.viewLead(old.id);return;}
-    const raw=digits(x.phone||"");const phone=/^55\d{10,11}$/.test(raw)?raw:/^\d{10,11}$/.test(raw)?"55"+raw:"";
-    const now=new Date().toISOString();
-    const record={id:crypto.randomUUID(),owner_id:h.state.user?.id||null,company_name:x.company_name,sector:x.sector||"",city:x.city||app.city,neighborhood:x.neighborhood||"",cnpj:x.cnpj,cnpj_verified:false,cnae:x.cnae||"",place_id:"",source_type:"fichario_cnpj",contact_name:"",contact_phone:phone,contact_email:"",contact_source_url:x.sourceUrl||"",website:x.site||"",opt_in_whatsapp:false,opt_in_evidence:"",stage:"Descoberto",notes:`Fonte: ${x.source}. Capital social cadastral: ${x.capital_social||"não informado"}.`,next_contact_at:null,ai_score:null,ai_analysis:null,created_at:now,updated_at:now};
-    if(!h.state.demo){const {error}=await h.state.client.from("prospect_leads").insert(record);if(error){h.toast("Não foi possível salvar: "+error.message,"error");return;}}
-    h.state.leads.unshift(record);await h.recordEvent(record.id,"Captura","Empresa capturada de base pública de CNPJ");h.closeModal();h.render();h.toast("CNPJ salvo no CRM.");
+    const x=app.items.find(x=>x.cnpj===id)||h.state.leads.find(x=>x.cnpj===id);
+    if(!x)return;
+    const existing=linked(x);
+    if(existing){h.viewLead(existing.id);return;}
+    const record=buildRecord(x);
+    if(!h.state.demo){
+      const {error}=await h.state.client.from("prospect_leads").insert(record);
+      if(error){h.toast("Não foi possível salvar: "+error.message,"error");return;}
+    }
+    h.state.leads.unshift(record);
+    await h.recordEvent(record.id,"Captura","CNPJ cadastrado a partir de fonte empresarial pública.");
+    h.closeModal();h.render();
+    h.toast("Empresa adicionada ao CRM"+(h.state.demo?" demonstrativo.":"."));
   }
   async function contacted(id){
     const company=h.state.leads.find(l=>l.id===id);if(!company)return;
@@ -238,9 +302,11 @@ import * as CONTACT from './contact-utils.js';
     else if(name==="capture-partners")await partners(id);
     else if(name==="capture-save")await save(id);
     else if(name==="capture-export")csv();
+    else if(name==="capture-bulk")await captureVisible();
+    else if(name==="capture-more")await loadMore();
     else if(name==="capture-page-next")await loadPage(app.page+1);
     else if(name==="capture-page-prev")await loadPage(app.page-1);
     else if(name==="capture-contacted")await contacted(id);
   }
 
-export { setup, home, discover, submit, changeMode, action };
+export { setup, home, discover, submit, changeMode, action, autoStart };
