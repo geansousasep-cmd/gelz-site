@@ -17,6 +17,7 @@ const d=item?.empresa||item?.dados||item||{};const addr=d.endereco||d.address||{
 const cnpj=normalizeCnpj(textField(d,"cnpj","documento","cnpj_basico"));
 const capitalValue=capital(d.capital_social??d.capitalSocial??d.capital_social_empresa??0);
 let phone=textField(d,"telefone","telefone_comercial","ddd_telefone_1","telefone1","telefone1_completo");
+if(d.contato_oculto===true||d.contato_oculto==="true")phone="";
 if(phone.startsWith("0"))phone=phone.replace(/^0+/,"");
 return {
 cnpj,company_name:textField(d,"nome_fantasia","razao_social","razaoSocial","nome","fantasia","nome_empresarial")||"Empresa sem nome",
@@ -54,7 +55,7 @@ export async function byName({query,uf="SP",city=""}){const q=str(query);if(q.le
 export async function bySector({uf="SP",city="São Paulo",cnae="6920601",page=1}){
 const p=new URLSearchParams({uf:str(uf).toUpperCase(),cidade:str(city),cnae:digits(cnae),pagina:String(page),por_pagina:"20",ordem:"capital_desc",situacao:"ativa"});if(!p.get("cnae")||p.get("cnae").length!==7)throw Error("Informe o CNAE com 7 dígitos.");
 const data=await request(API+"/busca-avancada?"+p);const items=unwrap(data).map(x=>normalize(x,"Fichário / busca por setor")).filter(x=>x.verified);return {items,total:Number(data?.total||data?.total_resultados||items.length),mode:"sector",page,notice:String(data?.aviso||"")};}
-export async function enrich(items,max=8){const arr=items.slice(0,max);const results=await Promise.allSettled(arr.map(x=>byCNPJ(x.cnpj)));return arr.map((x,i)=>results[i].status==="fulfilled"?{...results[i].value,source:x.source}:x);}
+export async function enrich(items,max=8){const arr=items.slice(0,max);const results=await Promise.allSettled(arr.map(x=>byCNPJ(x.cnpj)));return items.map((x,i)=>i<max&&results[i].status==="fulfilled"?{...results[i].value,source:x.source}:x);}
 export async function byRadius({city="São Paulo",neighborhood="Tatuapé",radiusKm=3,sector=""}){
 const km=Math.max(1,Math.min(15,Number(radiusKm)||3));
 const q=[str(neighborhood),str(city),"Brasil"].filter(Boolean).join(", ");
