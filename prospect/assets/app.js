@@ -256,11 +256,57 @@ async function openWhatsapp(form){
  if(!message){toast("Digite uma mensagem antes de continuar.","error");return;}
  openWAUrl(phone,message,leadId);
 }
-async function runAI(id){if(state.demo){demoWarn();return;}const l=state.leads.find(x=>x.id===id);if(!l)return;if(!C.aiEnabled){toast("A IA depende da Edge Function e da chave de API no servidor.","error");return;}
-toast("Solicitando análise, usando apenas dados documentados...");
-const {data,error}=await state.client.functions.invoke("prospect-analyze",{body:{lead:l}});if(error||!data?.analysis){toast("Não foi possível analisar: "+(error?.message||data?.error||"Resposta indisponível"),"error");return;}
-const rawScore=data.analysis.score;const score=rawScore===null||rawScore===undefined?null:Math.max(0,Math.min(100,Number(rawScore)));const updated={...l,ai_score:score,ai_analysis:data.analysis,updated_at:new Date().toISOString()};const {error:dbError}=await state.client.from("prospect_leads").update({ai_score:score,ai_analysis:data.analysis,updated_at:updated.updated_at}).eq("id",l.id);if(dbError){toast("A análise não pôde ser salva: "+dbError.message,"error");return;}
-Object.assign(l,updated);await recordEvent(l.id,"Análise","Potencial comercial avaliado com dados informados e limitações documentadas.");state.analysisLeadId=l.id;closeModal();go("intelligence");toast("Análise atualizada.");}
+async function analyzeCompany(cnpj){
+  const id=String(cnpj||"").replace(/\D/g,"");
+  const saved=state.leads.find(x=>x.cnpj===id);
+  state.analysisLeadId=saved?.id||"";
+  state.publicAnalysis=null;
+  closeModal();go("intelligence");
+  toast("Consultando CNPJ e quadro societário nas fontes públicas...");
+  try{
+    const dossier=await RESEARCH.buildPublicDossier(saved||{cnpj:id});
+    state.publicAnalysis=dossier;
+    if(state.view==="intelligence")render();
+    toast("Relatório empresarial atualizado com fontes.");
+  }catch(error){
+    toast("Consulta empresarial: "+(error.message||"Fonte indisponível"),"error");
+  }
+}
+async function runAI(id){
+  const lead=state.leads.find(x=>x.id===id)||null;
+  const cnpj=String(lead?.cnpj||state.publicAnalysis?.company?.cnpj||"").replace(/\D/g,"");
+  if(!cnpj){toast("Selecione um lead com CNPJ válido para pesquisar.","error");return;}
+  toast("Atualizando dados cadastrais e informações empresariais...");
+  let dossier;
+  try{dossier=await RESEARCH.buildPublicDossier(lead||{cnpj});}
+  catch(error){toast("Não foi possível pesquisar: "+error.message,"error");return;}
+  state.publicAnalysis=dossier;
+  state.analysisLeadId=lead?.id||"";
+  if(state.view==="intelligence")render();
+  if(state.demo||!state.client||!C.aiEnabled){
+    toast("Dados públicos atualizados. IA com pesquisa web requer API e banco configurados.");
+    return;
+  }
+  toast("Pesquisando a empresa na internet com IA e verificando fontes...");
+  const safeLead={cnpj:dossier.company.cnpj,company_name:dossier.company.name,razao_social:dossier.company.legalName,sector:dossier.company.sector,cnae:dossier.company.cnae,city:dossier.company.city,neighborhood:dossier.company.neighborhood,website:dossier.company.website,porte:dossier.company.porte,capital_social:dossier.company.capitalSocial};
+  let response;
+  try{response=await state.client.functions.invoke("prospect-analyze",{body:{lead:safeLead}});}
+  catch(err){toast("Falha na integração IA: "+err.message,"error");return;}
+  const {data,error}=response||{};
+  if(error||data?.error||!data?.analysis){toast("A pesquisa IA não foi concluída: "+(error?.message||data?.error||"Sem retorno")+". O relatório cadastral permanece disponível.","error");return;}
+  const result=data.analysis;
+  const score=result.score==null?dossier.score:Math.max(0,Math.min(100,Number(result.score)));
+  const normalizedSources=(result.sources||[]).filter(x=>x&&typeof x==="object"&&verifiedUrl(x.url)).slice(0,12).map(x=>({title:String(x.title||"Fonte web").slice(0,140),url:verifiedUrl(x.url),status:"pesquisa web"}));
+  const report={...dossier,mode:"web_ai",type:"web_ai",score,confidence:result.confidence||"baixa",summary:result.summary||dossier.summary,opportunities:Array.isArray(result.opportunities)?result.opportunities:dossier.opportunities,factors:Array.isArray(result.factors)?result.factors:dossier.factors,missing_data:Array.isArray(result.missing_data)?result.missing_data:dossier.missing_data,next_action:result.next_action||dossier.next_action,sources:[...dossier.sources,...normalizedSources],checkedAt:new Date().toISOString()};
+  state.publicAnalysis=report;
+  if(lead&&!state.demo){
+    const {error:dbError}=await state.client.from("prospect_leads").update({ai_score:score,ai_analysis:report,updated_at:new Date().toISOString()}).eq("id",lead.id);
+    if(dbError)toast("Análise pronta, mas não foi possível salvá-la no CRM: "+dbError.message,"error");
+    else{lead.ai_score=score;lead.ai_analysis=report;await recordEvent(lead.id,"Análise web","Pesquisa por IA com fontes registradas.");}
+  }
+  if(state.view==="intelligence")render();
+  toast("Pesquisa com IA concluída. Confira as fontes e informações encontradas.");
+}
 async function enrichCnpj(id){const l=state.leads.find(x=>x.id===id);if(!l)return;openModal("Consultar CNPJ",`<div class="info" style="margin-bottom:16px">Google Maps não contém CNPJ. A validação utiliza serviço empresarial separado, em uma Edge Function segura. Consulta por nome só é feita se houver fornecedor habilitado.</div><form id="cnpj-form"><input name="lead_id" type="hidden" value="${attr(l.id)}"><div class="field"><label>CNPJ para validar</label><input name="cnpj" inputmode="numeric" placeholder="00.000.000/0000-00" value="${attr(l.cnpj||"")}"></div><div class="modal-actions"><button class="button button-primary" type="submit">Validar CNPJ</button></div></form><div class="divider"></div><button class="button" data-action="cnpj-search" data-id="${attr(l.id)}">${ic("search")} Procurar por nome empresarial (se conectado)</button><div id="cnpj-result"></div>`,"PESQUISA EMPRESARIAL");}
 async function callEnrichment(body){if(state.demo){demoWarn();return null;}if(!state.client){toast("Configure o Supabase.","error");return null;}const {data,error}=await state.client.functions.invoke("prospect-enrich",{body});if(error){toast("Consulta não disponível: "+error.message,"error");return null;}if(data?.error){toast("Consulta: "+data.error,"error");return null;}return data;}
 async function submitCnpj(form){const l=state.leads.find(x=>x.id===new FormData(form).get("lead_id"));const cnpj=String(new FormData(form).get("cnpj")||"").replace(/\D/g,"");if(!l||cnpj.length!==14){toast("Informe CNPJ com 14 dígitos.","error");return;}let result;
@@ -309,7 +355,7 @@ case "export-csv":downloadCSV();break;
 case "import-csv":$("#csv-file")?.click();break;
 case "print-report":window.print();break;
 case "clear-filters":state.searchTerm="";state.searchStage="";render();break;
-case "ai-info":openModal("Análise responsável",`<p>A IA auxilia na triagem de oportunidades a partir de informações empresariais fornecidas ou verificadas. A pontuação não estima o patrimônio do empresário, faturamento não comprovado ou montante disponível para investir.</p><div class="warning">Resultados dependem de fontes confiáveis e de uma API de IA configurada no servidor. Não confundir potencial comercial com adequação a produtos de investimento.</div>`,"TRANSPARÊNCIA / IA");break;
+case "ai-info":openModal("Pesquisa com transparência",`<p>A IA auxilia na triagem de oportunidades a partir de informações empresariais fornecidas ou verificadas. A pontuação não estima o patrimônio do empresário, faturamento não comprovado ou montante disponível para investir.</p><div class="warning">Resultados dependem de fontes confiáveis e de uma API de IA configurada no servidor. Não confundir potencial comercial com adequação a produtos de investimento.</div>`,"TRANSPARÊNCIA / IA");break;
 case "privacy-info":openModal("Privacidade e conformidade",`<p>Os dados dos leads devem ter finalidade definida, origem documentada, acesso restrito e mecanismos para correção, exclusão e oposição ao contato.</p><p>Evite coleta de números pessoais por bots, coleta não autorizada e disparos automáticos. A política do WhatsApp exige condições próprias de autorização comercial. Verifique também as regras da instituição e da CVM.</p>`,"SEGURANÇA / COMPLIANCE");break;
 }}
 async function initialize(){
@@ -337,6 +383,6 @@ $("#command-input").addEventListener("input",e=>renderCommand(e.target.value));
 document.addEventListener("click",async e=>{const nav=e.target.closest("[data-view]");if(nav){e.preventDefault();go(nav.dataset.view);return;}const n=e.target.closest("[data-action]");if(!n)return;if(n.tagName==="A")e.preventDefault();await onAction(n.dataset.action,n.dataset.id||n.dataset.cnpj,n);});
 document.addEventListener("submit",async e=>{const f=e.target;const formId=f.getAttribute("id");if(!["lead-form","task-form","wa-form","cnpj-form","profile-form","capture-form"].includes(formId))return;e.preventDefault();const submit=f.querySelector('button[type="submit"]');if(submit)submit.disabled=true;try{if(formId==="lead-form")await storeLead(f);else if(formId==="task-form")await saveTask(f);else if(formId==="wa-form")await openWhatsapp(f);else if(formId==="cnpj-form")await submitCnpj(f);else if(formId==="profile-form")await saveProfile(f);else if(formId==="capture-form")await CAPTURE.submit(f);}catch(err){toast("Falha: "+err.message,"error");}finally{if(submit&&submit.isConnected)submit.disabled=false;}});
 document.addEventListener("input",e=>{if(e.target.id==="lead-search"){state.searchTerm=e.target.value;const start=e.target.selectionStart;const end=e.target.selectionEnd;render();$("#lead-search")?.focus();$("#lead-search")?.setSelectionRange(start,end);}});
-document.addEventListener("change",async e=>{const el=e.target;if(el.id==="capture-mode"){CAPTURE.changeMode(el.value);}else if(el.id==="lead-filter"){state.searchStage=el.value;render();}else if(el.dataset.changeStage){await stageChange(el.dataset.changeStage,el.value);}else if(el.dataset.taskCheck){await toggleTask(el.dataset.taskCheck,el.checked);}else if(el.id==="ai-lead"){state.analysisLeadId=el.value;render();}else if(el.id==="wa-template"){const id=$("#wa-form input[name=lead_id]").value;const l=state.leads.find(x=>x.id===id);if(l)$("#wa-message").value=messageText(l,el.value);}else if(el.id==="csv-file"){await importCSV(el.files[0]);el.value="";}});
+document.addEventListener("change",async e=>{const el=e.target;if(el.id==="capture-mode"){CAPTURE.changeMode(el.value);}else if(el.id==="lead-filter"){state.searchStage=el.value;render();}else if(el.dataset.changeStage){await stageChange(el.dataset.changeStage,el.value);}else if(el.dataset.taskCheck){await toggleTask(el.dataset.taskCheck,el.checked);}else if(el.id==="ai-lead"){state.analysisLeadId=el.value;state.publicAnalysis=null;render();}else if(el.id==="wa-template"){const id=$("#wa-form input[name=lead_id]").value;const l=state.leads.find(x=>x.id===id);if(l)$("#wa-message").value=messageText(l,el.value);}else if(el.id==="csv-file"){await importCSV(el.files[0]);el.value="";}});
 await initialize();
 })();
