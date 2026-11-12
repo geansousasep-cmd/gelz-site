@@ -6,7 +6,7 @@ import * as CNPJ from './cnpj-engine.js';
   const safe=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   const digits=v=>String(v??"").replace(/\D/g,"");
   const ico=(name)=>h.ic(name,16);
-  const button=(label,action,id="",kind="button-subtle")=>`<button class="button ${kind}" type="button" data-action="${action}" ${id?`data-cnpj="${safe(id)}"`:""}>${label}</button>`;
+  const button=(label,action,id="",kind="button-subtle")=>`<button class="button ${kind}" type="button" data-action="${action}" ${id?`data-cnpj="${safe(id)}" data-id="${safe(id)}"`:""}>${label}</button>`;
   const linked=x=>h.state.leads.find(l=>x.cnpj&&l.cnpj===x.cnpj);
   const touched=l=>!!l&&(["Em conversa","Reunião agendada","Proposta","Convertido"].includes(l.stage)||h.state.events.some(e=>e.lead_id===l.id&&e.kind==="Contato confirmado"));
   const score=x=>CNPJ.potential(x);
