@@ -27,7 +27,7 @@ Deno.serve(async function researchHandler(req){
       const response=await fetch("https://fichario.app/api/v1/cnpj/"+id,{signal:controller.signal,headers:{"accept":"application/json"}});
       if(response.ok){
         const result=await response.json();
-        company=result?.dados||result?.empresa||result||null;
+        const entry=result?.data||result?.dados||result?.empresa||result||{};company={...entry,...(entry?.empresa||{}),...(entry?.estabelecimento||{})};
       }
     }finally{clearTimeout(t);}
   }catch(e){console.warn("CNPJ source unavailable",String(e));}
