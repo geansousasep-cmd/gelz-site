@@ -4,6 +4,7 @@ const C=window.GELZ_CONFIG||{};
 const CAPTURE=await import("./capture.js");
 const CNPJ_API=await import("./cnpj-engine.js");
 const CONTACT=await import("./contact-utils.js");
+const RESEARCH=await import("./research.js");
 const $=s=>document.querySelector(s);
 const $$=s=>Array.from(document.querySelectorAll(s));
 const safe=v=>String(v??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
@@ -13,7 +14,7 @@ const fmtDate=v=>{if(!v)return "Sem data";const d=new Date(v);return isNaN(+d)?"
 const today=()=>new Date().toISOString().slice(0,10);
 const uid=()=>globalThis.crypto?.randomUUID?.()||"local-"+Date.now()+"-"+Math.random().toString(36).slice(2);
 const STAGES=["Descoberto","Em pesquisa","Qualificado","Aguardando autorização","Em conversa","Reunião agendada","Proposta","Convertido","Sem interesse"];
-const VIEW_NAMES={dashboard:"Início",discover:"Capturar CNPJs",leads:"Meus leads",pipeline:"Funil",tasks:"Agenda",intelligence:"Inteligência",reports:"Gráficos",settings:"Ajustes"};
+const VIEW_NAMES={dashboard:"Início",discover:"Capturar CNPJs",leads:"Meus leads",pipeline:"Funil",tasks:"Agenda",intelligence:"Pesquisar empresa",reports:"Gráficos",settings:"Ajustes"};
 const paths={
 dashboard:'<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>',
 map:'<path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15M15 6v15"/>',
@@ -50,7 +51,7 @@ calendarPlus:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M
 };
 const ic=(k,size=17)=>`<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[k]||paths.info}</svg>`;
 function icons(root=document){root.querySelectorAll("[data-icon]").forEach(e=>e.innerHTML=ic(e.dataset.icon));}
-const state={client:null,user:null,account:null,demo:false,leads:[],tasks:[],events:[],view:"dashboard",map:null,mapElement:null,mapMarkers:[],places:[],placeSelected:null,details:null,loading:false,searchTerm:"",searchStage:"",analysisLeadId:"",settings:{},mapBusy:false};
+const state={publicAnalysis:null,client:null,user:null,account:null,demo:false,leads:[],tasks:[],events:[],view:"dashboard",map:null,mapElement:null,mapMarkers:[],places:[],placeSelected:null,details:null,loading:false,searchTerm:"",searchStage:"",analysisLeadId:"",settings:{},mapBusy:false};
 const fakeCompanies=[
 ["Alvorada Contábil (fictícia)","Contabilidade","Tatuapé","Qualificado"],
 ["Horizonte Atacado (fictícia)","Comércio","Brás","Em pesquisa"],
@@ -60,7 +61,7 @@ const fakeCompanies=[
 ["Vértice Gestão (fictícia)","Consultoria","Santana","Proposta"],
 ["Terranova Serviços (fictícia)","Serviços","Paulista","Sem interesse"]
 ];
-CAPTURE.setup({state,ic,render,toast,openModal,closeModal,viewLead,recordEvent,stageChange,fmtDate});
+CAPTURE.setup({state,ic,render,toast,openModal,closeModal,viewLead,recordEvent,stageChange,fmtDate,analyzeCompany});
 function createDemoLeads(){return fakeCompanies.map((a,i)=>({id:"fic-"+i,company_name:a[0],sector:a[1],neighborhood:a[2],city:"São Paulo",stage:a[3],contact_name:"",contact_phone:"",contact_email:"",contact_source_url:"",opt_in_whatsapp:false,opt_in_evidence:"",cnpj:"",cnpj_verified:false,cnae:"",source_type:"fictício",place_id:"",website:"",notes:"Dados exclusivamente fictícios para visualização do produto.",next_contact_at:null,created_at:new Date(Date.now()-i*86400000).toISOString(),updated_at:new Date(Date.now()-i*86400000).toISOString(),ai_score:null,ai_analysis:null}));}
 function toast(message,type="ok"){const d=document.createElement("div");d.className="toast"+(type==="error"?" error":"");d.textContent=message;$("#toast-root").appendChild(d);setTimeout(()=>d.remove(),4500);}
 function demoWarn(){toast("Demonstração: apenas dados fictícios e operações locais. Nenhuma integração ativa.");}
@@ -68,6 +69,7 @@ function pageHeader(eyebrow,heading,subtitle,actions=""){return `<div class="pag
 function btn(text,action,variant="button-subtle",extra=""){return `<button type="button" class="button ${variant}" data-action="${action}" ${extra}>${text}</button>`;}
 function pill(stage){const cl=stage==="Convertido"?"green":stage==="Reunião agendada"?"blue":stage==="Sem interesse"?"red":stage==="Qualificado"?"gold":"dim";return `<span class="chip ${cl}">${safe(stage)}</span>`;}
 function fmt(v){return Number(v||0).toLocaleString("pt-BR");}
+function verifiedUrl(v){try{const u=new URL(String(v||""));return u.protocol==="https:"?u.href:"";}catch{return "";}}
 function optionStage(active){return STAGES.map(st=>`<option value="${attr(st)}" ${st===active?"selected":""}>${safe(st)}</option>`).join("");}
 function render(){if($("#workspace").classList.contains("hidden"))return;$$("[data-view]").forEach(n=>n.classList.toggle("active",n.dataset.view===state.view));$("#current-breadcrumb").textContent=VIEW_NAMES[state.view];$("#nav-lead-count").textContent=state.leads.length;$("#footer-mode").textContent=state.demo?"DEMONSTRAÇÃO • NÃO PRIVADA":"Acesso privado";$("#connection-status").textContent=state.demo?"Modo local":"Sessão autenticada";$("#account-subline").textContent=state.demo?"Dados fictícios":"Administrador";
 let content="";
