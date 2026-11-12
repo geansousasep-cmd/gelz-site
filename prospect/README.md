@@ -146,7 +146,7 @@ cd prospect
 python -m http.server 8000
 ```
 
-Abra `http://localhost:8000` para a interface. Sem credenciais, clique em **Explorar demonstração fictícia**. Não cadastre dados reais nesse modo.
+Abra `http://localhost:8000` para a interface. Sem credenciais, utilize **admin / admin** somente para entrar na **demonstração fictícia** ou clique em **Explorar demonstração fictícia**. Não existe autenticação privada nesse modo e nenhum dado real é carregado. Não cadastre dados reais na demonstração.
 
 ## Limitações atuais — não ocultar
 
