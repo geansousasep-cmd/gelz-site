@@ -21,6 +21,7 @@ try{
  await evaluate("document.querySelector('#demo-button').click()");
  await waitFor("!document.querySelector('#workspace').classList.contains('hidden')");
  assert.equal(await evaluate("!!document.querySelector('#capture-form')"),true,"CNPJ capture on home");
+ await waitFor("!document.querySelector('.loading-stripes')",125);
  await evaluate("document.querySelector('[data-view=leads]').click()");
  assert.equal(await waitFor("document.querySelector('#current-breadcrumb').textContent==='Meus leads'"),true,"Sidebar navigation to Leads");
  await evaluate("document.querySelector('[data-view=discover]').click()");
@@ -36,6 +37,22 @@ try{
  await evaluate("document.querySelector('[data-view=leads]').click()");
  assert.equal(await evaluate("!!document.querySelector('.data-table .cell-name')"),true,"Captured CNPJ appears in CRM");
 
+ // WhatsApp is a direct, one-click manual link; no opt-in form lock.
+ await evaluate("document.querySelector('.data-table .cell-name').click()");
+ await waitFor("!!document.querySelector('#modal [data-action=lead-edit]')");
+ await evaluate("document.querySelector('#modal [data-action=lead-edit]').click()");
+ await waitFor("!!document.querySelector('#lead-form')");
+ await evaluate("document.querySelector('#lead-form [name=contact_phone]').value='551198808780';document.querySelector('#lead-form').requestSubmit();true");
+ await waitFor("!!document.querySelector('#main .data-table [data-action=wa-direct]')");
+ await evaluate("window.__gelzWaUrl='';window.open=(url)=>{window.__gelzWaUrl=String(url);return {};};document.querySelector('#main .data-table [data-action=wa-direct]').click();true");
+ await waitFor("window.__gelzWaUrl.startsWith('https://wa.me/551198808780?text=')");
+ assert.ok((await evaluate("decodeURIComponent(window.__gelzWaUrl)")).includes("Olá!"),"WhatsApp message present");
+ await evaluate("document.querySelector('.data-table .cell-name').click();document.querySelector('#modal [data-action=wa-compose]').click()");
+ await waitFor("!!document.querySelector('#wa-form')");
+ assert.equal(await evaluate("document.querySelector('#wa-form button[type=submit]').disabled"),false,"Editable WhatsApp not blocked by opt-in");
+ await evaluate("document.querySelector('#modal-close').click()");
+
+
  await evaluate("document.querySelector('[data-view=discover]').click()");
  await evaluate("const el=document.querySelector('#capture-mode');el.value='sector';el.dispatchEvent(new Event('change',{bubbles:true}));true");
  assert.equal(await evaluate("!!document.querySelector('select[name=porte]') && !!document.querySelector('select[name=capitalBand]') && !!document.querySelector('input[name=bairro]')"),true,"Neighborhood and capital filter controls");
@@ -43,6 +60,10 @@ try{
  await waitFor("document.querySelector('.capture-pagination') && !document.querySelector('.loading-stripes')",125);
  const count1=await evaluate("document.querySelectorAll('.prospect-results tbody tr').length");
  assert.ok(count1>0&&count1<=20,"real source returns one page of up to 20 small companies");
+
+ await evaluate("window.confirm=()=>true;document.querySelector('[data-action=capture-bulk]').click();true");
+ await waitFor("Number(document.querySelector('#nav-lead-count').textContent)>1");
+
  assert.equal(await evaluate("document.querySelector('.capture-page-caption').textContent.includes('Página')"),true);
  const firstPage=await evaluate("document.querySelector('.capture-page-caption').textContent");
  assert.ok(firstPage.includes('1'),"first page shown");
@@ -60,6 +81,6 @@ try{
  await evaluate("document.querySelector('[data-action=capture-partners]').click()");
  await waitFor("document.querySelector('.partner-section-head') && !document.querySelector('#modal-body .loading-stripes')",95);
  assert.equal(await evaluate("document.querySelector('#modal-body').textContent.includes('Sócios')"),true,"QSA panel in browser");
- console.log("BROWSER E2E PASS: login demonstrativo, sidebar, modo CNPJ, consulta real, captura e CRM, paginação, capital baixo e QSA.");
+ console.log("BROWSER E2E PASS: login demo, navigation, live CNPJ, company capture, direct WhatsApp, batch CRM, SME paging and QSA.");
  ws.close();
 }catch(err){console.error("BROWSER E2E FAIL",err);process.exitCode=1;}finally{finish();}
