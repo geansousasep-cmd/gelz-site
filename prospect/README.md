@@ -18,6 +18,18 @@ Os limites do Fichário podem mudar. Documentação: https://fichario.app/api . 
 
 **IMPORTANTE:** quando não há Supabase configurado, `admin/admin` abre somente uma **demonstração sem login privado e sem persistência segura de leads**. A pesquisa externa usa empresas reais, mas o CRM demonstrativo é temporário. **Não cadastre dados pessoais ou comerciais sigilosos nele.**
 
+## Atualização: WhatsApp individual, fichas e empresas locais
+
+- **WhatsApp sem etapa bloqueada:** botões `Abrir WhatsApp` nas fichas do CRM e nos resultados de CNPJ usam link individual `https://wa.me/55DDDNUMERO?text=...`, com número brasileiro validado e mensagem de apresentação. Abrem a conversa imediatamente; o usuário revisa/envia **manualmente**. O CRM registra só que o link foi aberto, nunca presume envio, resposta ou autorização.
+- **Mensagem editável** disponível como opção separada. O bloqueio visual por ausência de opt-in foi retirado da **abertura manual do link**; isso NÃO equivale a permissão de marketing ou autorização para envios comerciais. Respeitar consentimento aplicável, preferências, LGPD e política da plataforma.
+- **Ficha completa por CNPJ:** atualiza sob demanda via fonte pública e mostra razão social, CNAE, endereço, abertura, natureza jurídica, situação, telefone/e-mail comerciais e documentação de origem. Campos indisponíveis são exibidos como não informados.
+- **Prioridade comercial para pequenas e médias:** padrão de busca por `ME + EPP`, ordenando na fonte por capital social ascendente; dentro da página, mostra índice de afinidade de abordagem PJ baseado em porte, capital declarado e existência de canal comercial. Índice é heurístico de *relacionamento comercial*, NÃO estimativa de patrimônio/capacidade de investir.
+- **Mais empresas na tela:** botão `Carregar +80` consulta até 4 páginas adicionais de 20 resultados (máximo 100 carregadas por visualização) com intervalo entre páginas, sem contornar limites da API. Para avançar, pode usar `Próxima página`.
+- **Salvar visíveis:** captura até 100 empresas de uma só vez para o CRM, sem duplicatas e sem disparar WhatsApp. No modo sem Supabase, a captura é **temporária e não persiste após fechar**.
+- **Pesquisa inicial automática** por empresas ME/EPP de São Paulo, sem lista inventada: os resultados são obtidos diretamente pela API pública e dependem da sua disponibilidade.
+
+Os termos da fonte pública proíbem raspagem em massa, revenda, telemarketing abusivo e tentativas de contornar limites. A ferramenta não realiza scraping indiscriminado, não envia mensagens automáticas nem oferece números pessoais ocultos.
+
 ## Novidades: base maior, bairros e sócios (novembro de 2026)
 
 - A busca `Cidade / segmento` agora aceita **Todos os segmentos**, e o padrão não prioriza empresas de grande capital.
