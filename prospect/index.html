@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#090e17">
+  <meta name="description" content="GELZ Prospect — Inteligência comercial privada para prospecção B2B.">
+  <title>GELZ Prospect — Financial Intelligence</title>
+  <link rel="stylesheet" href="./assets/app.css">
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+</head>
+<body>
+  <div id="auth-screen" class="auth-screen">
+    <div class="auth-glow"></div>
+    <div class="auth-card">
+      <div class="logo auth-logo"><span class="logo-mark">G<span></span></span><span>GELZ <strong>PROSPECT</strong><small>FINANCIAL INTELLIGENCE</small></span></div>
+      <div class="eyebrow">AMBIENTE PRIVADO</div>
+      <h1>Inteligência para transformar conexões em oportunidades.</h1>
+      <p>Entre no seu espaço de prospecção, pesquisa e relacionamento empresarial.</p>
+      <div id="auth-error" role="status" class="notice hidden"></div>
+      <form id="login-form" autocomplete="on">
+        <label for="username">Usuário</label>
+        <input id="username" name="username" type="text" value="admin" autocomplete="username" required>
+        <label for="password">Senha</label>
+        <div class="input-with-action"><input id="password" name="password" type="password" autocomplete="current-password" required><button type="button" id="toggle-password" aria-label="Mostrar senha">Exibir</button></div>
+        <button class="button button-primary button-block" id="login-button" type="submit">Acessar plataforma <span aria-hidden="true">↗</span></button>
+      </form>
+      <section id="rotate-box" class="hidden">
+        <h2>Proteja sua conta</h2>
+        <p>Troque a senha temporária antes de acessar o CRM.</p>
+        <form id="rotate-form">
+          <label for="new-password">Nova senha</label>
+          <input id="new-password" type="password" minlength="12" autocomplete="new-password" required placeholder="Mínimo de 12 caracteres">
+          <label for="confirm-password">Confirmar senha</label>
+          <input id="confirm-password" type="password" minlength="12" autocomplete="new-password" required>
+          <button class="button button-primary button-block" type="submit">Atualizar senha</button>
+        </form>
+      </section>
+      <div id="setup-panel" class="auth-setup hidden">
+        <strong>Instalação necessária</strong>
+        <p>Para login privado e dados reais, configure o Supabase e o administrador seguindo o arquivo README do projeto. Sem essa configuração, nenhum dado empresarial é carregado.</p>
+        <button id="demo-button" class="button button-outline button-block" type="button">Explorar demonstração fictícia</button>
+      </div>
+      <div class="auth-footer"><span class="status-dot"></span> GELZ Private Systems <span class="auth-footer-separator">•</span> Acesso restrito</div>
+    </div>
+    <span class="auth-watermark">GELZ / 2026</span>
+  </div>
+  <div id="workspace" class="workspace hidden">
+    <aside class="sidebar" id="sidebar">
+      <a class="logo sidebar-logo" href="#dashboard"><span class="logo-mark">G<span></span></span><span>GELZ <strong>PROSPECT</strong><small>FINANCIAL INTELLIGENCE</small></span></a>
+      <div class="sidebar-label">WORKSPACE</div>
+      <nav id="nav" class="nav" aria-label="Navegação principal">
+        <button class="nav-item active" data-view="dashboard" type="button"><span data-icon="dashboard"></span>Visão geral</button>
+        <button class="nav-item" data-view="discover" type="button"><span data-icon="map"></span>Explorar empresas <span class="nav-hint">01</span></button>
+        <button class="nav-item" data-view="leads" type="button"><span data-icon="users"></span>Leads <span class="nav-pill" id="nav-lead-count">0</span></button>
+        <button class="nav-item" data-view="pipeline" type="button"><span data-icon="columns"></span>Pipeline</button>
+        <button class="nav-item" data-view="tasks" type="button"><span data-icon="calendar"></span>Agenda e tarefas</button>
+        <button class="nav-item" data-view="intelligence" type="button"><span data-icon="sparkles"></span>GELZ Intelligence</button>
+        <button class="nav-item" data-view="reports" type="button"><span data-icon="chart"></span>Relatórios</button>
+      </nav>
+      <div class="sidebar-label sidebar-label-bottom">PLATAFORMA</div>
+      <nav class="nav"><button class="nav-item" data-view="settings" type="button"><span data-icon="settings"></span>Configurações</button></nav>
+      <div class="sidebar-bottom">
+        <div class="sidebar-person"><div class="avatar">A</div><div><strong>Administrador</strong><small id="account-subline">Conta privada</small></div><button id="logout" type="button" class="icon-button" aria-label="Sair" title="Sair"><span data-icon="logout"></span></button></div>
+      </div>
+    </aside>
+    <div class="main-shell">
+      <header class="topbar">
+        <div class="topbar-start"><button type="button" id="mobile-menu" class="icon-button menu-toggle" aria-label="Abrir navegação"><span data-icon="menu"></span></button><div class="breadcrumb"><span>GELZ Prospect</span><span class="slash">/</span><strong id="current-breadcrumb">Visão geral</strong></div></div>
+        <div class="topbar-end"><button id="global-search" class="search-shortcut" type="button"><span data-icon="search"></span><span>Buscar empresa, lead, tarefa...</span><kbd>Ctrl K</kbd></button><span class="top-status"><span class="status-dot"></span><span id="connection-status">Verificando</span></span><button class="icon-button" id="quick-add" type="button" title="Novo lead"><span data-icon="plus"></span></button></div>
+      </header>
+      <main id="main" class="main" tabindex="-1"></main>
+      <footer class="footer-bar"><span>GELZ Prospect <span class="footer-sub">/ Private Financial Workspace</span></span><span id="footer-mode">Ambiente seguro</span></footer>
+    </div>
+  </div>
+  <div id="overlay" class="overlay hidden" role="presentation"></div>
+  <div id="modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-head"><div><div class="eyebrow" id="modal-eyebrow">GELZ PROSPECT</div><h2 id="modal-title">Informações</h2></div><button class="icon-button" id="modal-close" type="button" aria-label="Fechar"><span data-icon="close"></span></button></div><div id="modal-body" class="modal-body"></div></div>
+  <div id="command" class="command-backdrop hidden" role="dialog" aria-modal="true" aria-label="Busca rápida"><div class="command-box"><div class="command-input-wrap"><span data-icon="search"></span><input id="command-input" type="search" placeholder="Buscar leads e funcionalidades..."><kbd>ESC</kbd></div><div id="command-results" class="command-results"></div></div></div>
+  <div id="toast-root" class="toast-root" aria-live="polite"></div>
+  <script src="./config.js"></script>
+  <script type="module" src="./assets/app.js"></script>
+</body>
+</html>
