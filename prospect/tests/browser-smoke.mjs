@@ -44,7 +44,7 @@ try{
  await waitFor("!!document.querySelector('#lead-form')");
  await evaluate("document.querySelector('#lead-form [name=contact_phone]').value='551198808780';document.querySelector('#lead-form').requestSubmit();true");
  await waitFor("!!document.querySelector('#main .data-table [data-action=wa-direct]')");
- await evaluate("window.__gelzWaUrl='';window.open=(url)=>{window.__gelzWaUrl=String(url);return {};};document.querySelector('#main .data-table [data-action=wa-direct]').click();true");
+ await waitFor("(()=>{const el=document.querySelector('#main .data-table [data-action=wa-direct]');if(!el)return false;window.__gelzWaUrl='';window.open=(url)=>{window.__gelzWaUrl=String(url);return {};};el.click();return true;})()",60);
  await waitFor("window.__gelzWaUrl.startsWith('https://wa.me/551198808780?text=')");
  assert.ok((await evaluate("decodeURIComponent(window.__gelzWaUrl)")).includes("Olá!"),"WhatsApp message present");
  await evaluate("document.querySelector('.data-table .cell-name').click();document.querySelector('#modal [data-action=wa-compose]').click()");
