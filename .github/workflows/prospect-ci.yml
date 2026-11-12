@@ -5,7 +5,7 @@ on:
       - 'prospect/**'
       - '.github/workflows/prospect-ci.yml'
   push:
-    branches: [feature/gelz-prospect-premium, fix/prospect-cnpj-core, fix/prospect-whatsapp-direct-data-scale]
+    branches: [feature/gelz-prospect-premium, fix/prospect-cnpj-core, fix/prospect-whatsapp-direct-data-scale, feature/prospect-linkedin-ia-web-20261112]
     paths:
       - 'prospect/**'
       - '.github/workflows/prospect-ci.yml'
@@ -27,8 +27,10 @@ jobs:
           node --check prospect/assets/cnpj-engine.js
           node --check prospect/assets/capture.js
           node --check prospect/assets/contact-utils.js
+          node --check prospect/assets/research.js
+          node --check --input-type=module < prospect/supabase/functions/prospect-analyze/index.ts
       - name: Run Prospect smoke tests
-        run: node --test prospect/tests/smoke.test.mjs prospect/tests/capture.test.mjs
+        run: node --test prospect/tests/smoke.test.mjs prospect/tests/capture.test.mjs prospect/tests/research.test.mjs
       - name: Browser E2E navigation and live CNPJ capture
         run: node prospect/tests/browser-smoke.mjs
       - name: Probe public CNPJ API and CORS (non-blocking)
