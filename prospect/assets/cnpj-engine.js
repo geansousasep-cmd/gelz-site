@@ -103,7 +103,8 @@ const persons=socios
   .map(s=>({name:str(s?.nome_socio||s?.nome||"").slice(0,160),role:str(s?.qualificacao_socio||s?.qualificacao||"Sócio / Administrador").slice(0,90)}))
   .filter(s=>s.name)
   .slice(0,25);
-const ownerProtected=String(data?.natureza_juridica||"").toLowerCase().includes("empresário individual")||data?.opcao_pelo_mei===true;
+const legalType=String(data?.natureza_juridica||"").toLowerCase();
+const ownerProtected=/empres[aá]rio\s*\(?individual/i.test(legalType)||data?.opcao_pelo_mei===true;
 let corporatePhone=ownerProtected?"":str(data?.ddd_telefone_1||"").replace(/\D/g,"");
 let corporateEmail=ownerProtected?"":str(data?.email||"").slice(0,200);
 return {partners:persons,corporatePhone,corporateEmail,source:"BrasilAPI / dados cadastrais públicos da Receita Federal",sourceUrl:"https://brasilapi.com.br/docs#tag/CNPJ",retrievedAt:new Date().toISOString()};
