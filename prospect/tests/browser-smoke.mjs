@@ -92,13 +92,13 @@ try{
  await waitFor("document.querySelector('.partner-section-head') && !document.querySelector('#modal-body .loading-stripes')",95);
  assert.equal(await evaluate("document.querySelector('#modal-body').textContent.includes('Sócios')"),true,"QSA panel in browser");
 
- assert.equal(await evaluate("!!document.querySelector('#modal-body a[href*=linkedin.com]')"),true,"LinkedIn people search for each public partner");
+ assert.equal(await evaluate("Array.from(document.querySelectorAll('#modal-body a')).some(a=>a.href.includes('linkedin.com'))"),true,"LinkedIn people search for each public partner");
  assert.equal(await evaluate("document.querySelector('#modal-body').innerText.includes('https://wa.me/551133334444')"),true,"corporate WhatsApp number-only link");
  await evaluate("document.querySelector('#modal-close').click()");
  await evaluate("document.querySelector('[data-action=capture-analyze]').click()");
  await waitFor("document.querySelector('#current-breadcrumb').textContent==='Pesquisar empresa' && document.querySelector('.research-company-title') && !document.querySelector('.loading-stripes')",115);
  assert.ok(await evaluate("document.querySelector('.research-source-list').textContent.includes('Dados cadastrais CNPJ')"),"Public sources shown for researched company");
- assert.equal(await evaluate("!!document.querySelector('.research-person a[href*=linkedin.com]')"),true,"LinkedIn business source in intelligence report");
+ assert.equal(await evaluate("Array.from(document.querySelectorAll('.research-person a')).some(a=>a.href.includes('linkedin.com'))"),true,"LinkedIn business source in intelligence report");
  assert.ok(await evaluate("document.querySelector('.research-main').innerText.includes('CNPJ / Receita')"),"Public report clearly not advertised as AI");
  await evaluate("window.fetch=window.__originalCompanyFetch;true");
 
