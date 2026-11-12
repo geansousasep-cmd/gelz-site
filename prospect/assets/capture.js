@@ -17,10 +17,10 @@ import * as CNPJ from './cnpj-engine.js';
     const field=(name,label,body,show=true)=>`<div class="field" data-capture-field="${name}" ${show?"":'style="display:none"'}><label>${label}</label>${body}</div>`;
     return `<section class="panel prospect-search"><div class="prospect-search-title"><div><span class="eyebrow">GELZ / BUSINESS INTELLIGENCE</span><h2>${ico("search")} Buscar CNPJ e empresas</h2></div><span class="chip blue">${ico("shield")} Dados públicos</span></div>
       <form id="capture-form" class="prospect-form">
-      ${field("mode","Tipo de pesquisa",`<select name="mode" id="capture-mode">${opt("sector","Por segmento")}${opt("cnpj","Pelo CNPJ")}${opt("name","Pelo nome")}${opt("radius","Por raio (OSM)")}</select>`)}
+      ${field("mode","Tipo de pesquisa",`<select name="mode" id="capture-mode">${opt("sector","Por segmento")}${opt("cnpj","Pelo CNPJ")}${opt("name","Pelo nome")}${opt("radius","Por raio (km)")}</select>`)}
       ${field("cnpj","CNPJ",`<input name="cnpj" inputmode="numeric" placeholder="00.000.000/0000-00" value="${app.mode==="cnpj"?safe(app.term):""}">`,app.mode==="cnpj")}
       ${field("name","Empresa",`<input name="name" placeholder="Nome fantasia ou razão social" value="${app.mode==="name"?safe(app.term):""}">`,app.mode==="name")}
-      ${field("sector","Segmento",`<select name="cnae">${segments.map(([v,n])=>`<option value="${v}" ${app.cnae===v?"selected":""}>${n}</option>`).join("")}</select>`,app.mode==="sector")}
+      ${field("sector","Segmento",`<select name="cnae">${segments.map(([v,n])=>`<option value="${v}" ${app.cnae===v?"selected":""}>${n}</option>`).join("")}</select>`,(app.mode==="sector"||app.mode==="radius"))}
       ${field("city","Cidade",`<input name="city" value="${safe(app.city)}">`,app.mode!=="cnpj")}
       ${field("uf","UF",`<select name="uf">${["SP","RJ","MG","SC","PR","RS","BA","GO","PE","DF","ES","CE"].map(v=>`<option ${app.uf===v?"selected":""}>${v}</option>`).join("")}</select>`,app.mode!=="cnpj")}
       ${field("neighborhood","Bairro / ponto",`<input name="neighborhood" value="${safe(app.neighborhood)}">`,app.mode==="radius")}
@@ -28,7 +28,7 @@ import * as CNPJ from './cnpj-engine.js';
       <button type="submit" class="button button-primary prospect-cta" ${app.loading?"disabled":""}>${app.loading?ico("refresh")+" Pesquisando...":ico("search")+" Encontrar leads"}</button></form>
       <div class="prospect-hint" id="capture-hint">${hint()}</div></section>`;
   }
-  function hint(){return app.mode==="radius"?"Raio real, porém somente estabelecimentos que têm CNPJ indicado no OpenStreetMap. Cobertura limitada.":app.mode==="sector"?"Pesquisa por CNAE e cidade, não por distância.":"Consulta real em base pública de CNPJs.";}
+  function hint(){return app.mode==="radius"?(window.GELZ_CONFIG?.radiusProviderEnabled?"Busca por raio exato usando fornecedor empresarial autenticado.":"Raio real usando OpenStreetMap: somente empresas com CNPJ mapeado. Cobertura limitada."):(app.mode==="sector"?"Pesquisa por CNAE e cidade, não por distância.":"Consulta real em base pública de CNPJs.");}
   function metrics(){
     const good=app.items.filter(x=>(score(x).score??-1)>=70).length,contacted=h.state.leads.filter(touched).length;
     const list=[["CNPJs encontrados",app.items.length,"building"],["Em destaque",good,"sparkles"],["Salvos no CRM",h.state.leads.length,"users"],["Contatados",contacted,"phone"]];
@@ -66,7 +66,12 @@ import * as CNPJ from './cnpj-engine.js';
       if(app.mode==="cnpj"){result={items:[await CNPJ.byCNPJ(app.term)]};}
       else if(app.mode==="name"){result=await CNPJ.byName({query:app.term,city:app.city,uf:app.uf});}
       else if(app.mode==="sector"){result=await CNPJ.bySector({city:app.city,uf:app.uf,cnae:app.cnae});}
-      else result=await CNPJ.byRadius({city:app.city,neighborhood:app.neighborhood,radiusKm:app.radius});
+      else if(window.GELZ_CONFIG?.radiusProviderEnabled&&!h.state.demo&&h.state.client){
+        const center=await CNPJ.geocodeCenter({city:app.city,neighborhood:app.neighborhood});
+        const {data,error}=await h.state.client.functions.invoke("prospect-enrich",{body:{mode:"radius",latitude:center.latitude,longitude:center.longitude,radiusKm:app.radius,cnae:app.cnae}});
+        if(error||data?.error)throw Error(error?.message||data?.error||"Busca geográfica indisponível");
+        result={items:(data?.items||[]).map(x=>CNPJ.normalize(x,"API CNPJs / raio exato")),total:data?.total||0,notice:"Empresas localizadas dentro do raio definido. Fonte: fornecedor cadastral contratado."};
+      }else result=await CNPJ.byRadius({city:app.city,neighborhood:app.neighborhood,radiusKm:app.radius});
       if(result.items?.length&&app.mode!=="cnpj"&&app.mode!=="radius")result.items=await CNPJ.enrich(result.items,Math.min(8,result.items.length));
       app.items=(result.items||[]).filter(x=>x.verified);app.total=result.total??app.items.length;app.notice=result.notice||"";
       if(!app.items.length)h.toast("Nenhum resultado confirmado para esta busca.");
@@ -74,7 +79,7 @@ import * as CNPJ from './cnpj-engine.js';
   }
   function changeMode(mode){
     app.mode=mode;const el=document.querySelector("#capture-form");if(!el)return;
-    el.querySelectorAll("[data-capture-field]").forEach(f=>{const k=f.dataset.captureField;f.style.display=k==="mode"||k===mode||(mode!=="cnpj"&&["city","uf"].includes(k))?"":"none";});
+    el.querySelectorAll("[data-capture-field]").forEach(f=>{const k=f.dataset.captureField;f.style.display=k==="mode"||k===mode||(mode!=="cnpj"&&["city","uf"].includes(k))||(mode==="radius"&&k==="sector")?"":"none";});
     const caption=document.querySelector("#capture-hint");if(caption)caption.textContent=hint();
   }
   function detail(id){
