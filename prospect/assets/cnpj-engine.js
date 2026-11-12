@@ -10,7 +10,31 @@ const str=v=>String(v??"").trim();
 const capital=v=>{if(typeof v==="number")return Math.max(0,v);if(v==null)return 0;let s=String(v).replace(/[^\d,.-]/g,"");if(s.includes(",")&&s.includes("."))s=s.replace(/\./g,"").replace(",",".");else if(s.includes(","))s=s.replace(",",".");let n=Number(s);return Number.isFinite(n)?Math.max(0,n):0;};
 const normalizeCnpj=v=>digits(v).slice(0,14);
 export function validCNPJ(raw){const c=normalizeCnpj(raw);if(c.length!==14||/^(\d)\1+$/.test(c))return false;for(let length=12;length<=13;length++){let sum=0;let weight=length===12?5:6;for(let i=0;i<length;i++){sum+=Number(c[i])*weight;weight=weight===2?9:weight-1;}let d=sum%11;let expected=d<2?0:11-d;if(Number(c[length])!==expected)return false;}return true;}
-async function request(url,{post,limit=timeout}={}){const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),limit);try{const res=await fetch(url,{method:post?"POST":"GET",headers:{accept:"application/json",...(post?{"content-type":"application/json"}:{})},body:post?JSON.stringify(post):undefined,signal:controller.signal});if(!res.ok)throw Error("Serviço respondeu "+res.status+(res.status===429?" (limite excedido)":""));const contentType=res.headers.get("content-type")||"";if(!contentType.includes("json"))throw Error("A fonte não respondeu JSON");return await res.json();}catch(err){if(err.name==="AbortError")throw Error("Tempo limite excedido");if(err instanceof TypeError)throw Error("Fonte indisponível no navegador. Pode ser restrição CORS ou conexão.");throw err;}finally{clearTimeout(timer);}}
+
+async function request(url,{post,limit=timeout}={}){
+  let lastError;
+  for(let attempt=0;attempt<3;attempt++){
+    const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),limit);
+    try{
+      const res=await fetch(url,{method:post?"POST":"GET",headers:{accept:"application/json",...(post?{"content-type":"application/json"}:{})},body:post?JSON.stringify(post):undefined,signal:controller.signal});
+      if(!res.ok){
+        if(res.status===429)throw Error("Limite de consultas atingido (429). Tente mais tarde.");
+        if(res.status===402)throw Error("Limite gratuito da fonte atingido (402).");
+        if(res.status===404)throw Error("CNPJ não localizado.");
+        if(res.status>=500)throw Error("Serviço temporariamente indisponível ("+res.status+")");
+        throw Error("Serviço respondeu "+res.status);
+      }
+      const contentType=res.headers.get("content-type")||"";
+      if(!contentType.includes("json"))throw Error("A fonte não respondeu JSON");
+      return await res.json();
+    }catch(err){
+      lastError=err?.name==="AbortError"?new Error("Consulta excedeu o limite de tempo."):err instanceof TypeError?new Error("Conexão instável com o serviço CNPJ."):err;
+      if(/429|402|404|400|401|403/.test(lastError.message))break;
+      if(attempt<2)await new Promise(resolve=>setTimeout(resolve,380*(attempt+1)));
+    }finally{clearTimeout(timer);}
+  }
+  throw lastError||new Error("Consulta indisponível.");
+}
 const textField=(d,...keys)=>{for(const k of keys){const v=d?.[k];if(v!==undefined&&v!==null&&String(v).trim())return String(v);}return "";};
 export function normalize(item={},origin="Fichário"){
 const d=item?.empresa||item?.dados||item||{};const addr=d.endereco||d.address||{};
