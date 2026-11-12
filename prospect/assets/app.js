@@ -129,7 +129,7 @@ function intelligence(){
       :`<div class="empty">${ic("sparkles",28)}<h3>Dados reais, fontes visíveis</h3><p>Consulte um CNPJ para ver sinais empresariais e oportunidades.</p></div>`}
     </section>
   </div>
-  ${report?`<div class="three research-extra">
+  ${report?`${(report.company_updates||[]).length?`<section class="panel panel-pad research-news"><div class="panel-top"><h2 class="panel-title">${ic("globe")} Descobertas na internet</h2><span class="chip blue">Pesquisa web com IA</span></div><div class="research-web-facts">${report.company_updates.map(x=>`<p>${safe(x)}</p>`).join("")}</div></section>`:""}<div class="three research-extra">
     <section class="insight-block"><h3>${ic("briefcase")} Oportunidades de conversa</h3><div class="research-bullets">${(report.opportunities||[]).slice(0,6).map(x=>`<p>${safe(x)}</p>`).join("")||"<p>Dados insuficientes.</p>"}</div></section>
     <section class="insight-block"><h3>${ic("chart")} Fatos e sinais</h3><div class="research-bullets">${(report.factors||[]).slice(0,7).map(x=>`<p>${safe(x)}</p>`).join("")||"<p>Sem dados conclusivos.</p>"}</div></section>
     <section class="insight-block"><h3>${ic("info")} Dados não disponíveis</h3><div class="research-bullets">${(report.missing_data||[]).slice(0,6).map(x=>`<p>${safe(x)}</p>`).join("")||"<p>Sem observações adicionais.</p>"}</div></section>
@@ -297,7 +297,7 @@ async function runAI(id){
   const result=data.analysis;
   const score=result.score==null?dossier.score:Math.max(0,Math.min(100,Number(result.score)));
   const normalizedSources=(result.sources||[]).filter(x=>x&&typeof x==="object"&&verifiedUrl(x.url)).slice(0,12).map(x=>({title:String(x.title||"Fonte web").slice(0,140),url:verifiedUrl(x.url),status:"pesquisa web"}));
-  const report={...dossier,mode:"web_ai",type:"web_ai",score,confidence:result.confidence||"baixa",summary:result.summary||dossier.summary,opportunities:Array.isArray(result.opportunities)?result.opportunities:dossier.opportunities,factors:Array.isArray(result.factors)?result.factors:dossier.factors,missing_data:Array.isArray(result.missing_data)?result.missing_data:dossier.missing_data,next_action:result.next_action||dossier.next_action,sources:[...dossier.sources,...normalizedSources],checkedAt:new Date().toISOString()};
+  const report={...dossier,mode:"web_ai",type:"web_ai",score,confidence:result.confidence||"baixa",summary:result.summary||dossier.summary,company_updates:Array.isArray(result.company_updates)?result.company_updates:[],opportunities:Array.isArray(result.opportunities)?result.opportunities:dossier.opportunities,factors:Array.isArray(result.factors)?result.factors:dossier.factors,missing_data:Array.isArray(result.missing_data)?result.missing_data:dossier.missing_data,next_action:result.next_action||dossier.next_action,sources:[...dossier.sources,...normalizedSources],checkedAt:new Date().toISOString()};
   state.publicAnalysis=report;
   if(lead&&!state.demo){
     const {error:dbError}=await state.client.from("prospect_leads").update({ai_score:score,ai_analysis:report,updated_at:new Date().toISOString()}).eq("id",lead.id);
