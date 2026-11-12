@@ -49,7 +49,10 @@ try{
  await evaluate("document.querySelector('[data-action=capture-page-next]').click()");
  await waitFor("document.querySelector('.capture-page-caption') && document.querySelector('.capture-page-caption').textContent.includes('Página 2') && !document.querySelector('.loading-stripes')",125);
  const count2=await evaluate("document.querySelectorAll('.prospect-results tbody tr').length");
+
+ console.log("PAGE2_COUNT",count2,"NOTICE",await evaluate("document.querySelector('.prospect-results').innerText.slice(0,700)"));
  assert.ok(count2>0,"next page contains business listings");
+
  await evaluate("const mode=document.querySelector('#capture-mode');mode.value='cnpj';mode.dispatchEvent(new Event('change',{bubbles:true}));document.querySelector('input[name=cnpj]').value='19131243000197';document.querySelector('#capture-form').requestSubmit();true");
  await waitFor("document.querySelector('[data-action=capture-partners]') && !document.querySelector('.loading-stripes')",125);
  await evaluate("document.querySelector('[data-action=capture-partners]').click()");
