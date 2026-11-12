@@ -48,6 +48,7 @@ try{
 
  await waitFor("!!document.querySelector('#main .data-table [data-action=wa-direct]')");
  console.log("WA DOM PRE",await evaluate("JSON.stringify({view:document.querySelector('#current-breadcrumb')?.textContent,phone:document.querySelector('#main .data-table .cell-meta')?.textContent,waButtons:document.querySelectorAll('[data-action=wa-direct]').length,mainText:document.querySelector('#main')?.innerText.slice(0,700)})"));
+ console.log("WA_BROWSER_DEBUG",await evaluate("JSON.stringify({buttons:[...document.querySelectorAll('[data-action=wa-direct]')].map(x=>({html:x.outerHTML.slice(0,340),parent:x.parentElement?.outerHTML.slice(0,400)})),main:document.querySelector('#main')?.innerText?.slice(0,850),view:document.querySelector('#current-breadcrumb')?.innerText})"));
  await waitFor("(()=>{const el=document.querySelector('#main .data-table [data-action=wa-direct]');if(!el)return false;window.__gelzWaUrl='';window.open=(url)=>{window.__gelzWaUrl=String(url);return {};};el.click();return true;})()",60);
  await waitFor("window.__gelzWaUrl.startsWith('https://wa.me/551198808780?text=')");
  assert.ok((await evaluate("decodeURIComponent(window.__gelzWaUrl)")).includes("Olá!"),"WhatsApp message present");
