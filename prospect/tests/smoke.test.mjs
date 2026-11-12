@@ -23,7 +23,7 @@ test("Browser config never includes tokens or passwords",()=>{
  const cfg=get("config.js");
  assert.ok(!/sk-[A-Za-z0-9]{10,}|service_role[^:]*:[ ]*["'][A-Za-z0-9]/.test(cfg));
  assert.ok(cfg.includes('supabaseAnonKey: ""'));
- assert.ok(cfg.includes('googleMapsKey: ""'));
+ assert.ok(cfg.includes('radiusProviderEnabled: false'));
 });
 test("Server functions require authenticated admin and bounded sources",()=>{
  const enrich=get("supabase/functions/prospect-enrich/index.ts");
