@@ -210,8 +210,8 @@ import * as CONTACT from './contact-utils.js';
     const institution=h.state.settings?.institution||"Quattro Investimentos";
     const link=CONTACT.whatsappLink(phone,CONTACT.advisorIntro(name,advisor,institution));
     if(!link){h.toast("Telefone sem DDD ou incompleto. Corrija-o antes de abrir o WhatsApp.","error");return;}
-    const result=window.open(link,"_blank","noopener,noreferrer");
-    if(!result)window.location.assign(link);
+    const result=window.open(link,"_blank");
+    if(result){try{result.opener=null;}catch{}}else window.location.assign(link);
     h.toast("Conversa individual aberta. Nenhuma mensagem enviada automaticamente.");
   }
 
