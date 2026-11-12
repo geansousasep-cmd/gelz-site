@@ -17,7 +17,8 @@ const d=item?.empresa||item?.dados||item||{};const addr=d.endereco||d.address||{
 const cnpj=normalizeCnpj(textField(d,"cnpj","documento","cnpj_basico"));
 const capitalValue=capital(d.capital_social??d.capitalSocial??d.capital_social_empresa??0);
 let phone=textField(d,"telefone","telefone_comercial","ddd_telefone_1","telefone1","telefone1_completo");
-if(d.contato_oculto===true||d.contato_oculto==="true")phone="";
+const contactHidden=d.contato_oculto===true||d.contato_oculto==="true";
+if(contactHidden)phone="";
 if(phone.startsWith("0"))phone=phone.replace(/^0+/,"");
 return {
 cnpj,company_name:textField(d,"nome_fantasia","razao_social","razaoSocial","nome","fantasia","nome_empresarial")||"Empresa sem nome",
@@ -28,7 +29,7 @@ city:textField(addr,"municipio","cidade")||textField(d,"municipio","cidade"),
 uf:textField(addr,"uf")||textField(d,"uf"),
 neighborhood:textField(addr,"bairro")||textField(d,"bairro"),
 cep:digits(textField(addr,"cep")||textField(d,"cep")).slice(0,8),
-phone,site:textField(d,"site","website","websiteURI"),
+phone,contactHidden,email:contactHidden?"":textField(d,"email","email_comercial","correio_eletronico"),site:textField(d,"site","website","websiteURI"),
 porte:textField(d,"porte","porte_empresa","porteEmpresa"),
 capital_social:capitalValue,
 situacao:textField(d,"situacao","situacao_cadastral","descricao_situacao_cadastral"),
@@ -52,10 +53,61 @@ function unwrap(data){const value=data?.resultados||data?.empresas||data?.result
 export async function byCNPJ(cnpj){const id=normalizeCnpj(cnpj);if(!validCNPJ(id))throw Error("CNPJ inválido. Confira os 14 dígitos.");
 try{const data=await request(API+"/cnpj/"+id);return normalize(data,"Fichário / Receita Federal");}catch(error){try{const data=await request(OPEN_CNPJ+id);return normalize(data,"OpenCNPJ / Receita Federal");}catch{throw error;}}}
 export async function byName({query,uf="SP",city=""}){const q=str(query);if(q.length<3)throw Error("Informe pelo menos 3 letras do nome da empresa.");const p=new URLSearchParams({q,uf:str(uf).toUpperCase(),...(city?{cidade:str(city)}:{})});const data=await request(API+"/busca?"+p);return {items:unwrap(data).map(x=>normalize(x,"Fichário / busca por nome")).filter(x=>x.verified),total:Number(data?.total??data?.resultados?.length??0),mode:"name"};}
-export async function bySector({uf="SP",city="São Paulo",cnae="6920601",page=1}){
-const p=new URLSearchParams({uf:str(uf).toUpperCase(),cidade:str(city),cnae:digits(cnae),pagina:String(page),por_pagina:"20",ordem:"capital_desc",situacao:"ativa"});if(!p.get("cnae")||p.get("cnae").length!==7)throw Error("Informe o CNAE com 7 dígitos.");
-const data=await request(API+"/busca-avancada?"+p);const items=unwrap(data).map(x=>normalize(x,"Fichário / busca por setor")).filter(x=>x.verified);return {items,total:Number(data?.total||data?.total_resultados||items.length),mode:"sector",page,notice:String(data?.aviso||"")};}
-export async function enrich(items,max=8){const arr=items.slice(0,max);const results=await Promise.allSettled(arr.map(x=>byCNPJ(x.cnpj)));return items.map((x,i)=>i<max&&results[i].status==="fulfilled"?{...results[i].value,source:x.source}:x);}
+
+export async function bySector({uf="SP",city="São Paulo",cnae="",page=1,porte="",capitalMin=null,capitalMax=null,order="capital_desc"}={}){
+const pageNum=Math.max(1,Math.min(50,Math.floor(Number(page)||1)));
+const capitalLower=capitalMin==null||capitalMin===""?null:Math.max(0,Number(capitalMin));
+const capitalUpper=capitalMax==null||capitalMax===""?null:Math.max(0,Number(capitalMax));
+const cnaeValue=digits(cnae);
+if(cnaeValue&&cnaeValue.length!==7)throw Error("Informe um CNAE válido com 7 dígitos.");
+if(!str(uf)||(!str(city)&&!cnaeValue))throw Error("Informe a cidade ou o CNAE e a UF.");
+const validPorte=["","ME","EPP","Demais","ME,EPP"];
+if(!validPorte.includes(porte))throw Error("Porte inválido.");
+if(capitalLower!=null&&capitalUpper!=null&&capitalLower>capitalUpper)throw Error("Capital mínimo não pode exceder o máximo.");
+const orderValues=["capital_desc","capital_asc","razao_asc"];
+if(!orderValues.includes(order))order="capital_desc";
+const p=new URLSearchParams({uf:str(uf).toUpperCase(),pagina:String(pageNum),por_pagina:"20",ordem:order,situacao:"ativa"});
+if(str(city))p.set("cidade",str(city));if(cnaeValue)p.set("cnae",cnaeValue);if(porte)p.set("porte",porte);
+if(capitalLower!=null)p.set("capital_min",String(capitalLower));
+if(capitalUpper!=null)p.set("capital_max",String(capitalUpper));
+const data=await request(API+"/busca-avancada?"+p);
+const items=unwrap(data).map(x=>normalize(x,"Fichário / busca avançada")).filter(x=>x.verified);
+const rawTotal=data?.total_numero??data?.total??data?.total_resultados??items.length;
+const total=Number(String(rawTotal).replace(/[^\d]/g,""))||0;
+const pages=Math.min(50,Math.max(1,Number(data?.paginas)||Math.ceil(Math.min(total,10000)/20)||1));
+return {items,total,pages,mode:"sector",page:pageNum,notice:String(data?.aviso||data?.nota||""),source:"Fichário"};
+}
+const companyCache=new Map();
+export async function enrich(items,max=8){
+const selected=items.slice(0,Math.max(0,Math.min(20,Number(max)||0)));
+const results=Array(selected.length);
+for(let i=0;i<selected.length;i+=4){
+await Promise.all(selected.slice(i,i+4).map(async(x,offset)=>{
+const key=x.cnpj;
+if(companyCache.has(key)){results[i+offset]=companyCache.get(key);return;}
+try{const detail=await byCNPJ(key);companyCache.set(key,detail);results[i+offset]=detail;}
+catch{results[i+offset]=null;}
+}));
+}
+return items.map((x,i)=>i<selected.length&&results[i]?{...x,...results[i],source:x.source,sourceUrl:x.sourceUrl||results[i].sourceUrl}:x);
+}
+/* Consulta por CNPJ em fonte secundária para mostrar SOMENTE nomes e qualificações do QSA.
+   O telefone exibido permanece o canal comercial oficial da empresa; documentos pessoais
+   e números particulares não são extraídos nem armazenados. */
+export async function partners(cnpj){
+const id=normalizeCnpj(cnpj);
+if(!validCNPJ(id))throw Error("CNPJ inválido.");
+const data=await request("https://brasilapi.com.br/api/cnpj/v1/"+id,{limit:16000});
+const socios=Array.isArray(data?.qsa)?data.qsa:[];
+const persons=socios
+  .map(s=>({name:str(s?.nome_socio||s?.nome||"").slice(0,160),role:str(s?.qualificacao_socio||s?.qualificacao||"Sócio / Administrador").slice(0,90)}))
+  .filter(s=>s.name)
+  .slice(0,25);
+const ownerProtected=String(data?.natureza_juridica||"").toLowerCase().includes("empresário individual")||data?.opcao_pelo_mei===true;
+let corporatePhone=ownerProtected?"":str(data?.ddd_telefone_1||"").replace(/\D/g,"");
+let corporateEmail=ownerProtected?"":str(data?.email||"").slice(0,200);
+return {partners:persons,corporatePhone,corporateEmail,source:"BrasilAPI / dados cadastrais públicos da Receita Federal",sourceUrl:"https://brasilapi.com.br/docs#tag/CNPJ",retrievedAt:new Date().toISOString()};
+}
 export async function geocodeCenter({city="São Paulo",neighborhood="Tatuapé"}){
 const q=[str(neighborhood),str(city),"Brasil"].filter(Boolean).join(", ");
 const data=await request("https://nominatim.openstreetmap.org/search?"+new URLSearchParams({q,format:"json",limit:"1",countrycodes:"br",addressdetails:"1"}));
